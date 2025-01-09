@@ -24,3 +24,21 @@ def test_meta_tids():
     client.load_data('sample_data/comments.json')
 
     assert client.get_meta_tids() == expected_data
+
+def test_mod_in():
+    with open('sample_data/math-pca2.json', 'r') as file:
+        expected_data = json.load(file)['mod-in']
+
+    client = PolisClient()
+    client.load_data('sample_data/comments.json')
+
+    assert client.get_mod_in() == sorted(expected_data)
+
+def test_mod_out():
+    with open('sample_data/math-pca2.json', 'r') as file:
+        expected_data = json.load(file)['mod-out']
+
+    client = PolisClient()
+    client.load_data('sample_data/comments.json')
+
+    assert sorted(client.get_mod_out()) == sorted(expected_data)

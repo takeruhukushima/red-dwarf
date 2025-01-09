@@ -13,6 +13,8 @@ class PolisClient():
         # Ref: https://github.com/compdemocracy/polis/blob/6d04f4d144adf9640fe49b8fbaac38943dc11b9a/math/src/polismath/math/conversation.clj#L217-L225
         self.user_vote_counts = defaultdict(int)
         self.meta_tids = []
+        self.mod_in = []
+        self.mod_out = []
 
     def impute_missing_votes(self):
         # Ref: https://hyp.is/8zUyWM5fEe-uIO-J34vbkg/gwern.net/doc/sociology/2021-small.pdf
@@ -56,6 +58,12 @@ class PolisClient():
     def get_meta_tids(self):
         return self.meta_tids
 
+    def get_mod_in(self):
+        return self.mod_in
+
+    def get_mod_out(self):
+        return self.mod_out
+
     def load_data(self, filepath):
         if filepath.endswith("votes.json"):
             self.load_votes_data(filepath)
@@ -71,5 +79,17 @@ class PolisClient():
     def load_comments_data(self, filepath):
         comments_df = pl.read_json(filepath)
         for row in comments_df.iter_rows(named=True):
+            # TODO: Why does is_meta make this mod-in.
+            # Maybe I don't understand what mod-in does...
+            # Note: mod-in/mod-out doesn't seem to be actually used in the front-end, so a bug here wouldn't matter.
+            # Ref: https://github.com/compdemocracy/polis/blob/6d04f4d144adf9640fe49b8fbaac38943dc11b9a/math/src/polismath/math/conversation.clj#L825-L842
+            if row['is_meta'] or row['mod'] == 1:
+                self.mod_in.append(row['tid'])
+
+            if row['is_meta'] or row['mod'] == -1:
+                self.mod_out.append(row['tid'])
+
+            # Ref: https://github.com/compdemocracy/polis/blob/6d04f4d144adf9640fe49b8fbaac38943dc11b9a/math/src/polismath/math/conversation.clj#L843-L850
             if row['is_meta']:
                 self.meta_tids.append(row['tid'])
+
