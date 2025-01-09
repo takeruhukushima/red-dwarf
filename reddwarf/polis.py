@@ -12,6 +12,7 @@ class PolisClient():
         # Ref: https://gist.github.com/patcon/fd9079a5fbcd533160f8ae211e975307#file-math-pca2-json-L2
         # Ref: https://github.com/compdemocracy/polis/blob/6d04f4d144adf9640fe49b8fbaac38943dc11b9a/math/src/polismath/math/conversation.clj#L217-L225
         self.user_vote_counts = defaultdict(int)
+        self.meta_tids = []
 
     def impute_missing_votes(self):
         # Ref: https://hyp.is/8zUyWM5fEe-uIO-J34vbkg/gwern.net/doc/sociology/2021-small.pdf
@@ -52,6 +53,9 @@ class PolisClient():
     def get_user_vote_counts(self):
         return self.user_vote_counts
 
+    def get_meta_tids(self):
+        return self.meta_tids
+
     def load_data(self, filepath):
         if filepath.endswith("votes.json"):
             self.load_votes_data(filepath)
@@ -65,4 +69,7 @@ class PolisClient():
         self.add_votes_batch(votes_df)
 
     def load_comments_data(self, filepath):
-        raise NotImplementedError
+        comments_df = pl.read_json(filepath)
+        for row in comments_df.iter_rows(named=True):
+            if row['is_meta']:
+                self.meta_tids.append(row['tid'])

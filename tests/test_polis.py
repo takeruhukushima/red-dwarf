@@ -15,3 +15,12 @@ def test_user_vote_counts():
 
     # Call the method and assert the result matches the expected data
     assert client.get_user_vote_counts() == expected_data
+
+def test_meta_tids():
+    with open('sample_data/math-pca2.json', 'r') as file:
+        expected_data = json.load(file)['meta-tids']
+
+    client = PolisClient()
+    client.load_data('sample_data/comments.json')
+
+    assert client.get_meta_tids() == expected_data
