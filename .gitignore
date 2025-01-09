@@ -1,2 +1,7 @@
 # Don't lock, because we're a library.
 uv.lock
+
+# Ignore python compilation files.
+*.pyc
+__pycache__
+*.egg-info
