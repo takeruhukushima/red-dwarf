@@ -1,0 +1,2 @@
+# Don't lock, because we're a library.
+uv.lock

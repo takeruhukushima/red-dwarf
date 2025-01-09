@@ -1,0 +1,9 @@
+[project]
+name = "red_dwarf"
+version = "0.1.0"
+description = "A dimensional reduction library for stellarpunk democracy into the long haul"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "pytest>=8.3.4",
+]
