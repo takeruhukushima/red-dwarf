@@ -6,7 +6,7 @@ class PolisClient():
         self.n_components = 2
         # Ref: https://hyp.is/8zUyWM5fEe-uIO-J34vbkg/gwern.net/doc/sociology/2021-small.pdf
         self.min_votes = 7
-        self.votes = defaultdict(dict)
+        self.votes = []
         # Ref: https://hyp.is/MV0Iws5fEe-k9BdY6UR1VQ/gwern.net/doc/sociology/2021-small.pdf
         self.vote_matrix = None
         # Ref: https://gist.github.com/patcon/fd9079a5fbcd533160f8ae211e975307#file-math-pca2-json-L2
@@ -15,6 +15,9 @@ class PolisClient():
         self.meta_tids = []
         self.mod_in = []
         self.mod_out = []
+        self.last_vote_timestamp = 0
+        self.group_clusters = []
+        self.base_clusters = {}
 
     def impute_missing_votes(self):
         # Ref: https://hyp.is/8zUyWM5fEe-uIO-J34vbkg/gwern.net/doc/sociology/2021-small.pdf
@@ -35,20 +38,21 @@ class PolisClient():
         """Add multiple votes from a DataFrame"""
         # TODO: Use tuples instead of named columns later, for perf.
         for row in votes_df.iter_rows(named=True):
-            kwargs = {
-                'participant_id': row['pid'],
-                'statement_id': row['tid'],
-                'vote': row['vote'],
-            }
-            self.add_vote(**kwargs)
+            self.add_vote(row)
 
-    def add_vote(self, participant_id, statement_id, vote):
+    def add_vote(self, vote_row):
         """Add a single vote to the system"""
         # If this is a new vote (not an update)
-        if statement_id not in self.votes[participant_id]:
-            self.user_vote_counts[participant_id] += 1
+        self.user_vote_counts[vote_row['pid']] += 1
 
-        self.votes[participant_id][statement_id] = vote
+        if self.last_vote_timestamp < int(vote_row['modified']):
+            self.last_vote_timestamp = int(vote_row['modified'])
+
+        self.votes.append({
+            'participant_id': vote_row['pid'],
+            'statement_id': vote_row['tid'],
+            'vote': vote_row['vote'],
+        })
         # Matrix is now stale
         self.matrix = None
 
@@ -63,6 +67,20 @@ class PolisClient():
 
     def get_mod_out(self):
         return self.mod_out
+
+    def get_last_vote_timestamp(self):
+        return self.last_vote_timestamp
+
+    def get_group_clusters(self):
+        return self.group_clusters
+
+    def get_matrix(self):
+        if self.matrix is None:
+            # Only generate matrix when needed.
+            self.matrix = pl.from_dicts(self.votes)
+            self.matrix = self.matrix.pivot(values="vote", index="participant_id", on="statement_id")
+
+        return self.matrix
 
     def load_data(self, filepath):
         if filepath.endswith("votes.json"):

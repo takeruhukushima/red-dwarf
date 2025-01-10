@@ -1,5 +1,4 @@
 import json
-import pytest
 from reddwarf.polis import PolisClient
 
 def test_user_vote_counts():
@@ -42,3 +41,51 @@ def test_mod_out():
     client.load_data('sample_data/comments.json')
 
     assert sorted(client.get_mod_out()) == sorted(expected_data)
+
+def test_last_vote_timestamp():
+    with open('sample_data/math-pca2.json', 'r') as file:
+        expected_data = json.load(file)['lastVoteTimestamp']
+
+    client = PolisClient()
+    client.load_data('sample_data/votes.json')
+
+    assert client.get_last_vote_timestamp() == expected_data
+
+ORIENTATION = { 'row': 0, 'column': 1 }
+
+def test_participant_count():
+    with open('sample_data/math-pca2.json', 'r') as file:
+        expected_data = json.load(file)['n']
+
+    client = PolisClient()
+    client.load_data('sample_data/votes.json')
+
+    assert client.get_matrix().shape[ORIENTATION['row']] == expected_data
+
+# def test_statement_count():
+#     with open('sample_data/math-pca2.json', 'r') as file:
+#         expected_data = json.load(file)['n-cmts']
+
+#     client = PolisClient()
+#     client.load_data('sample_data/votes.json')
+
+#     assert client.get_matrix().shape[ORIENTATION['column']] == expected_data
+
+# def test_group_cluster_count():
+#     with open('sample_data/math-pca2.json', 'r') as file:
+#         expected_data = json.load(file)['group-clusters']
+
+#     client = PolisClient()
+#     client.load_data('sample_data/votes.json')
+
+#     assert len(client.get_group_clusters()) == len(expected_data)
+
+# def test_pca_base_cluster_count():
+#     with open('sample_data/math-pca2.json', 'r') as file:
+#         expected_data = json.load(file)['base-clusters']
+
+#     client = PolisClient()
+#     client.load_data('sample_data/votes.json')
+
+#     assert len(client.base_clusters.get('x', [])) == len(expected_data['x'])
+#     assert len(client.base_clusters.get('y', [])) == len(expected_data['y'])
