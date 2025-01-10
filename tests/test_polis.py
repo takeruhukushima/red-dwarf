@@ -51,7 +51,7 @@ def test_last_vote_timestamp():
 
     assert client.get_last_vote_timestamp() == expected_data
 
-ORIENTATION = { 'row': 0, 'column': 1 }
+SHAPE_AXIS = { 'row': 0, 'column': 1 }
 
 def test_participant_count():
     with open('sample_data/math-pca2.json', 'r') as file:
@@ -60,7 +60,7 @@ def test_participant_count():
     client = PolisClient()
     client.load_data('sample_data/votes.json')
 
-    assert client.get_matrix().shape[ORIENTATION['row']] == expected_data
+    assert client.get_matrix().shape[SHAPE_AXIS['row']] == expected_data
 
 # def test_statement_count():
 #     with open('sample_data/math-pca2.json', 'r') as file:
@@ -69,7 +69,7 @@ def test_participant_count():
 #     client = PolisClient()
 #     client.load_data('sample_data/votes.json')
 
-#     assert client.get_matrix().shape[ORIENTATION['column']] == expected_data
+#     assert client.get_matrix().shape[SHAPE_AXIS['column']] == expected_data
 
 # def test_group_cluster_count():
 #     with open('sample_data/math-pca2.json', 'r') as file:
