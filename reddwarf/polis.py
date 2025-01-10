@@ -23,12 +23,6 @@ class PolisClient():
         self.statement_count = None
         self.participant_count = None
 
-    def impute_missing_votes(self):
-        # Ref: https://hyp.is/8zUyWM5fEe-uIO-J34vbkg/gwern.net/doc/sociology/2021-small.pdf
-        # Use "mean" strategy of sklearn SimpleImputer.
-        # See: https://scikit-learn.org/1.6/modules/generated/sklearn.impute.SimpleImputer.html#sklearn.impute.SimpleImputer
-        raise NotImplementedError
-
     def get_participant_row_mask(self):
         raise NotImplementedError
 
@@ -96,6 +90,7 @@ class PolisClient():
 
         return self.matrix
 
+    # Ref: https://hyp.is/8zUyWM5fEe-uIO-J34vbkg/gwern.net/doc/sociology/2021-small.pdf
     def impute_missing_votes(self):
         schema = { k: pl.Float64 for k in self.matrix.columns }
         schema['participant_id'] = pl.Int64
@@ -133,4 +128,3 @@ class PolisClient():
             # Ref: https://github.com/compdemocracy/polis/blob/6d04f4d144adf9640fe49b8fbaac38943dc11b9a/math/src/polismath/math/conversation.clj#L843-L850
             if row['is_meta']:
                 self.meta_tids.append(row['tid'])
-
