@@ -1,5 +1,6 @@
 import polars as pl
 from collections import defaultdict
+from sklearn.impute import SimpleImputer
 
 class PolisClient():
     def __init__(self) -> None:
@@ -94,6 +95,15 @@ class PolisClient():
             self.participant_count = len(self.matrix)
 
         return self.matrix
+
+    def impute_missing_votes(self):
+        schema = { k: pl.Float64 for k in self.matrix.columns }
+        schema['participant_id'] = pl.Int64
+        mean_imputer = SimpleImputer(missing_values=float('nan'), strategy='mean')
+        self.matrix = pl.from_numpy(
+            mean_imputer.fit_transform(self.matrix),
+            schema=schema,
+        )
 
     def load_data(self, filepath):
         if filepath.endswith("votes.json"):

@@ -73,6 +73,17 @@ def test_statement_count():
 
     assert client.statement_count == expected_data
 
+def test_impute_missing_values():
+    client = PolisClient()
+    client.load_data('sample_data/votes.json')
+    matrix_with_missing = client.get_matrix()
+    client.impute_missing_votes()
+    matrix_without_missing = client.get_matrix()
+
+    assert matrix_with_missing.null_count().sum_horizontal().item() > 0
+    assert matrix_without_missing.null_count().sum_horizontal().item() == 0
+    assert matrix_with_missing.shape == matrix_without_missing.shape
+
 # def test_group_cluster_count():
 #     with open('sample_data/math-pca2.json', 'r') as file:
 #         expected_data = json.load(file)['group-clusters']
