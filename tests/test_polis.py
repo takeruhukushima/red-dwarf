@@ -59,17 +59,19 @@ def test_participant_count():
 
     client = PolisClient()
     client.load_data('sample_data/votes.json')
+    client.get_matrix()
 
-    assert client.get_matrix().shape[SHAPE_AXIS['row']] == expected_data
+    assert client.participant_count == expected_data
 
-# def test_statement_count():
-#     with open('sample_data/math-pca2.json', 'r') as file:
-#         expected_data = json.load(file)['n-cmts']
+def test_statement_count():
+    with open('sample_data/math-pca2.json', 'r') as file:
+        expected_data = json.load(file)['n-cmts']
 
-#     client = PolisClient()
-#     client.load_data('sample_data/votes.json')
+    client = PolisClient()
+    client.load_data('sample_data/votes.json')
+    client.get_matrix()
 
-#     assert client.get_matrix().shape[SHAPE_AXIS['column']] == expected_data
+    assert client.statement_count == expected_data
 
 # def test_group_cluster_count():
 #     with open('sample_data/math-pca2.json', 'r') as file:

@@ -18,6 +18,9 @@ class PolisClient():
         self.last_vote_timestamp = 0
         self.group_clusters = []
         self.base_clusters = {}
+        # TODO: Make accessor methods for these?
+        self.statement_count = None
+        self.participant_count = None
 
     def impute_missing_votes(self):
         # Ref: https://hyp.is/8zUyWM5fEe-uIO-J34vbkg/gwern.net/doc/sociology/2021-small.pdf
@@ -55,6 +58,8 @@ class PolisClient():
         })
         # Matrix is now stale
         self.matrix = None
+        self.statement_count = None
+        self.participant_count = None
 
     def get_user_vote_counts(self):
         return self.user_vote_counts
@@ -74,11 +79,19 @@ class PolisClient():
     def get_group_clusters(self):
         return self.group_clusters
 
+    # TODO: Refactor this to "process_matrix"?
     def get_matrix(self):
         if self.matrix is None:
             # Only generate matrix when needed.
             self.matrix = pl.from_dicts(self.votes)
-            self.matrix = self.matrix.pivot(values="vote", index="participant_id", on="statement_id")
+            self.matrix = self.matrix.pivot(
+                values="vote",
+                index="participant_id",
+                on="statement_id",
+            )
+
+            self.statement_count = len(self.matrix.drop('participant_id').columns)
+            self.participant_count = len(self.matrix)
 
         return self.matrix
 
