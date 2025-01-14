@@ -5,6 +5,7 @@ description = "A dimensional reduction library for stellarpunk democracy into th
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
+    "pandas>=2.2.3",
     "polars>=1.19.0",
     "scikit-learn>=1.6.0",
 ]
