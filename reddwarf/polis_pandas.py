@@ -3,11 +3,12 @@ from collections import defaultdict
 from sklearn.impute import SimpleImputer
 
 class PolisClient():
-    def __init__(self) -> None:
+    def __init__(self, is_strict_moderation=None) -> None:
         self.n_components = 2
         # Ref: https://hyp.is/8zUyWM5fEe-uIO-J34vbkg/gwern.net/doc/sociology/2021-small.pdf
         self.min_votes = 7
         self.votes = []
+        self.comments_df = []
         # Ref: https://hyp.is/MV0Iws5fEe-k9BdY6UR1VQ/gwern.net/doc/sociology/2021-small.pdf
         self.vote_matrix = None
         # Ref: https://gist.github.com/patcon/fd9079a5fbcd533160f8ae211e975307#file-math-pca2-json-L2
@@ -22,12 +23,24 @@ class PolisClient():
         # TODO: Make accessor methods for these?
         self.statement_count = None
         self.participant_count = None
+        self.is_strict_moderation = is_strict_moderation
 
     def get_participant_row_mask(self):
         raise NotImplementedError
 
-    def get_statement_col_mask(self):
-        raise NotImplementedError
+    def get_active_statement_ids(self):
+        if self.is_strict_moderation == None:
+            raise ValueError('must set is_strict_moderation to properly filter for active statements')
+        ACTIVE_MOD_STATES = [1] if self.is_strict_moderation else [1,0]
+        active_statement_ids = sorted(self.comments_df.loc[self.comments_df["mod"].isin(ACTIVE_MOD_STATES)].index, key=int)
+
+        return active_statement_ids
+
+    def get_unvoted_statement_ids(self):
+        null_column_mask = self.matrix.isnull().all()
+        null_column_ids = self.matrix.columns[null_column_mask].tolist()
+
+        return null_column_ids
 
     def apply_masks(self, participant_rows=True, statement_cols=True):
         raise NotImplementedError
@@ -75,7 +88,7 @@ class PolisClient():
         return self.group_clusters
 
     # TODO: Refactor this to "process_matrix"?
-    def get_matrix(self):
+    def get_matrix(self, is_filtered=False):
         if self.matrix is None:
             # Only generate matrix when needed.
             self.matrix = pl.DataFrame.from_dict(self.votes)
@@ -85,17 +98,44 @@ class PolisClient():
                 columns="statement_id",
             )
 
-            self.statement_count = len(self.matrix.columns)
+            participant_count = self.matrix.index.max() + 1
+            comment_count = self.matrix.columns.max() + 1
+            self.matrix = self.matrix.reindex(
+                index=range(participant_count),
+                columns=range(comment_count),
+                fill_value=float('nan'),
+            )
+            self.statement_count = self.matrix.notna().any().sum()
             self.participant_count = len(self.matrix)
 
+        if is_filtered:
+            self.filter_matrix()
+
         return self.matrix
+
+    def filter_matrix(self):
+        self.matrix = self.matrix.filter(self.get_active_statement_ids(), axis='columns')
+        # TODO: What about statements with no votes? E.g., 53 in oprah. Filter out? zero?
+        unvoted_filter_type = 'drop' # `drop` or `zero`
+        if unvoted_filter_type == 'zero':
+            self.matrix[self.get_unvoted_statement_ids()] = 0
+        elif unvoted_filter_type == 'drop':
+            self.matrix = self.matrix.drop(self.get_unvoted_statement_ids(), axis='columns')
+        else:
+            raise ValueError('unvoted_filter_type must be `drop` or `zero`')
+
+    def run_pca(self):
+        data = self.get_matrix(is_filtered=True)
 
     # Ref: https://hyp.is/8zUyWM5fEe-uIO-J34vbkg/gwern.net/doc/sociology/2021-small.pdf
     def impute_missing_votes(self):
         mean_imputer = SimpleImputer(missing_values=float('nan'), strategy='mean')
-        self.matrix = pl.DataFrame(
+        matrix_imputed = pl.DataFrame(
             mean_imputer.fit_transform(self.matrix),
+            columns=self.matrix.columns,
+            index=self.matrix.index,
         )
+        self.matrix = matrix_imputed
 
     def load_data(self, filepath):
         if filepath.endswith("votes.json"):
@@ -113,18 +153,18 @@ class PolisClient():
         self.add_votes_batch(votes_df)
 
     def load_comments_data(self, filepath):
-        comments_df = pl.read_json(filepath)
-        for _, row in comments_df.iterrows():
+        self.comments_df = pl.read_json(filepath).set_index('tid')
+        for i, row in self.comments_df.iterrows():
             # TODO: Why does is_meta make this mod-in.
             # Maybe I don't understand what mod-in does...
             # Note: mod-in/mod-out doesn't seem to be actually used in the front-end, so a bug here wouldn't matter.
             # Ref: https://github.com/compdemocracy/polis/blob/6d04f4d144adf9640fe49b8fbaac38943dc11b9a/math/src/polismath/math/conversation.clj#L825-L842
             if row['is_meta'] or row['mod'] == 1:
-                self.mod_in.append(row['tid'])
+                self.mod_in.append(i)
 
             if row['is_meta'] or row['mod'] == -1:
-                self.mod_out.append(row['tid'])
+                self.mod_out.append(i)
 
             # Ref: https://github.com/compdemocracy/polis/blob/6d04f4d144adf9640fe49b8fbaac38943dc11b9a/math/src/polismath/math/conversation.clj#L843-L850
             if row['is_meta']:
-                self.meta_tids.append(row['tid'])
+                self.meta_tids.append(i)

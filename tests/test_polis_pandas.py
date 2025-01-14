@@ -74,11 +74,12 @@ def test_statement_count():
     assert client.statement_count == expected_data
 
 def test_impute_missing_values():
-    client = PolisClient()
+    client = PolisClient(is_strict_moderation=False)
     client.load_data('sample_data/votes.json')
-    matrix_with_missing = client.get_matrix()
+    client.load_data('sample_data/comments.json')
+    matrix_with_missing = client.get_matrix(is_filtered=True)
     client.impute_missing_votes()
-    matrix_without_missing = client.get_matrix()
+    matrix_without_missing = client.get_matrix(is_filtered=True)
 
     assert matrix_with_missing.isnull().values.sum() > 0
     assert matrix_without_missing.isnull().values.sum() == 0
