@@ -114,7 +114,11 @@ class PolisClient():
         return self.matrix
 
     def filter_matrix(self):
+        # Filter out moderated statements.
         self.matrix = self.matrix.filter(self.get_active_statement_ids(), axis='columns')
+        # Filter out participants with less than 7 votes.
+        # Ref: https://hyp.is/JbNMus5gEe-cQpfc6eVIlg/gwern.net/doc/sociology/2021-small.pdf
+        self.matrix = self.matrix.dropna(thresh=self.min_votes, axis='rows')
         # TODO: What about statements with no votes? E.g., 53 in oprah. Filter out? zero?
         unvoted_filter_type = 'drop' # `drop` or `zero`
         if unvoted_filter_type == 'zero':
@@ -123,9 +127,6 @@ class PolisClient():
             self.matrix = self.matrix.drop(self.get_unvoted_statement_ids(), axis='columns')
         else:
             raise ValueError('unvoted_filter_type must be `drop` or `zero`')
-
-    def run_pca(self):
-        data = self.get_matrix(is_filtered=True)
 
     # Ref: https://hyp.is/8zUyWM5fEe-uIO-J34vbkg/gwern.net/doc/sociology/2021-small.pdf
     def impute_missing_votes(self):
@@ -136,6 +137,9 @@ class PolisClient():
             index=self.matrix.index,
         )
         self.matrix = matrix_imputed
+
+    def run_pca(self):
+        data = self.get_matrix(is_filtered=True)
 
     def load_data(self, filepath):
         if filepath.endswith("votes.json"):
