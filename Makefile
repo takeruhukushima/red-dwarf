@@ -1,6 +1,9 @@
 install:
 	uv run pip install -e .
 
+debug:
+	uv run python debug.py
+
 test:
 	uv run pytest
 
