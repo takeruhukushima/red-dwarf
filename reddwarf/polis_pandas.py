@@ -1,6 +1,9 @@
 import pandas as pl # For sake of clean diffs
 from collections import defaultdict
 from sklearn.impute import SimpleImputer
+from sklearn.decomposition import PCA
+import matplotlib.pyplot as plt
+import numpy as np
 
 class PolisClient():
     def __init__(self, is_strict_moderation=None) -> None:
@@ -24,6 +27,10 @@ class PolisClient():
         self.statement_count = None
         self.participant_count = None
         self.is_strict_moderation = is_strict_moderation
+        # Also know as PCA coords, PCA components, or embeddings.
+        self.eigenvectors = []
+        # Also know as PCA explained variance.
+        self.eigenvalues = []
 
     def get_participant_row_mask(self):
         raise NotImplementedError
@@ -139,7 +146,38 @@ class PolisClient():
         self.matrix = matrix_imputed
 
     def run_pca(self):
-        data = self.get_matrix(is_filtered=True)
+        pca = PCA(n_components=self.n_components) ## pca is apparently different, it wants
+        pca = pca.fit(self.matrix.T) ## .T transposes the matrix (flips it)
+        self.eigenvectors = pca.components_.T ## isolate the coordinates and flip
+        self.eigenvalues = pca.explained_variance_
+
+    def scale_pca_polis(self):
+        num_comments = self.matrix.shape[1]
+        # TODO: Get a more rigorous user_vote_count with moderated-out statements.
+        non_na_counts = [self.get_user_vote_counts()[pid] for pid in sorted(self.get_user_vote_counts().keys()) if pid in self.matrix.index]
+        non_na_counts = pl.DataFrame(non_na_counts, index=self.matrix.index)
+        # Ref: https://hyp.is/x6nhItMMEe-v1KtYFgpOiA/gwern.net/doc/sociology/2021-small.pdf
+        # Ref: https://github.com/compdemocracy/polis/blob/15aa65c9ca9e37ecf57e2786d7d81a4bd4ad37ef/math/src/polismath/math/pca.clj#L155-L156
+        scaling_coeffs = np.sqrt(num_comments / non_na_counts).values
+        # TODO: Why is this needed? It doesn't seem to do anything...
+        # See: https://numpy.org/doc/stable/reference/generated/numpy.reshape.html
+        # Reshape scaling_coeffs to match the shape of embedding (needed for broadcasting)
+        scaling_coeffs = np.reshape(scaling_coeffs, shape=(-1, 1))
+
+        # TODO: Why was this happening?
+        # self.eigenvectors -= self.eigenvectors.mean()
+        self.eigenvectors = self.eigenvectors * scaling_coeffs
+
+    def generate_figure(self):
+        plt.figure(figsize=(7, 5), dpi=80)
+        plt.scatter(
+            x=self.eigenvectors[:,0],
+            y=self.eigenvectors[:,1],
+            s=10,
+            alpha=0.25,
+        )
+        plt.colorbar()
+        plt.show()
 
     def load_data(self, filepath):
         if filepath.endswith("votes.json"):
