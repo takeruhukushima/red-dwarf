@@ -93,3 +93,17 @@ class Loader():
         r = self.session.get(self.polis_instance_url + "/api/v3/math/pca2", params=params)
         math = json.loads(r.text)
         self.math_data = math
+
+        # TODO: Add a way to do this without math data, for example
+        # by checking until 5 empty responses in a row.
+        # This is the best place to check though, as `voters`
+        # in summary.csv omits some participants.
+        participant_count = self.math_data["n"]
+        for pid in range(participant_count):
+            params = {
+                "pid": pid,
+                "conversation_id": self.conversation_id,
+            }
+            r = self.session.get(self.polis_instance_url + "/api/v3/votes", params=params)
+            participant_votes = json.loads(r.text)
+            self.votes_data.extend(participant_votes)

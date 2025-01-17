@@ -33,8 +33,21 @@ def test_load_data_from_api_votes():
     loader = Loader(conversation_id=SMALL_CONVO_ID)
     assert len(loader.votes_data) > 0
 
+    first_vote = loader.votes_data[0]
+    expected_keys = [
+        'pid',
+        'tid',
+        'vote',
+        'weight_x_32767',
+        'modified',
+        'conversation_id'
+    ]
+    assert sorted(expected_keys) == sorted(first_vote.keys())
+
 def test_load_data_from_api_math():
     loader = Loader(conversation_id=SMALL_CONVO_ID)
+    assert len(loader.math_data) > 0
+
     # TODO: Test for presences of sub-keys.
     expected_keys = [
         'comment-priorities',
@@ -42,7 +55,8 @@ def test_load_data_from_api_math():
         'meta-tids',
         'pca',
         'group-clusters',
-        'n', 'consensus',
+        'n',
+        'consensus',
         'n-cmts',
         'repness',
         'group-aware-consensus',
@@ -58,4 +72,3 @@ def test_load_data_from_api_math():
         'math_tick',
     ]
     assert sorted(loader.math_data.keys()) == sorted(expected_keys)
-    assert len(loader.math_data) > 0
