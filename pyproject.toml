@@ -12,6 +12,7 @@ dependencies = [
     "requests-cache>=1.2.1",
     "requests>=2.32.3",
     "scikit-learn>=1.6.0",
+    "requests-ratelimiter>=0.7.0",
 ]
 
 [tool.setuptools.packages.find]

@@ -1,7 +1,5 @@
 import pytest
 from reddwarf.data_loader import Loader
-import requests_cache
-requests_cache.install_cache('test_cache')
 
 SMALL_CONVO_ID = "9knpdktubt"
 
@@ -31,13 +29,13 @@ def test_load_data_from_api_comments():
     ]
     assert sorted(first_comment.keys()) == sorted(expected_keys)
 
-@pytest.mark.skip(reason="not ready yet")
 def test_load_data_from_api_votes():
     loader = Loader(conversation_id=SMALL_CONVO_ID)
     assert len(loader.votes_data) > 0
 
 def test_load_data_from_api_math():
     loader = Loader(conversation_id=SMALL_CONVO_ID)
+    # TODO: Test for presences of sub-keys.
     expected_keys = [
         'comment-priorities',
         'user-vote-counts',
