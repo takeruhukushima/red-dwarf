@@ -78,6 +78,24 @@ class Loader():
         }
 
     def load_api_data(self):
+        self.load_api_data_comments()
+        self.load_api_data_math()
+         # TODO: Add a way to do this without math data, for example
+        # by checking until 5 empty responses in a row.
+        # This is the best place to check though, as `voters`
+        # in summary.csv omits some participants.
+        participant_count = self.math_data["n"]
+        self.load_api_data_votes(last_participant_id=participant_count-1)
+
+    def load_api_data_math(self):
+        params = {
+            "conversation_id": self.conversation_id,
+        }
+        r = self.session.get(self.polis_instance_url + "/api/v3/math/pca2", params=params)
+        math = json.loads(r.text)
+        self.math_data = math
+
+    def load_api_data_comments(self):
         params = {
             "conversation_id": self.conversation_id,
             "moderation": "true",
@@ -87,19 +105,9 @@ class Loader():
         comments = json.loads(r.text)
         self.comments_data = comments
 
-        params = {
-            "conversation_id": self.conversation_id,
-        }
-        r = self.session.get(self.polis_instance_url + "/api/v3/math/pca2", params=params)
-        math = json.loads(r.text)
-        self.math_data = math
 
-        # TODO: Add a way to do this without math data, for example
-        # by checking until 5 empty responses in a row.
-        # This is the best place to check though, as `voters`
-        # in summary.csv omits some participants.
-        participant_count = self.math_data["n"]
-        for pid in range(participant_count):
+    def load_api_data_votes(self, last_participant_id=None):
+        for pid in range(last_participant_id):
             params = {
                 "pid": pid,
                 "conversation_id": self.conversation_id,
