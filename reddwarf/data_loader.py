@@ -38,9 +38,9 @@ class Loader():
         self.polis_instance_url = "https://pol.is"
         self.conversation_id = conversation_id
 
-        self.votes_data = None
-        self.comments_data = None
-        self.math_data = None
+        self.votes_data = []
+        self.comments_data = []
+        self.math_data = {}
 
         if self.conversation_id:
             self.init_http_client()
