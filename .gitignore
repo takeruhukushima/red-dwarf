@@ -1,6 +1,8 @@
 # Don't lock, because we're a library.
 uv.lock
 
+test_cache.sqlite
+
 # Ignore python compilation files.
 *.pyc
 __pycache__
