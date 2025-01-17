@@ -62,5 +62,11 @@ class Loader():
         }
         r = self.session.get(self.polis_instance_url + "/api/v3/comments", params=params)
         comments = json.loads(r.text)
-
         self.comments_data = comments
+
+        params = {
+            "conversation_id": self.conversation_id,
+        }
+        r = self.session.get(self.polis_instance_url + "/api/v3/math/pca2", params=params)
+        math = json.loads(r.text)
+        self.math_data = math
