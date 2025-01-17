@@ -1,6 +1,7 @@
 import json
 from fake_useragent import UserAgent
 from urllib3.util import ssl_
+from datetime import timedelta
 from requests import Session
 from requests.adapters import HTTPAdapter
 from requests_cache import CacheMixin
@@ -61,6 +62,7 @@ class Loader():
             # Source: https://github.com/JWCook/requests-ratelimiter/tree/main?tab=readme-ov-file#custom-session-example-requests-cache
             self.session = CachedLimiterSession(
                 per_second=5,
+                expire_after=timedelta(hours=1),
                 cache_name="test_cache.sqlite",
                 bucket_class=SQLiteBucket,
                 bucket_kwargs={
