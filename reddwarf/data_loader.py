@@ -1,7 +1,10 @@
 import requests
 import json
+from fake_useragent import UserAgent
 from requests.adapters import HTTPAdapter
 from urllib3.util import ssl_
+
+ua = UserAgent()
 
 class CloudflareBypassHTTPAdapter(HTTPAdapter):
     """
@@ -48,7 +51,7 @@ class Loader():
         adapter = CloudflareBypassHTTPAdapter()
         self.session.mount(self.polis_instance_url, adapter)
         self.session.headers = {
-            'User-Agent': 'x',
+            'User-Agent': ua.random,
         }
 
     def load_api_data(self):
