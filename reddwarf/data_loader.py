@@ -1,4 +1,5 @@
 import json
+import os
 from fake_useragent import UserAgent
 from urllib3.util import ssl_
 from datetime import timedelta
@@ -43,10 +44,11 @@ class CloudflareBypassHTTPAdapter(HTTPAdapter):
 
 class Loader():
 
-    def __init__(self, conversation_id=None, is_cache_enabled=True):
+    def __init__(self, conversation_id=None, is_cache_enabled=True, output_dir=None):
         self.polis_instance_url = "https://pol.is"
         self.conversation_id = conversation_id
         self.is_cache_enabled = is_cache_enabled
+        self.output_dir = output_dir
 
         self.votes_data = []
         self.comments_data = []
@@ -55,6 +57,25 @@ class Loader():
         if self.conversation_id:
             self.init_http_client()
             self.load_api_data()
+
+        if self.output_dir:
+            self.dump_data(self.output_dir)
+
+    def dump_data(self, output_dir):
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir)
+
+        if self.votes_data:
+            with open(output_dir + "/votes.json", 'w') as f:
+                f.write(json.dumps(self.votes_data, indent=4))
+
+        if self.comments_data:
+            with open(output_dir + "/comments.json", 'w') as f:
+                f.write(json.dumps(self.comments_data, indent=4))
+
+        if self.math_data:
+            with open(output_dir + "/math.json", 'w') as f:
+                f.write(json.dumps(self.math_data, indent=4))
 
     def init_http_client(self):
         # Throttle requests, but disable when response is already cached.

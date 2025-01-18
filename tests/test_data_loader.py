@@ -72,3 +72,14 @@ def test_load_data_from_api_math():
         'math_tick',
     ]
     assert sorted(loader.math_data.keys()) == sorted(expected_keys)
+
+def test_load_data_from_api_and_dump_files(tmp_path):
+    votes_path = tmp_path / "votes.json"
+    comments_path = tmp_path / "comments.json"
+    math_path = tmp_path / "math.json"
+
+    loader = Loader(conversation_id=SMALL_CONVO_ID, output_dir=str(tmp_path))
+
+    assert votes_path.exists() == True
+    assert comments_path.exists() == True
+    assert math_path.exists() == True
