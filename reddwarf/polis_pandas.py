@@ -4,9 +4,11 @@ from sklearn.impute import SimpleImputer
 from sklearn.decomposition import PCA
 import matplotlib.pyplot as plt
 import numpy as np
+from reddwarf.data_loader import Loader
 
 class PolisClient():
     def __init__(self, is_strict_moderation=None) -> None:
+        self.data_loader = None
         self.n_components = 2
         # Ref: https://hyp.is/8zUyWM5fEe-uIO-J34vbkg/gwern.net/doc/sociology/2021-small.pdf
         self.min_votes = 7
@@ -165,37 +167,112 @@ class PolisClient():
         scaling_coeffs = np.reshape(scaling_coeffs, shape=(-1, 1))
 
         # TODO: Why was this happening?
-        # self.eigenvectors -= self.eigenvectors.mean()
+        self.eigenvectors -= self.eigenvectors.mean()
         self.eigenvectors = self.eigenvectors * scaling_coeffs
+        self.eigenvectors = pl.DataFrame(self.eigenvectors, index=self.matrix.index, columns=["x", "y"])
 
     def generate_figure(self):
         plt.figure(figsize=(7, 5), dpi=80)
         plt.scatter(
-            x=self.eigenvectors[:,0],
-            y=self.eigenvectors[:,1],
+            x=self.eigenvectors.loc[:,"x"],
+            y=self.eigenvectors.loc[:,"y"],
             s=10,
             alpha=0.25,
         )
         plt.colorbar()
         plt.show()
 
-    def load_data(self, filepath):
-        if filepath.endswith("votes.json"):
+
+    def build_base_clusters(self):
+        # TODO: Is this participant_count the correct one?
+        n_clusters=min(self.base_cluster_count, self.participant_count)
+        # Ref: Polis math values, base-iters
+        print(self.eigenvectors)
+        cluster_labels, cluster_centers = self.run_kmeans(self.eigenvectors, n_clusters=n_clusters)
+        # ptpt_to_cluster_mapping = dict(zip(self.matrix.index, range(len(kmeans.labels_))))
+        # cluster_to_ptpt_mapping = {v: k for k, v in ptpt_to_cluster_mapping.items()}
+        participant_df = pl.DataFrame.from_dict(
+            {
+                'participant_id': self.matrix.index,
+                'cluster_id': cluster_labels.tolist(),
+            },
+        )
+        cluster_df = participant_df.groupby('cluster_id')['participant_id'].apply(list).reset_index(name="participant_ids")
+        self.base_clusters['id'] = list(range(100))
+        self.base_clusters['members'] = cluster_df["participant_ids"].values.tolist()
+        self.base_clusters['x'] = [xy[0] for xy in cluster_centers.tolist()]
+        self.base_clusters['y'] = [xy[1] for xy in cluster_centers.tolist()]
+
+    def run_kmeans(self, data, n_clusters=2):
+        kmeans = KMeans(n_clusters=n_clusters, random_state=42, n_init="auto").fit(data)
+        return kmeans.labels_, kmeans.cluster_centers_
+
+    def find_optimal_k(self):
+        K_RANGE = range(2, 6)
+        K_star = 0
+        silhoutte_star = -np.inf
+
+        def plot_embedding_with_clusters(embedding_,labels_):
+            print("Plotting PCA embeddings with K-means, K="+str(np.max(labels_)+1))
+            fig, ax = plt.subplots(figsize=(7,5))
+            plt.sca(ax)
+            plt.axhline(y=0, color='k', linestyle='-', linewidth=0.5)
+            plt.axvline(x=0, color='k', linestyle='-', linewidth=0.5)
+            plt.gca().invert_yaxis()
+            # Add labels for each point
+            for i, _ in enumerate(embedding_.T):
+                row = embedding_.iloc[i,:]
+                plt.annotate(row.name,
+                    (row["x"], row["y"]),
+                    xytext=(5, 5),
+                    textcoords='offset points')
+            ax.scatter(
+                x=embedding_.iloc[:,0],
+                y=embedding_.iloc[:,1],
+                c=labels_,
+                cmap="tab20",
+                s=5
+            )
+            plt.show()
+
+        for K in K_RANGE:
+            cluster_labels, _ = self.run_kmeans(self.eigenvectors, n_clusters=K)
+            silhouette_K = silhouette_score(self.eigenvectors, cluster_labels)
+            print(f"{K=}, {silhouette_K=}")
+            if silhouette_K >= silhoutte_star:
+                K_star = K
+                silhoutte_star = silhouette_K
+                clusters_K_star = cluster_labels
+        print(f"Optimal clusters for K={K_star}")
+        plot_embedding_with_clusters(self.eigenvectors, clusters_K_star)
+
+    def load_data(self, filepath=None, conversation_id=None):
+        if conversation_id:
+            self.data_loader = Loader(conversation_id=conversation_id)
+            self.load_comments_data(data=self.data_loader.comments_data)
+            self.load_votes_data(data=self.data_loader.votes_data)
+        elif filepath.endswith("votes.json"):
             self.load_votes_data(filepath)
         elif filepath.endswith("comments.json"):
             self.load_comments_data(filepath)
         else:
             raise ValueError("Unknown file type")
 
-    def load_votes_data(self, filepath):
-        votes_df = pl.read_json(filepath, dtype={'modified': 'int64'})
+    def load_votes_data(self, filepath=None, data=None):
+        if filepath:
+            votes_df = pl.read_json(filepath, dtype={'modified': 'int64'})
+        elif data:
+            votes_df = pl.DataFrame.from_records(data).astype({'modified': 'int64'})
         # Convert pandas timestamp (nanoseconds) into unix time (milliseconds).
         # See: https://stackoverflow.com/a/52450463
         votes_df['modified'] = [(t // 10**6) for t in votes_df['modified']]
         self.add_votes_batch(votes_df)
 
-    def load_comments_data(self, filepath):
-        self.comments_df = pl.read_json(filepath).set_index('tid')
+    def load_comments_data(self, filepath=None, data=None):
+        if filepath:
+            self.comments_df = pl.read_json(filepath).set_index('tid')
+        elif data:
+            self.comments_df = pl.DataFrame.from_records(data).set_index('tid')
         for i, row in self.comments_df.iterrows():
             # TODO: Why does is_meta make this mod-in.
             # Maybe I don't understand what mod-in does...
