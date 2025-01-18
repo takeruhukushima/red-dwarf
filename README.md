@@ -25,20 +25,10 @@ Code that aspires to embody and support democratic values should be...
 
 ## Usage
 
-```py
-from red_dwarf.polis import PolisClient
+See [`docs/example-usage.ipynb`][notebook]
 
-client = PolisClient()
-# Source: https://github.com/compdemocracy/openData/blob/master/scoop-hivemind.ubi/votes.csv
-client.load_data('data/ubi.4yy3sh84js/votes.csv')
-# Source: https://pol.is/api/v3/comments?conversation_id=6bkf4ujff9&moderation=true&include_voting_patterns=true
-client.load_data('data/ubi.4yy3sh84js/comments.json')
-print(client.get_participant_row_mask())
-print(client.get_statement_col_mask())
-print(client.vote_matrix)
-client.run_pca()
-client.run_clustering()
-```
+[![screen of the sample jupyter notebook](/docs/notebook-screenshot.png)][notebook]
 
 <!-- Links -->
    [stellarpunk]: https://www.youtube.com/watch?v=opnkQVZrhAw
+   [notebook]: /docs/example-usage.ipynb
