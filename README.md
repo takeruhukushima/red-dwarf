@@ -1,6 +1,6 @@
 # Red Dwarf
 
-A _dim_ensional _red_uction library for [stellarpunk][] democracy into the long haul.
+A <em>DIM</em>ensional <em>RED</em>uction library for [stellarpunk][] democracy into the long haul.
 
 > Stars are fires that burn for thousands of years. Some of them burn slow and
 > long, like red dwarfs. Others-blue giants-burn their fuel so fast they shine
