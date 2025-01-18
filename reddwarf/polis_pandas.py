@@ -164,7 +164,9 @@ class PolisClient():
         # TODO: Why is this needed? It doesn't seem to do anything...
         # See: https://numpy.org/doc/stable/reference/generated/numpy.reshape.html
         # Reshape scaling_coeffs to match the shape of embedding (needed for broadcasting)
-        scaling_coeffs = np.reshape(scaling_coeffs, shape=(-1, 1))
+        scaling_coeffs = np.reshape(scaling_coeffs, (-1, 1))
+        # More explicit to read, but seemingly doesn't work with numpy version on Google CoLab
+        #scaling_coeffs = np.reshape(scaling_coeffs, shape=(-1, 1))
 
         # TODO: Why was this happening?
         self.eigenvectors -= self.eigenvectors.mean()
@@ -252,9 +254,9 @@ class PolisClient():
             self.load_comments_data(data=self.data_loader.comments_data)
             self.load_votes_data(data=self.data_loader.votes_data)
         elif filepath.endswith("votes.json"):
-            self.load_votes_data(filepath)
+            self.load_votes_data(filepath=filepath)
         elif filepath.endswith("comments.json"):
-            self.load_comments_data(filepath)
+            self.load_comments_data(filepath=filepath)
         else:
             raise ValueError("Unknown file type")
 
