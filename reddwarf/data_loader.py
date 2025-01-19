@@ -134,7 +134,7 @@ class Loader():
             item["vote"] = -item["vote"]
 
     def load_api_data_votes(self, last_participant_id=None):
-        for pid in range(last_participant_id):
+        for pid in range(0, last_participant_id+1):
             params = {
                 "pid": pid,
                 "conversation_id": self.conversation_id,
