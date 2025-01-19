@@ -128,6 +128,10 @@ class Loader():
         comments = json.loads(r.text)
         self.comments_data = comments
 
+    def fix_participant_vote_sign(self):
+        """For data coming from the API, vote signs are inverted (e.g., agree is -1)"""
+        for item in self.votes_data:
+            item["vote"] = -item["vote"]
 
     def load_api_data_votes(self, last_participant_id=None):
         for pid in range(last_participant_id):
@@ -138,3 +142,5 @@ class Loader():
             r = self.session.get(self.polis_instance_url + "/api/v3/votes", params=params)
             participant_votes = json.loads(r.text)
             self.votes_data.extend(participant_votes)
+
+        self.fix_participant_vote_sign()
