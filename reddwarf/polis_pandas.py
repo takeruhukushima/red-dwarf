@@ -18,7 +18,7 @@ class PolisClient():
         # (e.g., for not meeting vote threshold), to reproduce bugs in Polis codebase algorithms.
         self.keep_participant_ids = []
         # Ref: https://hyp.is/MV0Iws5fEe-k9BdY6UR1VQ/gwern.net/doc/sociology/2021-small.pdf
-        self.vote_matrix = None
+        self.matrix = None
         # Ref: https://gist.github.com/patcon/fd9079a5fbcd533160f8ae211e975307#file-math-pca2-json-L2
         # Ref: https://github.com/compdemocracy/polis/blob/6d04f4d144adf9640fe49b8fbaac38943dc11b9a/math/src/polismath/math/conversation.clj#L217-L225
         self.user_vote_counts = defaultdict(int)
