@@ -74,7 +74,7 @@ class Loader():
                 f.write(json.dumps(self.comments_data, indent=4))
 
         if self.math_data:
-            with open(output_dir + "/math.json", 'w') as f:
+            with open(output_dir + "/math-pca2.json", 'w') as f:
                 f.write(json.dumps(self.math_data, indent=4))
 
     def init_http_client(self):
