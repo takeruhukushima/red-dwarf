@@ -215,6 +215,9 @@ class PolisClient():
         self.base_clusters['x'] = [xy[0] for xy in cluster_centers.tolist()]
         self.base_clusters['y'] = [xy[1] for xy in cluster_centers.tolist()]
 
+    def load_base_clusters_from_math(self):
+        self.base_clusters = self.data_loader.math_data["base-clusters"]
+
     def run_kmeans(self, data, n_clusters=2):
         kmeans = KMeans(n_clusters=n_clusters, random_state=42, n_init="auto").fit(data)
         return kmeans.labels_, kmeans.cluster_centers_
