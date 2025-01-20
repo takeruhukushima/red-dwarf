@@ -129,8 +129,7 @@ class Loader():
         r = self.session.get(self.polis_instance_url + "/api/v3/reportExport/{}/comments.csv".format(self.report_id))
         comments_csv = r.text
 
-        reader = csv.DictReader(StringIO(comments_csv), delimiter=',')
-        print(reader.fieldnames)
+        reader = csv.DictReader(StringIO(comments_csv))
         COMMENT_FIELD_MAPPING_API_TO_CSV = {
             "created": "timestamp",
             None: "datetime",

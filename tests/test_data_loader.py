@@ -189,3 +189,10 @@ def test_load_data_from_csv_export_comments():
         'datetime',
     ]
     assert sorted(first_comment.keys()) == sorted(expected_keys)
+
+def test_load_data_from_api_matches_csv_export():
+    api_loader = Loader(report_id=SMALL_CONVO_REPORT_ID, data_source="api")
+    csv_loader = Loader(report_id=SMALL_CONVO_REPORT_ID, data_source="csv_export")
+
+    assert len(api_loader.comments_data) == len(csv_loader.comments_data)
+    # assert len(api_loader.votes_data) == len(csv_loader.votes_data)
