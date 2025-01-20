@@ -53,6 +53,7 @@ class Loader():
         self.votes_data = []
         self.comments_data = []
         self.math_data = {}
+        self.conversation_data = {}
 
         if self.conversation_id:
             self.init_http_client()
@@ -76,6 +77,11 @@ class Loader():
         if self.math_data:
             with open(output_dir + "/math-pca2.json", 'w') as f:
                 f.write(json.dumps(self.math_data, indent=4))
+
+        if self.conversation_data:
+            with open(output_dir + "/conversation.json", 'w') as f:
+                f.write(json.dumps(self.conversation_data, indent=4))
+
 
     def init_http_client(self):
         # Throttle requests, but disable when response is already cached.
@@ -101,6 +107,7 @@ class Loader():
         }
 
     def load_api_data(self):
+        self.load_api_data_conversation()
         self.load_api_data_comments()
         self.load_api_data_math()
          # TODO: Add a way to do this without math data, for example
@@ -109,6 +116,14 @@ class Loader():
         # in summary.csv omits some participants.
         participant_count = self.math_data["n"]
         self.load_api_data_votes(last_participant_id=participant_count-1)
+
+    def load_api_data_conversation(self):
+        params = {
+            "conversation_id": self.conversation_id,
+        }
+        r = self.session.get(self.polis_instance_url + "/api/v3/conversations", params=params)
+        convo = json.loads(r.text)
+        self.conversation_data = convo
 
     def load_api_data_math(self):
         params = {
