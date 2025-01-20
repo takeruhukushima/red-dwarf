@@ -149,3 +149,43 @@ def test_load_data_from_api_with_report_id_without_conflict():
 def test_load_data_from_api_with_report_id_with_conflict():
     with pytest.raises(ValueError):
         Loader(report_id=SMALL_CONVO_REPORT_ID, conversation_id="conflict-id")
+
+def test_load_data_from_csv_export_without_report_id():
+    with pytest.raises(ValueError) as e_info:
+        Loader(conversation_id=SMALL_CONVO_ID, data_source="csv_export")
+    assert "Cannot determine CSV export URL without report_id" == str(e_info.value)
+
+def test_load_data_from_unknown_data_source():
+    with pytest.raises(ValueError) as e_info:
+        Loader(conversation_id=SMALL_CONVO_ID, data_source="does-not-exist")
+    assert "Unknown data_source: does-not-exist" == str(e_info.value)
+
+def test_load_data_from_csv_export_comments():
+    loader = Loader(report_id=SMALL_CONVO_REPORT_ID, data_source="csv_export")
+    assert len(loader.comments_data) > 0
+
+    first_comment = loader.comments_data[0]
+    expected_keys = [
+        # For now, commenting out fields that are only available in API.
+        'txt',
+        'tid',
+        'created',
+        # 'tweet_id',
+        # 'quote_src_url',
+        # 'is_seed',
+        # 'is_meta',
+        # 'lang',
+        'pid',
+        # 'velocity',
+        'mod',
+        # 'active',
+        'agree_count',
+        'disagree_count',
+        # 'pass_count',
+        # 'count',
+        # 'conversation_id'
+
+        # And one field that's only in CSV.
+        'datetime',
+    ]
+    assert sorted(first_comment.keys()) == sorted(expected_keys)

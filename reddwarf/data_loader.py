@@ -7,6 +7,8 @@ from requests import Session
 from requests.adapters import HTTPAdapter
 from requests_cache import CacheMixin
 from requests_ratelimiter import LimiterMixin, SQLiteBucket, LimiterSession
+import csv
+from io import StringIO
 
 ua = UserAgent()
 
@@ -44,20 +46,27 @@ class CloudflareBypassHTTPAdapter(HTTPAdapter):
 
 class Loader():
 
-    def __init__(self, conversation_id=None, report_id=None, is_cache_enabled=True, output_dir=None):
+    def __init__(self, conversation_id=None, report_id=None, is_cache_enabled=True, output_dir=None, data_source="api"):
         self.polis_instance_url = "https://pol.is"
         self.conversation_id = conversation_id
         self.report_id = report_id
         self.is_cache_enabled = is_cache_enabled
         self.output_dir = output_dir
+        self.data_source = data_source
 
         self.votes_data = []
         self.comments_data = []
         self.math_data = {}
         self.conversation_data = {}
+
         if self.conversation_id or self.report_id:
             self.init_http_client()
-            self.load_api_data()
+            if self.data_source == "api":
+                self.load_api_data()
+            elif self.data_source == "csv_export":
+                self.load_remote_export_data()
+            else:
+                raise ValueError("Unknown data_source: {}".format(self.data_source))
 
         if self.output_dir:
             self.dump_data(self.output_dir)
@@ -105,6 +114,71 @@ class Loader():
         self.session.headers = {
             'User-Agent': ua.random,
         }
+
+    def load_remote_export_data(self):
+        if not self.report_id:
+            raise ValueError("Cannot determine CSV export URL without report_id")
+
+        self.load_remote_export_data_comments()
+        # self.load_remote_export_data_votes()
+        # self.load_remote_export_data_summary()
+        # self.load_remote_export_data_participant_votes()
+        # self.load_remote_export_data_comment_groups()
+
+    def load_remote_export_data_comments(self):
+        r = self.session.get(self.polis_instance_url + "/api/v3/reportExport/{}/comments.csv".format(self.report_id))
+        comments_csv = r.text
+
+        reader = csv.DictReader(StringIO(comments_csv), delimiter=',')
+        print(reader.fieldnames)
+        COMMENT_FIELD_MAPPING_API_TO_CSV = {
+            "created": "timestamp",
+            None: "datetime",
+            "tid": "comment-id",
+            "pid": "author-id",
+            "agree_count": "agrees",
+            "disagree_count": "disagrees",
+            "mod": "moderated",
+            "txt": "comment-body",
+            "is_seed": "is-seed",
+            "is_meta": "is-meta",
+            "tweet_id": None,
+            "quote_src_url": None,
+            "lang": None,
+            "velocity": None,
+            "active": None,
+            "pass_count": None,
+            "count": None,
+            "conversation_id": None,
+        }
+        COMMENT_FIELD_MAPPING_CSV_TO_API = {value: key for key, value in COMMENT_FIELD_MAPPING_API_TO_CSV.items()}
+        # Make to API fieldnames if a mapping exists, otherwise keep CSV fieldname.
+        reader.fieldnames = [(COMMENT_FIELD_MAPPING_CSV_TO_API[f] if COMMENT_FIELD_MAPPING_CSV_TO_API[f] else f) for f in reader.fieldnames]
+        self.comments_data = list(reader)
+
+    def load_remote_export_data_votes(self):
+        # r = self.session.get(self.polis_instance_url + "/api/v3/reportExport/{}/votes.csv".format(self.report_id))
+        # votes_csv = r.text
+        # print(votes_csv)
+        raise NotImplementedError
+
+    def load_remote_export_data_summary(self):
+        # r = self.session.get(self.polis_instance_url + "/api/v3/reportExport/{}/summary.csv".format(self.report_id))
+        # summary_csv = r.text
+        # print(summary_csv)
+        raise NotImplementedError
+
+    def load_remote_export_data_participant_votes(self):
+        # r = self.session.get(self.polis_instance_url + "/api/v3/reportExport/{}/participant-votes.csv".format(self.report_id))
+        # participant_votes_csv = r.text
+        # print(participant_votes_csv)
+        raise NotImplementedError
+
+    def load_remote_export_data_comment_groups(self):
+        # r = self.session.get(self.polis_instance_url + "/api/v3/reportExport/{}/comment-groups.csv".format(self.report_id))
+        # comment_groups_csv = r.text
+        # print(comment_groups_csv)
+        raise NotImplementedError
 
     def load_api_data(self):
         if self.report_id:
