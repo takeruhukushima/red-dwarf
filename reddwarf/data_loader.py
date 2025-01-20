@@ -121,6 +121,8 @@ class Loader():
 
         self.load_remote_export_data_comments()
         self.load_remote_export_data_votes()
+        # When multiple votes (same tid and pid), keep only most recent (vs first).
+        self.filter_duplicate_votes(keep="recent")
         # self.load_remote_export_data_summary()
         # self.load_remote_export_data_participant_votes()
         # self.load_remote_export_data_comment_groups()
@@ -171,8 +173,6 @@ class Loader():
         VOTE_FIELD_MAPPING_CSV_TO_API = {value: key for key, value in VOTE_FIELD_MAPPING_API_TO_CSV.items()}
         reader.fieldnames = [(VOTE_FIELD_MAPPING_CSV_TO_API[f] if VOTE_FIELD_MAPPING_CSV_TO_API[f] else f) for f in reader.fieldnames]
         self.votes_data = list(reader)
-        # When multiple votes (same tid and pid), keep only most recent (vs first).
-        self.filter_duplicate_votes(keep="recent")
 
     def filter_duplicate_votes(self, keep="recent"):
         if keep not in {"recent", "first"}:
