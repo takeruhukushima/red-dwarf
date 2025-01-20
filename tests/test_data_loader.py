@@ -1,7 +1,10 @@
 import pytest
 from reddwarf.data_loader import Loader
 
+# 3 groups, 28 ptpts (24 grouped), 63 statements.
+# See: https://pol.is/report/r5hr48j8y8mpcffk7crmk
 SMALL_CONVO_ID = "9knpdktubt"
+SMALL_CONVO_REPORT_ID = "r5hr48j8y8mpcffk7crmk"
 
 def test_load_data_from_api_conversation():
     loader = Loader(conversation_id=SMALL_CONVO_ID)
@@ -95,14 +98,54 @@ def test_load_data_from_api_math():
     assert sorted(loader.math_data.keys()) == sorted(expected_keys)
 
 def test_load_data_from_api_and_dump_files(tmp_path):
+    Loader(conversation_id=SMALL_CONVO_ID, output_dir=str(tmp_path))
+
     convo_path = tmp_path / "conversation.json"
     votes_path = tmp_path / "votes.json"
     comments_path = tmp_path / "comments.json"
     math_path = tmp_path / "math-pca2.json"
 
-    Loader(conversation_id=SMALL_CONVO_ID, output_dir=str(tmp_path))
-
     assert convo_path.exists() == True
     assert votes_path.exists() == True
     assert comments_path.exists() == True
     assert math_path.exists() == True
+
+def test_load_data_from_api_report():
+    loader = Loader(report_id=SMALL_CONVO_REPORT_ID)
+    assert len(loader.report_data) > 0
+
+    expected_keys = [
+        'report_id',
+        'created',
+        'modified',
+        'label_x_neg',
+        'label_y_neg',
+        'label_y_pos',
+        'label_x_pos',
+        'label_group_0',
+        'label_group_1',
+        'label_group_2',
+        'label_group_3',
+        'label_group_4',
+        'label_group_5',
+        'label_group_6',
+        'label_group_7',
+        'label_group_8',
+        'label_group_9',
+        'report_name',
+        'conversation_id'
+    ]
+    assert sorted(loader.report_data.keys()) == sorted(expected_keys)
+
+def test_load_data_from_api_with_report_id_only():
+    loader = Loader(report_id=SMALL_CONVO_REPORT_ID)
+    # Just test one to see if conversation_id determined properly and loaded rest.
+    assert len(loader.votes_data) > 0
+
+def test_load_data_from_api_with_report_id_without_conflict():
+    loader = Loader(report_id=SMALL_CONVO_REPORT_ID, conversation_id=SMALL_CONVO_ID)
+    assert len(loader.votes_data) > 0
+
+def test_load_data_from_api_with_report_id_with_conflict():
+    with pytest.raises(ValueError):
+        Loader(report_id=SMALL_CONVO_REPORT_ID, conversation_id="conflict-id")

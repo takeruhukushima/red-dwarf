@@ -44,9 +44,10 @@ class CloudflareBypassHTTPAdapter(HTTPAdapter):
 
 class Loader():
 
-    def __init__(self, conversation_id=None, is_cache_enabled=True, output_dir=None):
+    def __init__(self, conversation_id=None, report_id=None, is_cache_enabled=True, output_dir=None):
         self.polis_instance_url = "https://pol.is"
         self.conversation_id = conversation_id
+        self.report_id = report_id
         self.is_cache_enabled = is_cache_enabled
         self.output_dir = output_dir
 
@@ -54,8 +55,7 @@ class Loader():
         self.comments_data = []
         self.math_data = {}
         self.conversation_data = {}
-
-        if self.conversation_id:
+        if self.conversation_id or self.report_id:
             self.init_http_client()
             self.load_api_data()
 
@@ -107,6 +107,13 @@ class Loader():
         }
 
     def load_api_data(self):
+        if self.report_id:
+            self.load_api_data_report()
+            convo_id_from_report_id = self.report_data["conversation_id"]
+            if self.conversation_id and (self.conversation_id != convo_id_from_report_id):
+                raise ValueError("report_id conflicts with conversation_id")
+            self.conversation_id = convo_id_from_report_id
+
         self.load_api_data_conversation()
         self.load_api_data_comments()
         self.load_api_data_math()
@@ -116,6 +123,14 @@ class Loader():
         # in summary.csv omits some participants.
         participant_count = self.math_data["n"]
         self.load_api_data_votes(last_participant_id=participant_count-1)
+
+    def load_api_data_report(self):
+        params = {
+            "report_id": self.report_id,
+        }
+        r = self.session.get(self.polis_instance_url + "/api/v3/reports", params=params)
+        reports = json.loads(r.text)
+        self.report_data = reports[0]
 
     def load_api_data_conversation(self):
         params = {
