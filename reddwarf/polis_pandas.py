@@ -14,6 +14,9 @@ class PolisClient():
         self.min_votes = 7
         self.votes = []
         self.comments_df = []
+        # We sometimes want to keep some participant IDs that would otherwise be removed
+        # (e.g., for not meeting vote threshold), to reproduce bugs in Polis codebase algorithms.
+        self.keep_participant_ids = []
         # Ref: https://hyp.is/MV0Iws5fEe-k9BdY6UR1VQ/gwern.net/doc/sociology/2021-small.pdf
         self.vote_matrix = None
         # Ref: https://gist.github.com/patcon/fd9079a5fbcd533160f8ae211e975307#file-math-pca2-json-L2
@@ -125,9 +128,16 @@ class PolisClient():
     def filter_matrix(self):
         # Filter out moderated statements.
         self.matrix = self.matrix.filter(self.get_active_statement_ids(), axis='columns')
-        # Filter out participants with less than 7 votes.
+        # Filter out participants with less than 7 votes (keeping IDs we're forced to)
         # Ref: https://hyp.is/JbNMus5gEe-cQpfc6eVIlg/gwern.net/doc/sociology/2021-small.pdf
-        self.matrix = self.matrix.dropna(thresh=self.min_votes, axis='rows')
+        participant_ids_meeting_vote_thresh = self.matrix[self.matrix.count(axis="columns") >= self.min_votes].index.to_list()
+        participant_ids_in = participant_ids_meeting_vote_thresh + self.keep_participant_ids
+        participant_ids_in_unique = list(set(participant_ids_in))
+        self.matrix = self.matrix.filter(participant_ids_in_unique, axis='rows')
+        # This is otherwise the more efficient way, but we want to keep some
+        # to troubleshoot bugs in upsteam Polis math.
+        # self.matrix = self.matrix.dropna(thresh=self.min_votes, axis='rows')
+
         # TODO: What about statements with no votes? E.g., 53 in oprah. Filter out? zero?
         unvoted_filter_type = 'drop' # `drop` or `zero`
         if unvoted_filter_type == 'zero':

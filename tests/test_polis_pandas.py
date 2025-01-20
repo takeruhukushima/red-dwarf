@@ -85,6 +85,23 @@ def test_impute_missing_values():
     assert matrix_without_missing.isnull().values.sum() == 0
     assert matrix_with_missing.shape == matrix_without_missing.shape
 
+def test_filtered_participants_grouped():
+    with open('sample_data/below-100-ptpts/math-pca2.json', 'r') as file:
+        expected_data = json.load(file)['in-conv']
+
+    client = PolisClient(is_strict_moderation=False)
+    client.load_data(filepath='sample_data/below-100-ptpts/votes.json')
+    client.load_data(filepath='sample_data/below-100-ptpts/comments.json')
+
+    unaligned_matrix = client.get_matrix(is_filtered=True)
+    assert sorted(unaligned_matrix.index.to_list()) != sorted(expected_data)
+
+    client.matrix = None
+    client.keep_participant_ids = [ 5, 10, 11, 14 ]
+    aligned_matrix = client.get_matrix(is_filtered=True)
+    assert sorted(aligned_matrix.index.to_list()) == sorted(expected_data)
+
+
 # def test_group_cluster_count():
 #     with open('sample_data/math-pca2.json', 'r') as file:
 #         expected_data = json.load(file)['group-clusters']
