@@ -190,9 +190,28 @@ def test_load_data_from_csv_export_comments():
     ]
     assert sorted(first_comment.keys()) == sorted(expected_keys)
 
+def test_load_data_from_csv_export_votes():
+    loader = Loader(report_id=SMALL_CONVO_REPORT_ID, data_source="csv_export")
+    assert len(loader.votes_data) > 0
+
+    expected_keys = [
+        # For now, commenting out fields that are only available in API.
+        'pid',
+        'tid',
+        'vote',
+        # 'weight_x_32767',
+        'modified',
+        # 'conversation_id'
+
+        # And one field that's only in CSV.
+        'datetime',
+    ]
+    first_vote = loader.votes_data[0]
+    assert sorted(first_vote.keys()) == sorted(expected_keys)
+
 def test_load_data_from_api_matches_csv_export():
     api_loader = Loader(report_id=SMALL_CONVO_REPORT_ID, data_source="api")
     csv_loader = Loader(report_id=SMALL_CONVO_REPORT_ID, data_source="csv_export")
 
     assert len(api_loader.comments_data) == len(csv_loader.comments_data)
-    # assert len(api_loader.votes_data) == len(csv_loader.votes_data)
+    assert len(api_loader.votes_data) == len(csv_loader.votes_data)

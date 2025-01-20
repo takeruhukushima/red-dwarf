@@ -120,7 +120,7 @@ class Loader():
             raise ValueError("Cannot determine CSV export URL without report_id")
 
         self.load_remote_export_data_comments()
-        # self.load_remote_export_data_votes()
+        self.load_remote_export_data_votes()
         # self.load_remote_export_data_summary()
         # self.load_remote_export_data_participant_votes()
         # self.load_remote_export_data_comment_groups()
@@ -156,10 +156,45 @@ class Loader():
         self.comments_data = list(reader)
 
     def load_remote_export_data_votes(self):
-        # r = self.session.get(self.polis_instance_url + "/api/v3/reportExport/{}/votes.csv".format(self.report_id))
-        # votes_csv = r.text
-        # print(votes_csv)
-        raise NotImplementedError
+        r = self.session.get(self.polis_instance_url + "/api/v3/reportExport/{}/votes.csv".format(self.report_id))
+        votes_csv = r.text
+        reader = csv.DictReader(StringIO(votes_csv))
+        VOTE_FIELD_MAPPING_API_TO_CSV = {
+            "modified": "timestamp",
+            None: "datetime",
+            "tid": "comment-id",
+            "pid": "voter-id",
+            "vote": "vote",
+            "conversation_id": None,
+            "weight_x_32767": None,
+        }
+        VOTE_FIELD_MAPPING_CSV_TO_API = {value: key for key, value in VOTE_FIELD_MAPPING_API_TO_CSV.items()}
+        reader.fieldnames = [(VOTE_FIELD_MAPPING_CSV_TO_API[f] if VOTE_FIELD_MAPPING_CSV_TO_API[f] else f) for f in reader.fieldnames]
+        self.votes_data = list(reader)
+        # When multiple votes (same tid and pid), keep only most recent (vs first).
+        self.filter_duplicate_votes(keep="recent")
+
+    def filter_duplicate_votes(self, keep="recent"):
+        if keep not in {"recent", "first"}:
+            raise ValueError("Invalid value for 'keep'. Use 'recent' or 'first'.")
+
+        # Sort by modified time (descending for "recent", ascending for "first")
+        if keep == "recent":
+            reverse_sort = True
+        else:
+            reverse_sort = False
+        sorted_votes = sorted(self.votes_data, key=lambda x: x["modified"], reverse=reverse_sort)
+
+        filtered_dict = {}
+        for v in sorted_votes:
+            key = (v["pid"], v["tid"])
+            if key not in filtered_dict:
+                filtered_dict[key] = v
+            else:
+                print("Removing duplicate vote: {}".format(v))
+
+        self.votes_data = list(filtered_dict.values())
+
 
     def load_remote_export_data_summary(self):
         # r = self.session.get(self.polis_instance_url + "/api/v3/reportExport/{}/summary.csv".format(self.report_id))
