@@ -281,11 +281,12 @@ class PolisClient():
     def load_votes_data(self, filepath=None, data=None):
         if filepath:
             votes_df = pl.read_json(filepath, dtype={'modified': 'int64'})
+            # Convert pandas timestamp (nanoseconds) into unix time (milliseconds).
+            # See: https://stackoverflow.com/a/52450463
+            votes_df['modified'] = [(t // 10**6) for t in votes_df['modified']]
         elif data:
             votes_df = pl.DataFrame.from_records(data).astype({'modified': 'int64'})
-        # Convert pandas timestamp (nanoseconds) into unix time (milliseconds).
-        # See: https://stackoverflow.com/a/52450463
-        votes_df['modified'] = [(t // 10**6) for t in votes_df['modified']]
+
         self.add_votes_batch(votes_df)
 
     def load_comments_data(self, filepath=None, data=None):
