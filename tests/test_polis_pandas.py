@@ -1,5 +1,6 @@
 import json
 from reddwarf.polis_pandas import PolisClient
+import math
 
 def test_user_vote_counts():
     # Load the expected data from the JSON file
@@ -111,6 +112,22 @@ def test_load_data_from_report_id():
     client = PolisClient()
     client.load_data(report_id="r5hr48j8y8mpcffk7crmk")
 
+def test_matrix_cutoff_timestamp():
+    client = PolisClient()
+    client.load_data(conversation_id="9knpdktubt")
+
+    full_matrix = client.get_matrix()
+
+    cutoff_timestamp = 1528749254597
+    client.matrix = None
+    cutoff_matrix = client.get_matrix(cutoff=cutoff_timestamp)
+
+    is_past_cutoff = lambda x: x["modified"] > cutoff_timestamp
+    votes_after = list(filter(is_past_cutoff, client.votes))
+    vote_after = votes_after[0]
+
+    assert math.isnan(cutoff_matrix.loc[vote_after["participant_id"], vote_after["statement_id"]])
+    assert not math.isnan(full_matrix.loc[vote_after["participant_id"], vote_after["statement_id"]])
 
 # def test_group_cluster_count():
 #     with open('sample_data/below-100-ptpts/math-pca2.json', 'r') as file:

@@ -75,6 +75,7 @@ class PolisClient():
             'participant_id': vote_row['pid'],
             'statement_id': vote_row['tid'],
             'vote': vote_row['vote'],
+            'modified': vote_row['modified'],
         })
         # Matrix is now stale
         self.matrix = None
@@ -100,10 +101,20 @@ class PolisClient():
         return self.group_clusters
 
     # TODO: Refactor this to "process_matrix"?
-    def get_matrix(self, is_filtered=False):
+    def get_matrix(self, is_filtered=False, cutoff=None):
         if self.matrix is None:
+            if cutoff:
+                # TODO: This should already be sorted earlier. confirm.
+                date_sorted_votes = sorted([v for  v in self.votes], key=lambda x: x['modified'])
+                # date_sorted_votes = self.votes
+                if cutoff > 1_300_000_000: # assume timestamp
+                    votes = [v for v in date_sorted_votes if v['modified'] <= cutoff]
+                else: # assume trimming end of votes
+                    votes = date_sorted_votes[:cutoff]
+            else:
+                votes = self.votes
             # Only generate matrix when needed.
-            self.matrix = pl.DataFrame.from_dict(self.votes)
+            self.matrix = pl.DataFrame.from_dict(votes)
             self.matrix = self.matrix.pivot(
                 values="vote",
                 index="participant_id",
