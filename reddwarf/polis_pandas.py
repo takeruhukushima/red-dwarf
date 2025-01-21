@@ -261,9 +261,14 @@ class PolisClient():
         print(f"Optimal clusters for K={K_star}")
         plot_embedding_with_clusters(self.eigenvectors, clusters_K_star)
 
-    def load_data(self, filepath=None, conversation_id=None):
-        if conversation_id:
-            self.data_loader = Loader(conversation_id=conversation_id)
+    def load_data(self, filepath=None, conversation_id=None, report_id=None):
+        if conversation_id or report_id:
+            self.data_loader = Loader(conversation_id=conversation_id, report_id=report_id)
+
+            # Infer moderation type from API conversation_data when available.
+            if self.data_loader.conversation_data:
+                self.is_strict_moderation = self.data_loader.conversation_data["strict_moderation"]
+
             self.load_comments_data(data=self.data_loader.comments_data)
             self.load_votes_data(data=self.data_loader.votes_data)
         elif filepath.endswith("votes.json"):

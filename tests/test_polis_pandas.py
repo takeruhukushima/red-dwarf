@@ -101,6 +101,16 @@ def test_filtered_participants_grouped():
     aligned_matrix = client.get_matrix(is_filtered=True)
     assert sorted(aligned_matrix.index.to_list()) == sorted(expected_data)
 
+def test_infer_moderation_type_from_api():
+    client = PolisClient()
+    assert client.is_strict_moderation is None
+    client.load_data(conversation_id="9knpdktubt")
+    assert client.is_strict_moderation is not None
+
+def test_load_data_from_report_id():
+    client = PolisClient()
+    client.load_data(report_id="r5hr48j8y8mpcffk7crmk")
+
 
 # def test_group_cluster_count():
 #     with open('sample_data/below-100-ptpts/math-pca2.json', 'r') as file:
