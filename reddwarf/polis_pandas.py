@@ -66,14 +66,14 @@ class PolisClient():
     def add_vote(self, vote_row):
         """Add a single vote to the system"""
         # If this is a new vote (not an update)
-        self.user_vote_counts[vote_row['pid']] += 1
+        self.user_vote_counts[vote_row['participant_id']] += 1
 
         if self.last_vote_timestamp < int(vote_row['modified']):
             self.last_vote_timestamp = int(vote_row['modified'])
 
         self.votes.append({
-            'participant_id': vote_row['pid'],
-            'statement_id': vote_row['tid'],
+            'participant_id': vote_row['participant_id'],
+            'statement_id': vote_row['statement_id'],
             'vote': vote_row['vote'],
             'modified': vote_row['modified'],
         })
@@ -283,28 +283,22 @@ class PolisClient():
             self.load_comments_data(data=self.data_loader.comments_data)
             self.load_votes_data(data=self.data_loader.votes_data)
         elif filepath.endswith("votes.json"):
-            self.load_votes_data(filepath=filepath)
+            self.data_loader = Loader(filepath=filepath)
+            self.load_votes_data(data=self.data_loader.votes_data)
         elif filepath.endswith("comments.json"):
             self.load_comments_data(filepath=filepath)
         else:
             raise ValueError("Unknown file type")
 
-    def load_votes_data(self, filepath=None, data=None):
-        if filepath:
-            votes_df = pl.read_json(filepath, dtype={'modified': 'int64'})
-            # Convert pandas timestamp (nanoseconds) into unix time (milliseconds).
-            # See: https://stackoverflow.com/a/52450463
-            votes_df['modified'] = [(t // 10**6) for t in votes_df['modified']]
-        elif data:
-            votes_df = pl.DataFrame.from_records(data).astype({'modified': 'int64'})
-
+    def load_votes_data(self, data=None):
+        votes_df = pl.DataFrame.from_records(data).astype({'modified': 'int64'})
         self.add_votes_batch(votes_df)
 
     def load_comments_data(self, filepath=None, data=None):
         if filepath:
-            self.comments_df = pl.read_json(filepath).set_index('tid')
+            self.comments_df = pl.read_json(filepath).set_index('tid').sort_index()
         elif data:
-            self.comments_df = pl.DataFrame.from_records(data).set_index('tid')
+            self.comments_df = pl.DataFrame.from_records(data).set_index('tid').sort_index()
         for i, row in self.comments_df.iterrows():
             # TODO: Why does is_meta make this mod-in.
             # Maybe I don't understand what mod-in does...
