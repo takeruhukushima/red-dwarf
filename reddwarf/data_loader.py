@@ -1,53 +1,16 @@
 import json
 import os
 from fake_useragent import UserAgent
-from urllib3.util import ssl_
 from datetime import timedelta
-from requests import Session
-from requests.adapters import HTTPAdapter
-from requests_cache import CacheMixin
-from requests_ratelimiter import LimiterMixin, SQLiteBucket, LimiterSession
+from requests_ratelimiter import SQLiteBucket, LimiterSession
 import csv
 from io import StringIO
-
 from reddwarf.models import Vote
+from reddwarf.helpers import CachedLimiterSession, CloudflareBypassHTTPAdapter
 
 ua = UserAgent()
 
-class CachedLimiterSession(CacheMixin, LimiterMixin, Session):
-    """
-    Session class with caching and rate-limiting behavior. Accepts arguments for both
-    LimiterSession and CachedSession.
-    """
-
-class CloudflareBypassHTTPAdapter(HTTPAdapter):
-    """
-    A TransportAdapter that forces TLSv1.3 in Requests, so that Cloudflare doesn't flag us.
-
-    Source: https://lukasa.co.uk/2017/02/Configuring_TLS_With_Requests/
-    """
-
-    def init_patched_ssl_context(self):
-        context = ssl_.create_urllib3_context()
-        context.load_default_certs()
-        # Only available in Python 3.7
-        if hasattr(ssl_, "TLSVersion"):
-            context.minimum_version = ssl_.TLSVersion.TLSv1_3
-        else:
-            context.options |= ssl_.OP_NO_TLSv1_2
-
-        return context
-
-    def init_poolmanager(self, *args, **kwargs):
-        kwargs['ssl_context'] = self.init_patched_ssl_context()
-        return super(CloudflareBypassHTTPAdapter, self).init_poolmanager(*args, **kwargs)
-
-    def proxy_manager_for(self, *args, **kwargs):
-        kwargs['ssl_context'] = self.init_patched_ssl_context()
-        return super(CloudflareBypassHTTPAdapter, self).proxy_manager_for(*args, **kwargs)
-
 class Loader():
-
     def __init__(self, filepath=None, conversation_id=None, report_id=None, is_cache_enabled=True, output_dir=None, data_source="api"):
         self.polis_instance_url = "https://pol.is"
         self.conversation_id = conversation_id
