@@ -11,7 +11,7 @@ def test_user_vote_counts():
 
     # Instantiate the PolisClient and load raw data
     client = PolisClient()
-    client.load_data(filepath='sample_data/below-100-ptpts/votes.json')
+    client.load_data(filepaths=['sample_data/below-100-ptpts/votes.json'])
 
     # Call the method and assert the result matches the expected data
     assert client.get_user_vote_counts() == expected_data
@@ -21,7 +21,7 @@ def test_meta_tids():
         expected_data = json.load(file)['meta-tids']
 
     client = PolisClient()
-    client.load_data(filepath='sample_data/below-100-ptpts/comments.json')
+    client.load_data(filepaths=['sample_data/below-100-ptpts/comments.json'])
 
     assert client.get_meta_tids() == sorted(expected_data)
 
@@ -30,7 +30,7 @@ def test_mod_in():
         expected_data = json.load(file)['mod-in']
 
     client = PolisClient()
-    client.load_data(filepath='sample_data/below-100-ptpts/comments.json')
+    client.load_data(filepaths=['sample_data/below-100-ptpts/comments.json'])
 
     assert client.get_mod_in() == sorted(expected_data)
 
@@ -39,7 +39,7 @@ def test_mod_out():
         expected_data = json.load(file)['mod-out']
 
     client = PolisClient()
-    client.load_data(filepath='sample_data/below-100-ptpts/comments.json')
+    client.load_data(filepaths=['sample_data/below-100-ptpts/comments.json'])
 
     assert sorted(client.get_mod_out()) == sorted(expected_data)
 
@@ -48,7 +48,7 @@ def test_last_vote_timestamp():
         expected_data = json.load(file)['lastVoteTimestamp']
 
     client = PolisClient()
-    client.load_data(filepath='sample_data/below-100-ptpts/votes.json')
+    client.load_data(filepaths=['sample_data/below-100-ptpts/votes.json'])
 
     assert client.get_last_vote_timestamp() == expected_data
 
@@ -59,7 +59,7 @@ def test_participant_count():
         expected_data = json.load(file)['n']
 
     client = PolisClient()
-    client.load_data(filepath='sample_data/below-100-ptpts/votes.json')
+    client.load_data(filepaths=['sample_data/below-100-ptpts/votes.json'])
     client.get_matrix()
 
     assert client.participant_count == expected_data
@@ -69,15 +69,17 @@ def test_statement_count():
         expected_data = json.load(file)['n-cmts']
 
     client = PolisClient()
-    client.load_data(filepath='sample_data/below-100-ptpts/votes.json')
+    client.load_data(filepaths=['sample_data/below-100-ptpts/votes.json'])
     client.get_matrix()
 
     assert client.statement_count == expected_data
 
 def test_impute_missing_values():
     client = PolisClient(is_strict_moderation=False)
-    client.load_data(filepath='sample_data/below-100-ptpts/votes.json')
-    client.load_data(filepath='sample_data/below-100-ptpts/comments.json')
+    client.load_data(filepaths=[
+        'sample_data/below-100-ptpts/votes.json',
+        'sample_data/below-100-ptpts/comments.json',
+    ])
     matrix_with_missing = client.get_matrix(is_filtered=True)
     client.impute_missing_votes()
     matrix_without_missing = client.get_matrix(is_filtered=True)
@@ -91,8 +93,10 @@ def test_filtered_participants_grouped():
         expected_data = json.load(file)['in-conv']
 
     client = PolisClient(is_strict_moderation=False)
-    client.load_data(filepath='sample_data/below-100-ptpts/votes.json')
-    client.load_data(filepath='sample_data/below-100-ptpts/comments.json')
+    client.load_data(filepaths=[
+        'sample_data/below-100-ptpts/votes.json',
+        'sample_data/below-100-ptpts/comments.json',
+    ])
 
     unaligned_matrix = client.get_matrix(is_filtered=True)
     assert sorted(unaligned_matrix.index.to_list()) != sorted(expected_data)

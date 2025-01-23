@@ -11,22 +11,21 @@ from reddwarf.helpers import CachedLimiterSession, CloudflareBypassHTTPAdapter
 ua = UserAgent()
 
 class Loader():
-    def __init__(self, filepath=None, conversation_id=None, report_id=None, is_cache_enabled=True, output_dir=None, data_source="api"):
+    def __init__(self, filepaths=[], conversation_id=None, report_id=None, is_cache_enabled=True, output_dir=None, data_source="api"):
         self.polis_instance_url = "https://pol.is"
         self.conversation_id = conversation_id
         self.report_id = report_id
         self.is_cache_enabled = is_cache_enabled
         self.output_dir = output_dir
         self.data_source = data_source
-        self.filepath = filepath
+        self.filepaths = filepaths
 
         self.votes_data = []
         self.comments_data = []
         self.math_data = {}
         self.conversation_data = {}
 
-        if self.filepath:
-            self.init_http_client()
+        if self.filepaths:
             self.load_file_data()
         elif self.conversation_id or self.report_id:
             self.init_http_client()
@@ -149,24 +148,23 @@ class Loader():
         raise NotImplementedError
 
     def load_file_data(self):
-        if self.filepath.endswith("votes.json"):
-            self.load_file_data_votes()
-        elif self.filepath.endswith("comments.json"):
-            self.load_file_data_comments()
-        else:
-            raise ValueError("Unknown file type")
+        for f in self.filepaths:
+            if f.endswith("votes.json"):
+                self.load_file_data_votes(file=f)
+            elif f.endswith("comments.json"):
+                self.load_file_data_comments(file=f)
+            else:
+                raise ValueError("Unknown file type")
 
-    def load_file_data_votes(self):
-        import json
-        with open(self.filepath) as f:
+    def load_file_data_votes(self, file=None):
+        with open(file) as f:
             votes_data = json.load(f)
 
         votes_data = [Vote(**vote).model_dump(mode='json') for vote in votes_data]
         self.votes_data = votes_data
 
-    def load_file_data_comments(self):
-        import json
-        with open(self.filepath) as f:
+    def load_file_data_comments(self, file=None):
+        with open(file) as f:
             comments_data = json.load(f)
 
         comments_data = [Statement(**c).model_dump(mode='json') for c in comments_data]
