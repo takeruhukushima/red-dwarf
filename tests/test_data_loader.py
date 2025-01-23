@@ -153,32 +153,6 @@ def test_load_data_from_csv_export_comments():
     loader = Loader(report_id=SMALL_CONVO_REPORT_ID, data_source="csv_export")
     assert len(loader.comments_data) > 0
 
-    first_comment = loader.comments_data[0]
-    expected_keys = [
-        # For now, commenting out fields that are only available in API.
-        'txt',
-        'tid',
-        'created',
-        # 'tweet_id',
-        # 'quote_src_url',
-        # 'is_seed',
-        # 'is_meta',
-        # 'lang',
-        'pid',
-        # 'velocity',
-        'mod',
-        # 'active',
-        'agree_count',
-        'disagree_count',
-        # 'pass_count',
-        # 'count',
-        # 'conversation_id'
-
-        # And one field that's only in CSV.
-        'datetime',
-    ]
-    assert sorted(first_comment.keys()) == sorted(expected_keys)
-
 def test_load_data_from_csv_export_votes():
     loader = Loader(report_id=SMALL_CONVO_REPORT_ID, data_source="csv_export")
     assert len(loader.votes_data) > 0

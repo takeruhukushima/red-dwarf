@@ -5,7 +5,7 @@ from datetime import timedelta
 from requests_ratelimiter import SQLiteBucket, LimiterSession
 import csv
 from io import StringIO
-from reddwarf.models import Vote
+from reddwarf.models import Vote, Statement
 from reddwarf.helpers import CachedLimiterSession, CloudflareBypassHTTPAdapter
 
 ua = UserAgent()
@@ -99,32 +99,8 @@ class Loader():
     def load_remote_export_data_comments(self):
         r = self.session.get(self.polis_instance_url + "/api/v3/reportExport/{}/comments.csv".format(self.report_id))
         comments_csv = r.text
-
         reader = csv.DictReader(StringIO(comments_csv))
-        COMMENT_FIELD_MAPPING_API_TO_CSV = {
-            "created": "timestamp",
-            None: "datetime",
-            "tid": "comment-id",
-            "pid": "author-id",
-            "agree_count": "agrees",
-            "disagree_count": "disagrees",
-            "mod": "moderated",
-            "txt": "comment-body",
-            "is_seed": "is-seed",
-            "is_meta": "is-meta",
-            "tweet_id": None,
-            "quote_src_url": None,
-            "lang": None,
-            "velocity": None,
-            "active": None,
-            "pass_count": None,
-            "count": None,
-            "conversation_id": None,
-        }
-        COMMENT_FIELD_MAPPING_CSV_TO_API = {value: key for key, value in COMMENT_FIELD_MAPPING_API_TO_CSV.items()}
-        # Make to API fieldnames if a mapping exists, otherwise keep CSV fieldname.
-        reader.fieldnames = [(COMMENT_FIELD_MAPPING_CSV_TO_API[f] if COMMENT_FIELD_MAPPING_CSV_TO_API[f] else f) for f in reader.fieldnames]
-        self.comments_data = list(reader)
+        self.comments_data = [Statement(**st).model_dump(mode='json') for st in list(reader)]
 
     def load_remote_export_data_votes(self):
         r = self.session.get(self.polis_instance_url + "/api/v3/reportExport/{}/votes.csv".format(self.report_id))
