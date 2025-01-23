@@ -1,6 +1,9 @@
 install:
 	uv run pip install -e .
 
+install-dev:
+	uv sync --extra dev
+
 debug:
 	uv run python debug.py
 
