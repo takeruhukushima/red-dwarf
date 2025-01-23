@@ -44,7 +44,7 @@ class PolisClient():
         if self.is_strict_moderation == None:
             raise ValueError('must set is_strict_moderation to properly filter for active statements')
         ACTIVE_MOD_STATES = [1] if self.is_strict_moderation else [1,0]
-        active_statement_ids = sorted(self.comments_df.loc[self.comments_df["mod"].isin(ACTIVE_MOD_STATES)].index, key=int)
+        active_statement_ids = sorted(self.comments_df.loc[self.comments_df["moderated"].isin(ACTIVE_MOD_STATES)].index, key=int)
 
         return active_statement_ids
 
@@ -282,32 +282,30 @@ class PolisClient():
 
             self.load_comments_data(data=self.data_loader.comments_data)
             self.load_votes_data(data=self.data_loader.votes_data)
-        elif filepath.endswith("votes.json"):
+        elif filepath:
             self.data_loader = Loader(filepath=filepath)
-            self.load_votes_data(data=self.data_loader.votes_data)
-        elif filepath.endswith("comments.json"):
-            self.load_comments_data(filepath=filepath)
-        else:
-            raise ValueError("Unknown file type")
+            if filepath.endswith("votes.json"):
+                self.load_votes_data(data=self.data_loader.votes_data)
+            elif filepath.endswith("comments.json"):
+                self.load_comments_data(data=self.data_loader.comments_data)
+            else:
+                raise ValueError("Unknown file type")
 
     def load_votes_data(self, data=None):
         votes_df = pl.DataFrame.from_records(data).astype({'modified': 'int64'})
         self.add_votes_batch(votes_df)
 
-    def load_comments_data(self, filepath=None, data=None):
-        if filepath:
-            self.comments_df = pl.read_json(filepath).set_index('tid').sort_index()
-        elif data:
-            self.comments_df = pl.DataFrame.from_records(data).set_index('tid').sort_index()
+    def load_comments_data(self, data=None):
+        self.comments_df = pl.DataFrame.from_records(data).set_index('statement_id').sort_index()
         for i, row in self.comments_df.iterrows():
             # TODO: Why does is_meta make this mod-in.
             # Maybe I don't understand what mod-in does...
             # Note: mod-in/mod-out doesn't seem to be actually used in the front-end, so a bug here wouldn't matter.
             # Ref: https://github.com/compdemocracy/polis/blob/6d04f4d144adf9640fe49b8fbaac38943dc11b9a/math/src/polismath/math/conversation.clj#L825-L842
-            if row['is_meta'] or row['mod'] == 1:
+            if row['is_meta'] or row['moderated'] == 1:
                 self.mod_in.append(i)
 
-            if row['is_meta'] or row['mod'] == -1:
+            if row['is_meta'] or row['moderated'] == -1:
                 self.mod_out.append(i)
 
             # Ref: https://github.com/compdemocracy/polis/blob/6d04f4d144adf9640fe49b8fbaac38943dc11b9a/math/src/polismath/math/conversation.clj#L843-L850

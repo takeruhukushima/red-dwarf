@@ -100,7 +100,7 @@ class Loader():
         r = self.session.get(self.polis_instance_url + "/api/v3/reportExport/{}/comments.csv".format(self.report_id))
         comments_csv = r.text
         reader = csv.DictReader(StringIO(comments_csv))
-        self.comments_data = [Statement(**st).model_dump(mode='json') for st in list(reader)]
+        self.comments_data = [Statement(**c).model_dump(mode='json') for c in list(reader)]
 
     def load_remote_export_data_votes(self):
         r = self.session.get(self.polis_instance_url + "/api/v3/reportExport/{}/votes.csv".format(self.report_id))
@@ -149,7 +149,12 @@ class Loader():
         raise NotImplementedError
 
     def load_file_data(self):
-        self.load_file_data_votes()
+        if self.filepath.endswith("votes.json"):
+            self.load_file_data_votes()
+        elif self.filepath.endswith("comments.json"):
+            self.load_file_data_comments()
+        else:
+            raise ValueError("Unknown file type")
 
     def load_file_data_votes(self):
         import json
@@ -158,6 +163,14 @@ class Loader():
 
         votes_data = [Vote(**vote).model_dump(mode='json') for vote in votes_data]
         self.votes_data = votes_data
+
+    def load_file_data_comments(self):
+        import json
+        with open(self.filepath) as f:
+            comments_data = json.load(f)
+
+        comments_data = [Statement(**c).model_dump(mode='json') for c in comments_data]
+        self.comments_data = comments_data
 
     def load_api_data(self):
         if self.report_id:
@@ -209,6 +222,7 @@ class Loader():
         }
         r = self.session.get(self.polis_instance_url + "/api/v3/comments", params=params)
         comments = json.loads(r.text)
+        comments = [Statement(**c).model_dump(mode='json') for c in comments]
         self.comments_data = comments
 
     def fix_participant_vote_sign(self):

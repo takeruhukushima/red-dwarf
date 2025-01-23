@@ -55,7 +55,7 @@ class Statement(BaseModel):
         validation_alias=AliasChoices('participant_id', 'pid', 'author-id'),
         serialization_alias="participant_id",
     )
-    velocity: Optional[Literal[0]] = None
+    velocity: Optional[Literal[1]] = None
     moderated: ModeratedEnum = Field(
         validation_alias=AliasChoices('moderated', 'mod'),
     )
