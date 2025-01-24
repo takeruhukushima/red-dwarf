@@ -188,9 +188,9 @@ class PolisClient():
 
         # Project participant vote data onto 2D using eigenvectors.
         self.projected_data = pca.transform(imputed_matrix)
-        self.projected_data = pl.DataFrame(self.projected_data, index=self.matrix.index, columns=["x", "y"])
+        self.projected_data = pl.DataFrame(self.projected_data, index=imputed_matrix.index, columns=["x", "y"])
 
-    def scale_pca_eigenvectors(self):
+    def scale_projected_data(self):
         # num_comments = self.matrix.shape[1]
         total_comment_count = self.matrix.shape[1]
         participant_vote_counts = self.matrix.count(axis="columns")
