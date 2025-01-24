@@ -205,6 +205,9 @@ class PolisClient():
 
     def generate_figure(self):
         plt.figure(figsize=(7, 5), dpi=80)
+        plt.axhline(y=0, color='k', linestyle='-', linewidth=0.5)
+        plt.axvline(x=0, color='k', linestyle='-', linewidth=0.5)
+        plt.gca().invert_xaxis()
         plt.scatter(
             x=self.eigenvectors.loc[:,"x"],
             y=self.eigenvectors.loc[:,"y"],
