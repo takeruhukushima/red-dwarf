@@ -7,10 +7,4 @@ if True:
     client.get_matrix(is_filtered=True)
     client.run_pca()
     client.scale_projected_data()
-    print(len(client.projected_data))
-    print(client.projected_data.values)
     client.generate_figure()
-
-    # client.scale_pca_polis()
-    # print(client.eigenvectors)
-    # client.generate_figure()

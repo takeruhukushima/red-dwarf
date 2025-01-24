@@ -189,23 +189,20 @@ class PolisClient():
         # Project participant vote data onto 2D using eigenvectors.
         self.projected_data = pca.transform(imputed_matrix)
         self.projected_data = pl.DataFrame(self.projected_data, index=imputed_matrix.index, columns=["x", "y"])
+        self.projected_data.index.name = "participant_id"
 
     def scale_projected_data(self):
-        # num_comments = self.matrix.shape[1]
-        total_comment_count = self.matrix.shape[1]
+        total_active_comment_count = self.matrix.shape[1]
         participant_vote_counts = self.matrix.count(axis="columns")
         # Ref: https://hyp.is/x6nhItMMEe-v1KtYFgpOiA/gwern.net/doc/sociology/2021-small.pdf
         # Ref: https://github.com/compdemocracy/polis/blob/15aa65c9ca9e37ecf57e2786d7d81a4bd4ad37ef/math/src/polismath/math/pca.clj#L155-L156
-        participant_scaling_coeffs = np.sqrt(total_comment_count / participant_vote_counts).values
+        participant_scaling_coeffs = np.sqrt(total_active_comment_count / participant_vote_counts).values
         # TODO: Why is this needed? It doesn't seem to do anything...
         # See: https://numpy.org/doc/stable/reference/generated/numpy.reshape.html
         # Reshape scaling_coeffs to match the shape of embedding (needed for broadcasting)
         participant_scaling_coeffs = np.reshape(participant_scaling_coeffs, (-1, 1))
-        # More explicit to read, but seemingly doesn't work with numpy version on Google CoLab
-        #scaling_coeffs = np.reshape(scaling_coeffs, shape=(-1, 1))
 
         self.projected_data = self.projected_data * participant_scaling_coeffs
-        # self.eigenvectors = pl.DataFrame(self.eigenvectors, index=self.matrix.index, columns=["x", "y"])
 
     def generate_figure(self):
         plt.figure(figsize=(7, 5), dpi=80)
