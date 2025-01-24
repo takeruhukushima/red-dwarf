@@ -169,39 +169,43 @@ class PolisClient():
 
     # Ref: https://hyp.is/8zUyWM5fEe-uIO-J34vbkg/gwern.net/doc/sociology/2021-small.pdf
     def impute_missing_votes(self):
-        mean_imputer = SimpleImputer(missing_values=float('nan'), strategy='mean')
-        matrix_imputed = pl.DataFrame(
+        mean_imputer = SimpleImputer(missing_values=np.nan, strategy='mean')
+        imputed_matrix = pl.DataFrame(
             mean_imputer.fit_transform(self.matrix),
             columns=self.matrix.columns,
             index=self.matrix.index,
         )
-        self.matrix = matrix_imputed
+        return imputed_matrix
 
     def run_pca(self):
-        pca = PCA(n_components=self.n_components) ## pca is apparently different, it wants
-        pca = pca.fit(self.matrix.T) ## .T transposes the matrix (flips it)
-        self.eigenvectors = pca.components_.T ## isolate the coordinates and flip
-        self.eigenvalues = pca.explained_variance_
-        # TODO: Why was this happening?
-        self.eigenvectors -= self.eigenvectors.mean()
+        imputed_matrix = self.impute_missing_votes()
 
-    def scale_pca_polis(self):
-        num_comments = self.matrix.shape[1]
-        # TODO: Get a more rigorous user_vote_count with moderated-out statements.
-        non_na_counts = [self.get_user_vote_counts()[pid] for pid in sorted(self.get_user_vote_counts().keys()) if pid in self.matrix.index]
-        non_na_counts = pl.DataFrame(non_na_counts, index=self.matrix.index)
+        pca = PCA(n_components=self.n_components) ## pca is apparently different, it wants
+        pca.fit(imputed_matrix) ## .T transposes the matrix (flips it)
+
+        self.eigenvectors = pca.components_
+        self.eigenvalues = pca.explained_variance_
+
+        # Project participant vote data onto 2D using eigenvectors.
+        self.projected_data = pca.transform(imputed_matrix)
+        self.projected_data = pl.DataFrame(self.projected_data, index=self.matrix.index, columns=["x", "y"])
+
+    def scale_pca_eigenvectors(self):
+        # num_comments = self.matrix.shape[1]
+        total_comment_count = self.matrix.shape[1]
+        participant_vote_counts = self.matrix.count(axis="columns")
         # Ref: https://hyp.is/x6nhItMMEe-v1KtYFgpOiA/gwern.net/doc/sociology/2021-small.pdf
         # Ref: https://github.com/compdemocracy/polis/blob/15aa65c9ca9e37ecf57e2786d7d81a4bd4ad37ef/math/src/polismath/math/pca.clj#L155-L156
-        scaling_coeffs = np.sqrt(num_comments / non_na_counts).values
+        participant_scaling_coeffs = np.sqrt(total_comment_count / participant_vote_counts).values
         # TODO: Why is this needed? It doesn't seem to do anything...
         # See: https://numpy.org/doc/stable/reference/generated/numpy.reshape.html
         # Reshape scaling_coeffs to match the shape of embedding (needed for broadcasting)
-        scaling_coeffs = np.reshape(scaling_coeffs, (-1, 1))
+        participant_scaling_coeffs = np.reshape(participant_scaling_coeffs, (-1, 1))
         # More explicit to read, but seemingly doesn't work with numpy version on Google CoLab
         #scaling_coeffs = np.reshape(scaling_coeffs, shape=(-1, 1))
 
-        self.eigenvectors = self.eigenvectors * scaling_coeffs
-        self.eigenvectors = pl.DataFrame(self.eigenvectors, index=self.matrix.index, columns=["x", "y"])
+        self.projected_data = self.projected_data * participant_scaling_coeffs
+        # self.eigenvectors = pl.DataFrame(self.eigenvectors, index=self.matrix.index, columns=["x", "y"])
 
     def generate_figure(self):
         plt.figure(figsize=(7, 5), dpi=80)
@@ -209,8 +213,8 @@ class PolisClient():
         plt.axvline(x=0, color='k', linestyle='-', linewidth=0.5)
         plt.gca().invert_xaxis()
         plt.scatter(
-            x=self.eigenvectors.loc[:,"x"],
-            y=self.eigenvectors.loc[:,"y"],
+            x=self.projected_data.loc[:,"x"],
+            y=self.projected_data.loc[:,"y"],
             s=10,
             alpha=0.25,
         )
