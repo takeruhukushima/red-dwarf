@@ -100,36 +100,45 @@ class PolisClient():
     def get_group_clusters(self):
         return self.group_clusters
 
-    # TODO: Refactor this to "process_matrix"?
-    def get_matrix(self, is_filtered=False, cutoff=None):
-        if self.matrix is None:
-            if cutoff:
-                # TODO: This should already be sorted earlier. confirm.
-                date_sorted_votes = sorted([v for  v in self.votes], key=lambda x: x['modified'])
-                # date_sorted_votes = self.votes
-                if cutoff > 1_300_000_000: # assume timestamp
-                    votes = [v for v in date_sorted_votes if v['modified'] <= cutoff]
-                else: # assume trimming end of votes
-                    votes = date_sorted_votes[:cutoff]
+    def generate_raw_matrix(self, cutoff=None):
+        if cutoff:
+            # TODO: This should already be sorted earlier. confirm.
+            date_sorted_votes = sorted([v for  v in self.votes], key=lambda x: x['modified'])
+            # date_sorted_votes = self.votes
+            if cutoff > 1_300_000_000:
+                cutoff_timestamp = cutoff
+                votes = [v for v in date_sorted_votes if v['modified'] <= cutoff_timestamp]
             else:
-                votes = self.votes
-            # Only generate matrix when needed.
-            self.matrix = pl.DataFrame.from_dict(votes)
-            self.matrix = self.matrix.pivot(
-                values="vote",
-                index="participant_id",
-                columns="statement_id",
-            )
+                cutoff_index = cutoff
+                votes = date_sorted_votes[:cutoff_index]
+        else:
+            votes = self.votes
 
-            participant_count = self.matrix.index.max() + 1
-            comment_count = self.matrix.columns.max() + 1
-            self.matrix = self.matrix.reindex(
-                index=range(participant_count),
-                columns=range(comment_count),
-                fill_value=float('nan'),
-            )
-            self.statement_count = self.matrix.notna().any().sum()
-            self.participant_count = len(self.matrix)
+        raw_matrix = pl.DataFrame.from_dict(votes)
+        raw_matrix = raw_matrix.pivot(
+            values="vote",
+            index="participant_id",
+            columns="statement_id",
+        )
+
+        participant_count = raw_matrix.index.max() + 1
+        comment_count = raw_matrix.columns.max() + 1
+        raw_matrix = raw_matrix.reindex(
+            index=range(participant_count),
+            columns=range(comment_count),
+            fill_value=np.nan,
+        )
+
+        return raw_matrix
+
+    def get_matrix(self, is_filtered=False, cutoff=None):
+        # Only generate matrix when needed.
+        if self.matrix is None:
+            raw_matrix = self.generate_raw_matrix(cutoff=cutoff)
+            self.statement_count = raw_matrix.notna().any().sum()
+            self.participant_count = len(raw_matrix)
+
+            self.matrix = raw_matrix
 
         if is_filtered:
             self.filter_matrix()
