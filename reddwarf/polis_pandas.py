@@ -182,6 +182,8 @@ class PolisClient():
         pca = pca.fit(self.matrix.T) ## .T transposes the matrix (flips it)
         self.eigenvectors = pca.components_.T ## isolate the coordinates and flip
         self.eigenvalues = pca.explained_variance_
+        # TODO: Why was this happening?
+        self.eigenvectors -= self.eigenvectors.mean()
 
     def scale_pca_polis(self):
         num_comments = self.matrix.shape[1]
@@ -198,8 +200,6 @@ class PolisClient():
         # More explicit to read, but seemingly doesn't work with numpy version on Google CoLab
         #scaling_coeffs = np.reshape(scaling_coeffs, shape=(-1, 1))
 
-        # TODO: Why was this happening?
-        self.eigenvectors -= self.eigenvectors.mean()
         self.eigenvectors = self.eigenvectors * scaling_coeffs
         self.eigenvectors = pl.DataFrame(self.eigenvectors, index=self.matrix.index, columns=["x", "y"])
 
