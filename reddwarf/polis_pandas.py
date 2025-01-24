@@ -197,9 +197,8 @@ class PolisClient():
         # Ref: https://hyp.is/x6nhItMMEe-v1KtYFgpOiA/gwern.net/doc/sociology/2021-small.pdf
         # Ref: https://github.com/compdemocracy/polis/blob/15aa65c9ca9e37ecf57e2786d7d81a4bd4ad37ef/math/src/polismath/math/pca.clj#L155-L156
         participant_scaling_coeffs = np.sqrt(total_active_comment_count / participant_vote_counts).values
-        # TODO: Why is this needed? It doesn't seem to do anything...
         # See: https://numpy.org/doc/stable/reference/generated/numpy.reshape.html
-        # Reshape scaling_coeffs to match the shape of embedding (needed for broadcasting)
+        # Reshape scaling_coeffs list to match the shape of projected_data matrix
         participant_scaling_coeffs = np.reshape(participant_scaling_coeffs, (-1, 1))
 
         self.projected_data = self.projected_data * participant_scaling_coeffs
