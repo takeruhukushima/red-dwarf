@@ -2,6 +2,8 @@ import pandas as pl # For sake of clean diffs
 from collections import defaultdict
 from sklearn.impute import SimpleImputer
 from sklearn.decomposition import PCA
+from sklearn.cluster import KMeans
+from sklearn.metrics import silhouette_score
 import matplotlib.pyplot as plt
 import numpy as np
 from reddwarf.data_loader import Loader
@@ -204,13 +206,13 @@ class PolisClient():
 
         self.projected_data = self.projected_data * participant_scaling_coeffs
 
-    def generate_figure(self, coord_dataframe):
+    def generate_figure(self, coord_dataframe, labels=None):
         plt.figure(figsize=(7, 5), dpi=80)
         plt.axhline(y=0, color='k', linestyle='-', linewidth=0.5)
         plt.axvline(x=0, color='k', linestyle='-', linewidth=0.5)
         plt.gca().invert_xaxis()
 
-        # Label points with participant_id
+        # Label points with participant_id if no labels set.
         for participant_id, row in coord_dataframe.iterrows():
             plt.annotate(participant_id,
                 (row["x"], row["y"]),
@@ -218,16 +220,21 @@ class PolisClient():
                 color="lightgray",
                 textcoords='offset points')
 
-        plt.scatter(
-            x=coord_dataframe.loc[:,"x"],
-            y=coord_dataframe.loc[:,"y"],
-            s=10,
-            alpha=0.25,
-        )
-        plt.colorbar()
+        scatter_kwargs = defaultdict()
+        scatter_kwargs["x"] = coord_dataframe.loc[:,"x"]
+        scatter_kwargs["y"] = coord_dataframe.loc[:,"y"]
+        scatter_kwargs["s"] = 10       # point size
+        scatter_kwargs["alpha"] = 0.8  # point transparency
+        if labels is not None:
+            # Ref: https://matplotlib.org/stable/users/explain/colors/colormaps.html#qualitative
+            scatter_kwargs["cmap"] = "Set1"    # color map
+            scatter_kwargs["c"] = labels        # color indexes
+
+        plt.scatter(**scatter_kwargs)
         plt.show()
 
 
+    # Not working yet.
     def build_base_clusters(self):
         # TODO: Is this participant_count the correct one?
         n_clusters=min(self.base_cluster_count, self.participant_count)
@@ -248,51 +255,30 @@ class PolisClient():
         self.base_clusters['x'] = [xy[0] for xy in cluster_centers.tolist()]
         self.base_clusters['y'] = [xy[1] for xy in cluster_centers.tolist()]
 
+    # Not working yet.
     def load_base_clusters_from_math(self):
         self.base_clusters = self.data_loader.math_data["base-clusters"]
 
-    def run_kmeans(self, data, n_clusters=2):
-        kmeans = KMeans(n_clusters=n_clusters, random_state=42, n_init="auto").fit(data)
+    def run_kmeans(self, dataframe, n_clusters=2):
+        kmeans = KMeans(n_clusters=n_clusters, random_state=None, n_init="auto").fit(dataframe)
         return kmeans.labels_, kmeans.cluster_centers_
 
     def find_optimal_k(self):
         K_RANGE = range(2, 6)
-        K_star = 0
-        silhoutte_star = -np.inf
-
-        def plot_embedding_with_clusters(embedding_,labels_):
-            print("Plotting PCA embeddings with K-means, K="+str(np.max(labels_)+1))
-            fig, ax = plt.subplots(figsize=(7,5))
-            plt.sca(ax)
-            plt.axhline(y=0, color='k', linestyle='-', linewidth=0.5)
-            plt.axvline(x=0, color='k', linestyle='-', linewidth=0.5)
-            plt.gca().invert_yaxis()
-            # Add labels for each point
-            for i, _ in enumerate(embedding_.T):
-                row = embedding_.iloc[i,:]
-                plt.annotate(row.name,
-                    (row["x"], row["y"]),
-                    xytext=(5, 5),
-                    textcoords='offset points')
-            ax.scatter(
-                x=embedding_.iloc[:,0],
-                y=embedding_.iloc[:,1],
-                c=labels_,
-                cmap="tab20",
-                s=5
-            )
-            plt.show()
+        K_best = 0 # Best K so far.
+        silhoutte_best = -np.inf
 
         for K in K_RANGE:
-            cluster_labels, _ = self.run_kmeans(self.eigenvectors, n_clusters=K)
-            silhouette_K = silhouette_score(self.eigenvectors, cluster_labels)
+            cluster_labels, _ = self.run_kmeans(dataframe=self.projected_data, n_clusters=K)
+            silhouette_K = silhouette_score(self.projected_data, cluster_labels)
             print(f"{K=}, {silhouette_K=}")
-            if silhouette_K >= silhoutte_star:
-                K_star = K
-                silhoutte_star = silhouette_K
-                clusters_K_star = cluster_labels
-        print(f"Optimal clusters for K={K_star}")
-        plot_embedding_with_clusters(self.eigenvectors, clusters_K_star)
+            if silhouette_K >= silhoutte_best:
+                K_best = K
+                silhoutte_best = silhouette_K
+                clusters_K_best = cluster_labels
+        print(f"Optimal clusters for K={K_best}")
+        print("Plotting PCA embeddings with K-means, K="+str(np.max(clusters_K_best)+1))
+        self.generate_figure(coord_dataframe=self.projected_data, labels=clusters_K_best)
 
     def load_data(self, filepaths=[], conversation_id=None, report_id=None):
         if conversation_id or report_id or filepaths:
