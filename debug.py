@@ -7,4 +7,4 @@ if True:
     client.get_matrix(is_filtered=True)
     client.run_pca()
     client.scale_projected_data()
-    client.generate_figure()
+    client.generate_figure(coord_dataframe=client.projected_data)

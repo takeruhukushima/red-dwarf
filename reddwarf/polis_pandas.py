@@ -204,14 +204,23 @@ class PolisClient():
 
         self.projected_data = self.projected_data * participant_scaling_coeffs
 
-    def generate_figure(self):
+    def generate_figure(self, coord_dataframe):
         plt.figure(figsize=(7, 5), dpi=80)
         plt.axhline(y=0, color='k', linestyle='-', linewidth=0.5)
         plt.axvline(x=0, color='k', linestyle='-', linewidth=0.5)
         plt.gca().invert_xaxis()
+
+        # Label points with participant_id
+        for participant_id, row in coord_dataframe.iterrows():
+            plt.annotate(participant_id,
+                (row["x"], row["y"]),
+                xytext=(2, 2),
+                color="lightgray",
+                textcoords='offset points')
+
         plt.scatter(
-            x=self.projected_data.loc[:,"x"],
-            y=self.projected_data.loc[:,"y"],
+            x=coord_dataframe.loc[:,"x"],
+            y=coord_dataframe.loc[:,"y"],
             s=10,
             alpha=0.25,
         )
