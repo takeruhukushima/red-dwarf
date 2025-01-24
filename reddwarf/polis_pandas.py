@@ -159,6 +159,7 @@ class PolisClient():
         # self.matrix = self.matrix.dropna(thresh=self.min_votes, axis='rows')
 
         # TODO: What about statements with no votes? E.g., 53 in oprah. Filter out? zero?
+        # Test this on a conversation where it will actually change statement count.
         unvoted_filter_type = 'drop' # `drop` or `zero`
         if unvoted_filter_type == 'zero':
             self.matrix[self.get_unvoted_statement_ids()] = 0
