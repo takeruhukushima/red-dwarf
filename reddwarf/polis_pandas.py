@@ -5,6 +5,8 @@ from sklearn.decomposition import PCA
 from sklearn.cluster import KMeans
 from sklearn.metrics import silhouette_score
 import matplotlib.pyplot as plt
+import matplotlib.patches as patches
+from scipy.spatial import ConvexHull
 import numpy as np
 from reddwarf.data_loader import Loader
 
@@ -230,6 +232,23 @@ class PolisClient():
             scatter_kwargs["cmap"] = "Set1"    # color map
             scatter_kwargs["c"] = labels        # color indexes
 
+            print("Calculating convex hulls around clusters...")
+            unique_labels = set(labels)
+            for label in unique_labels:
+                points = coord_dataframe[labels == label]
+                print(f"Hull {str(label)}, bounding {len(points)} points")
+                if len(points) < 2:
+                    continue
+                hull = ConvexHull(points)
+                hull_points = points.iloc[hull.vertices, :]
+                polygon = patches.Polygon(
+                    hull_points,
+                    fill=True,
+                    color="gray",
+                    alpha=0.3,
+                    edgecolor=None,
+                )
+                plt.gca().add_patch(polygon)
         plt.scatter(**scatter_kwargs)
         plt.show()
 
