@@ -237,7 +237,9 @@ class PolisClient():
             for label in unique_labels:
                 points = coord_dataframe[labels == label]
                 print(f"Hull {str(label)}, bounding {len(points)} points")
-                if len(points) < 2:
+                if len(points) < 3:
+                    # TODO: Accomodate 2 points like Polis platform does.
+                    print("Cannot create ConvexHull for less than 3 points. Skipping...")
                     continue
                 hull = ConvexHull(points)
                 hull_points = points.iloc[hull.vertices, :]
