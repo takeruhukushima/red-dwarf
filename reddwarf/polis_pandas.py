@@ -6,7 +6,7 @@ from sklearn.cluster import KMeans
 from sklearn.metrics import silhouette_score
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
-from scipy.spatial import ConvexHull
+from concave_hull import concave_hull_indexes
 import numpy as np
 from reddwarf.data_loader import Loader
 
@@ -239,10 +239,10 @@ class PolisClient():
                 print(f"Hull {str(label)}, bounding {len(points)} points")
                 if len(points) < 3:
                     # TODO: Accomodate 2 points like Polis platform does.
-                    print("Cannot create ConvexHull for less than 3 points. Skipping...")
+                    print("Cannot create concave hull for less than 3 points. Skipping...")
                     continue
-                hull = ConvexHull(points)
-                hull_points = points.iloc[hull.vertices, :]
+                vertex_indices = concave_hull_indexes(points, concavity=4.0)
+                hull_points = points.iloc[vertex_indices, :]
                 polygon = patches.Polygon(
                     hull_points,
                     fill=True,
