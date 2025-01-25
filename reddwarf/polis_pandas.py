@@ -219,7 +219,7 @@ class PolisClient():
             plt.annotate(participant_id,
                 (row["x"], row["y"]),
                 xytext=(2, 2),
-                color="lightgray",
+                color="gray",
                 textcoords='offset points')
 
         scatter_kwargs = defaultdict()
