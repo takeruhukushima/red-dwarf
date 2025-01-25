@@ -280,8 +280,16 @@ class PolisClient():
     def load_base_clusters_from_math(self):
         self.base_clusters = self.data_loader.math_data["base-clusters"]
 
-    def run_kmeans(self, dataframe, n_clusters=2):
-        kmeans = KMeans(n_clusters=n_clusters, random_state=None, n_init="auto").fit(dataframe)
+    # TODO: Start passing init_centers based on /math/pca2 endpoint data,
+    # and see how often we get the same clusters.
+    def run_kmeans(self, dataframe, n_clusters=2, init_centers=None):
+        if init_centers:
+            # Pass an array of xy coords to see kmeans guesses.
+            init = init_centers[:n_clusters]
+        else:
+            # Use the default strategy in sklearn.
+            init = "k-means++"
+        kmeans = KMeans(n_clusters=n_clusters, random_state=None, init=init, n_init="auto").fit(dataframe)
         return kmeans.labels_, kmeans.cluster_centers_
 
     def find_optimal_k(self):
