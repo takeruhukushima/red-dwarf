@@ -1,4 +1,5 @@
 from reddwarf.polis_pandas import PolisClient
+from reddwarf.data_presenter import DataPresenter
 
 if True:
     client = PolisClient()
@@ -8,4 +9,7 @@ if True:
     client.run_pca()
     client.scale_projected_data()
     client.find_optimal_k()
+
+    presenter = DataPresenter(client=client)
+    presenter.render_optimal_cluster_figure()
     # client.generate_figure(coord_dataframe=client.projected_data)
