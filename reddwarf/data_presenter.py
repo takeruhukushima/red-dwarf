@@ -3,6 +3,7 @@ import matplotlib.patches as patches
 from collections import defaultdict
 from concave_hull import concave_hull_indexes
 import numpy as np
+import seaborn as sns
 
 class DataPresenter():
     def __init__(self, client=None):
@@ -57,4 +58,13 @@ class DataPresenter():
                 )
                 plt.gca().add_patch(polygon)
         plt.scatter(**scatter_kwargs)
+        plt.show()
+
+    def generate_vote_heatmap(self, vote_df):
+        sns.set_context('poster')
+        sns.set_style('white')
+        sns.set_theme(font_scale=.7)
+        sns.set_color_codes()
+        fig, ax = plt.subplots(figsize=(10,8))
+        sns.heatmap(vote_df, center=0, cmap="RdYlBu", ax=ax)
         plt.show()
