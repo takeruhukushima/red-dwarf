@@ -1,5 +1,5 @@
 from pydantic import BaseModel, NonNegativeInt, Field, AliasChoices, field_serializer
-from typing import Literal, Optional, TypeVar, Annotated
+from typing import Literal, Optional, TypeAlias, Annotated
 from datetime import datetime
 from enum import IntEnum
 
@@ -13,7 +13,7 @@ class ModeratedEnum(IntEnum):
     UNMODERATED = 0
     REJECTED = -1
 
-IncrementingId = TypeVar('IncrementingId', NonNegativeInt)
+IncrementingId: TypeAlias = NonNegativeInt
 
 class Vote(BaseModel):
     @field_serializer('modified')
