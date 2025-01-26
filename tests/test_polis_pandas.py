@@ -81,8 +81,7 @@ def test_impute_missing_values():
         'sample_data/below-100-ptpts/comments.json',
     ])
     matrix_with_missing = client.get_matrix(is_filtered=True)
-    client.impute_missing_votes()
-    matrix_without_missing = client.get_matrix(is_filtered=True)
+    matrix_without_missing = client.impute_missing_votes()
 
     assert matrix_with_missing.isnull().values.sum() > 0
     assert matrix_without_missing.isnull().values.sum() == 0
