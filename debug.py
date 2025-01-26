@@ -1,7 +1,7 @@
 from reddwarf.polis_pandas import PolisClient
 from reddwarf.data_presenter import DataPresenter
 
-if True:
+if False:
     client = PolisClient()
     # client.load_data(report_id="r8xhmkwp6shm9yfermteh")
     client.load_data(report_id="r2dfw8eambusb8buvecjt")
@@ -13,3 +13,11 @@ if True:
     presenter = DataPresenter(client=client)
     presenter.render_optimal_cluster_figure()
     # client.generate_figure(coord_dataframe=client.projected_data)
+
+if True:
+    client = PolisClient()
+    client.load_data(conversation_id="4kjz5rrrfe")
+    xids = [12334552, 12334553, 12334554, "foobar"]
+    mappings = client.data_loader.fetch_xid_to_pid_mappings(xids)
+    for xid, pid in mappings.items():
+        print(f"{pid=} => {xid=}")

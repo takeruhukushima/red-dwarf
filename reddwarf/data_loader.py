@@ -240,3 +240,22 @@ class Loader():
             self.votes_data.extend(participant_votes)
 
         self.fix_participant_vote_sign()
+
+    def fetch_pid(self, xid):
+        params = {
+            "pid": "mypid",
+            "xid": xid,
+            "conversation_id": self.conversation_id,
+        }
+        r = self.session.get(self.polis_instance_url + "/api/v3/participationInit", params=params)
+        data = json.loads(r.text)
+
+        return data["ptpt"]["pid"]
+
+    def fetch_xid_to_pid_mappings(self, xids=[]):
+        mappings = {}
+        for xid in xids:
+            pid = self.fetch_pid(xid)
+            mappings[xid] = pid
+
+        return mappings
