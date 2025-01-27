@@ -1,5 +1,6 @@
 from reddwarf.polis_pandas import PolisClient
 from reddwarf.data_presenter import DataPresenter
+import pandas as pd
 
 
 CONVOS = {
@@ -41,7 +42,7 @@ if False:
     presenter.render_optimal_cluster_figure()
     # client.generate_figure(coord_dataframe=client.projected_data)
 
-if True:
+if False:
     client = PolisClient()
     client.load_data(conversation_id="9xxwa9jpkm")
     # Reproducing this output: https://github.com/compdemocracy/openData/blob/master/london.youth.policing
@@ -50,6 +51,46 @@ if True:
     matrix_raw = client.get_matrix(is_filtered=False, cutoff=1658934741418)
     participants_votes_df = client.build_participants_dataframe(matrix_raw)
     print(participants_votes_df)
+
+# This is a sanity-check for equality of a participants-votes.csv dataframe generated from raw votes vs a downloaded export.
+if True:
+    # Generate the participants-votes dataframe from raw data
+    client = PolisClient(is_strict_moderation=True)
+    client.load_data(directory_url="https://raw.githubusercontent.com/compdemocracy/openData/refs/heads/master/london.youth.policing/")
+    raw_matrix = client.get_matrix(is_filtered=False)
+    # Drop statement columns if no votes.
+    raw_matrix = raw_matrix.dropna(axis="columns", how="all")
+    # Convert all int columns to strings for easier comparison.
+    raw_matrix.columns = raw_matrix.columns.astype(str)
+    participants_votes_generated = client.build_participants_dataframe(vote_matrix=raw_matrix)
+    participants_votes_generated = participants_votes_generated.join(raw_matrix)
+    # Remove rows for participants with zero votes.
+    non_voting_participant_ids = participants_votes_generated[participants_votes_generated["n_votes"] == 0].index
+    participants_votes_generated = participants_votes_generated.drop(index=non_voting_participant_ids)
+
+    # Generate dataframe from downloaded CSV.
+    col_mapper = {
+        "participant": "participant_id",
+        "group-id": "group_id",
+        "n-comments": "n_comments",
+        "n-votes": "n_votes",
+        "n-agree": "n_agree",
+        "n-disagree": "n_disagree",
+    }
+    participants_votes_downloaded = (
+        pd
+            .read_csv("https://raw.githubusercontent.com/compdemocracy/openData/refs/heads/master/london.youth.policing/participants-votes.csv")
+            .rename(columns=col_mapper)
+            # Override group_id for now, until we can generate and compare.
+            .assign(group_id=None)
+            .set_index("participant_id")
+            .sort_index()
+    )
+    is_dataframes_equal = participants_votes_downloaded.equals(participants_votes_generated)
+    print(f"downloaded and generated dataframes are equal? {is_dataframes_equal}")
+    print(participants_votes_downloaded.shape)
+    print(participants_votes_generated.shape)
+    print(participants_votes_downloaded.compare(participants_votes_generated))
 
 if False:
     client = PolisClient()
