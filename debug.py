@@ -43,6 +43,15 @@ if False:
 
 if True:
     client = PolisClient()
+    client.load_data(conversation_id="9xxwa9jpkm")
+    # See: https://github.com/compdemocracy/openData/blob/master/london.youth.policing/participants-votes.csv
+    matrix_raw = client.get_matrix(is_filtered=False, cutoff=1658934741418)
+    print(matrix_raw.loc[[11,23],:])
+    participants_df = client.build_participants_dataframe(matrix_raw)
+    print(participants_df)
+
+if False:
+    client = PolisClient()
     # client.load_data(report_id=CONVOS["rideshare-toronto"]["report_id"])
     client.load_data(report_id=CONVOS["tech-politics-2018"]["report_id"])
     # client.load_data(conversation_id=CONVOS["anthropic-ccai"]["convo_id"])

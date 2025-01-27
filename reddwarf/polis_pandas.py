@@ -154,6 +154,35 @@ class PolisClient():
 
         return self.matrix
 
+    def build_participants_dataframe(self, vote_matrix):
+        # TODO: Drop statements from participants-votes when moderated out and no votes.
+        def get_comment_count(pid):
+            return (self
+                .statements_df["participant_id"]
+                .value_counts()
+                .get(pid, 0)
+            )
+
+        def get_xid(pid):
+            # TODO: Implemment this
+            return None
+
+        def get_group_id(pid):
+            # TODO: Implement this.
+            return None
+
+        participants_df = (pl.DataFrame()
+            .assign(participant_id=vote_matrix.index)
+            .set_index('participant_id')
+            .assign(xid=[get_xid(pid) for pid in vote_matrix.index])
+            .assign(group_id=[get_group_id(pid) for pid in vote_matrix.index])
+            .assign(n_comments=[get_comment_count(pid) for pid in vote_matrix.index])
+            .assign(n_votes=vote_matrix.count(axis="columns"))
+            .assign(n_agree=vote_matrix.apply(lambda row: row.eq(1).sum(), axis="columns"))
+            .assign(n_disagree=vote_matrix.apply(lambda row: row.eq(-1).sum(), axis="columns"))
+        )
+        return participants_df
+
     def filter_matrix(self):
         # Filter out moderated statements.
         self.matrix = self.matrix.filter(self.get_active_statement_ids(), axis='columns')
