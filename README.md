@@ -79,6 +79,7 @@ client.load_data(directory_url="https://raw.githubusercontent.com/compdemocracy/
 
 # If you have local CSV files, you can also load them individually.
 # Again, you must hint the moderation type.
+# Filenames must match `*comments.csv` or `*votes.csv`
 client = PolisClient(is_strict_moderation=True)
 client.load_data(filepaths=[
    "sample_data/comments.csv",
