@@ -11,7 +11,7 @@ from reddwarf.helpers import CachedLimiterSession, CloudflareBypassHTTPAdapter
 ua = UserAgent()
 
 class Loader():
-    def __init__(self, filepaths=[], conversation_id=None, report_id=None, is_cache_enabled=True, output_dir=None, data_source="api"):
+    def __init__(self, filepaths=[], conversation_id=None, report_id=None, is_cache_enabled=True, output_dir=None, data_source="api", directory_url=None):
         self.polis_instance_url = "https://pol.is"
         self.conversation_id = conversation_id
         self.report_id = report_id
@@ -19,6 +19,7 @@ class Loader():
         self.output_dir = output_dir
         self.data_source = data_source
         self.filepaths = filepaths
+        self.directory_url = directory_url
 
         self.votes_data = []
         self.comments_data = []
@@ -27,12 +28,15 @@ class Loader():
 
         if self.filepaths:
             self.load_file_data()
-        elif self.conversation_id or self.report_id:
+        elif self.conversation_id or self.report_id or self.directory_url:
             self.init_http_client()
-            if self.data_source == "api":
-                self.load_api_data()
-            elif self.data_source == "csv_export":
+            if self.directory_url:
+                self.data_source = "csv_export"
+
+            if self.data_source == "csv_export":
                 self.load_remote_export_data()
+            elif self.data_source == "api":
+                self.load_api_data()
             else:
                 raise ValueError("Unknown data_source: {}".format(self.data_source))
 
@@ -83,26 +87,35 @@ class Loader():
             'User-Agent': ua.random,
         }
 
-    def load_remote_export_data(self):
-        if not self.report_id:
-            raise ValueError("Cannot determine CSV export URL without report_id")
+    def get_polis_export_directory_url(self, report_id):
+        return f"{self.polis_instance_url}/api/v3/reportExport/{report_id}/"
 
-        self.load_remote_export_data_comments()
-        self.load_remote_export_data_votes()
+    def load_remote_export_data(self):
+        if self.directory_url:
+            directory_url = self.directory_url
+        elif self.report_id:
+            directory_url = self.get_polis_export_directory_url(self.report_id)
+        else:
+            raise ValueError("Cannot determine CSV export URL without report_id or directory_url")
+
+        self.load_remote_export_data_comments(directory_url)
+        self.load_remote_export_data_votes(directory_url)
+
+
         # When multiple votes (same tid and pid), keep only most recent (vs first).
         self.filter_duplicate_votes(keep="recent")
         # self.load_remote_export_data_summary()
         # self.load_remote_export_data_participant_votes()
         # self.load_remote_export_data_comment_groups()
 
-    def load_remote_export_data_comments(self):
-        r = self.session.get(self.polis_instance_url + "/api/v3/reportExport/{}/comments.csv".format(self.report_id))
+    def load_remote_export_data_comments(self, directory_url):
+        r = self.session.get(directory_url + "comments.csv")
         comments_csv = r.text
         reader = csv.DictReader(StringIO(comments_csv))
         self.comments_data = [Statement(**c).model_dump(mode='json') for c in list(reader)]
 
-    def load_remote_export_data_votes(self):
-        r = self.session.get(self.polis_instance_url + "/api/v3/reportExport/{}/votes.csv".format(self.report_id))
+    def load_remote_export_data_votes(self, directory_url):
+        r = self.session.get(directory_url + "votes.csv")
         votes_csv = r.text
         reader = csv.DictReader(StringIO(votes_csv))
         self.votes_data = [Vote(**vote).model_dump(mode='json') for vote in list(reader)]

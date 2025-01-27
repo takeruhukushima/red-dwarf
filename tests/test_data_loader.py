@@ -120,7 +120,7 @@ def test_load_data_from_api_with_report_id_with_conflict():
 def test_load_data_from_csv_export_without_report_id():
     with pytest.raises(ValueError) as e_info:
         Loader(conversation_id=SMALL_CONVO_ID, data_source="csv_export")
-    assert "Cannot determine CSV export URL without report_id" == str(e_info.value)
+    assert "Cannot determine CSV export URL without report_id or directory_url" == str(e_info.value)
 
 def test_load_data_from_unknown_data_source():
     with pytest.raises(ValueError) as e_info:
