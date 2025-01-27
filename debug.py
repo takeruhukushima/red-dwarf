@@ -44,11 +44,12 @@ if False:
 if True:
     client = PolisClient()
     client.load_data(conversation_id="9xxwa9jpkm")
-    # See: https://github.com/compdemocracy/openData/blob/master/london.youth.policing/participants-votes.csv
+    # Reproducing this output: https://github.com/compdemocracy/openData/blob/master/london.youth.policing
+    # participant-votes.csv matches, but votes.csv is missing entries.
+    # BUG: dates for exports seemingly not matching between matrix build and vote export.
     matrix_raw = client.get_matrix(is_filtered=False, cutoff=1658934741418)
-    print(matrix_raw.loc[[11,23],:])
-    participants_df = client.build_participants_dataframe(matrix_raw)
-    print(participants_df)
+    participants_votes_df = client.build_participants_dataframe(matrix_raw)
+    print(participants_votes_df)
 
 if False:
     client = PolisClient()
