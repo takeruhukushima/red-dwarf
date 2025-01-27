@@ -55,7 +55,7 @@ client.load_data(report_id="r45ru4zfmutun54ttskne")
 client.load_data(report_id="r45ru4zfmutun54ttskne", data_source="api")
 
 # If you know the report ID, you can also download from the newer and more official CSV export API endpoint:
-# Example: https://pol.is/api/v3/reportExport/r68fknmmmyhdpi3sh4ctc/participant-votes.csv
+# Example: https://pol.is/api/v3/reportExport/r45ru4zfmutun54ttskne/participant-votes.csv
 client = PolisClient()
 client.load_data(report_id="r45ru4zfmutun54ttskne", data_source="csv_export")
 
