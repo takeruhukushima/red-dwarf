@@ -33,10 +33,10 @@ See [`docs/example-usage.ipynb`][notebook]
 
 Let's say that you have a conversation for which you know the conversation url, and you may or may not know the report url. This conversation may also have an archived CSV export saved somewhere online.
 
-- conversation url: https://pol.is/5sw7wa5dep
-   - `conversation_id`: `5sw7wa5dep`
-- report url: https://pol.is/report/r45ru4zfmutun54ttskne
-   - `report_id`: `r45ru4zfmutun54ttskne`
+- conversation url: https://pol.is/4yy3sh84js
+   - `conversation_id`: `4yy3sh84js`
+- report url: https://pol.is/report/r5jsvucnwuuhw7dzjvaim
+   - `report_id`: `r5jsvucnwuuhw7dzjvaim`
 - archived CSV export: https://github.com/compdemocracy/openData/tree/master/scoop-hivemind.ubi
 
 ```py
@@ -45,28 +45,28 @@ from reddwarf.polis_pandas import PolisClient
 # If you only know the conversation ID, you can fetch the live data from the Polis APIs.
 # Note that this may be fresher than a static export hosted elsewhere.
 client = PolisClient()
-client.load_data(conversation_id="5sw7wa5dep")
+client.load_data(conversation_id="4yy3sh84js")
 # If you happen to know the report ID, that can be used instead.
 
 # All of these are equivalent:
-client.load_data(conversation_id="5sw7wa5dep")
-client.load_data(conversation_id="5sw7wa5dep", data_source="api")
-client.load_data(report_id="r45ru4zfmutun54ttskne")
-client.load_data(report_id="r45ru4zfmutun54ttskne", data_source="api")
+client.load_data(conversation_id="4yy3sh84js")
+client.load_data(conversation_id="4yy3sh84js", data_source="api")
+client.load_data(report_id="r5jsvucnwuuhw7dzjvaim")
+client.load_data(report_id="r5jsvucnwuuhw7dzjvaim", data_source="api")
 
 # If you know the report ID, you can also download from the newer and more official CSV export API endpoint:
-# Example: https://pol.is/api/v3/reportExport/r45ru4zfmutun54ttskne/participant-votes.csv
+# Example: https://pol.is/api/v3/reportExport/r5jsvucnwuuhw7dzjvaim/participant-votes.csv
 client = PolisClient()
-client.load_data(report_id="r45ru4zfmutun54ttskne", data_source="csv_export")
+client.load_data(report_id="r5jsvucnwuuhw7dzjvaim", data_source="csv_export")
 
 # All of these are equivalent:
-client.load_data(report_id="r45ru4zfmutun54ttskne", data_source="csv_export")
-client.load_data(directory_url="https://pol.is/api/v3/reportExport/r45ru4zfmutun54ttskne/")
+client.load_data(report_id="r5jsvucnwuuhw7dzjvaim", data_source="csv_export")
+client.load_data(directory_url="https://pol.is/api/v3/reportExport/r5jsvucnwuuhw7dzjvaim/")
 
 
 # If you know a remote directory-like path that contains all the raw export files, you can use that.
 # EXAMPLE
-# Web: https://github.com/compdemocracy/openData/tree/master/scoop-hivemind.taxes
+# Web: https://github.com/compdemocracy/openData/tree/master/scoop-hivemind.ubi
 # Raw: https://raw.githubusercontent.com/compdemocracy/openData/refs/heads/master/scoop-hivemind.ubi/
 #
 # Note: you must tell the loader whether "strict moderation" is being used,
@@ -82,8 +82,8 @@ client.load_data(directory_url="https://raw.githubusercontent.com/compdemocracy/
 # Filenames must match `*comments.csv` or `*votes.csv`
 client = PolisClient(is_strict_moderation=True)
 client.load_data(filepaths=[
-   "sample_data/comments.csv",
-   "sample_data/votes.csv",
+   "your-data/comments.csv",
+   "your-data/votes.csv",
 ])
 ```
 
