@@ -6,6 +6,7 @@ from sklearn.cluster import KMeans
 from sklearn.metrics import silhouette_score
 import numpy as np
 from reddwarf.data_loader import Loader
+from reddwarf.models import ModeratedEnum
 
 class PolisClient():
     def __init__(self, is_strict_moderation=None) -> None:
@@ -14,7 +15,8 @@ class PolisClient():
         # Ref: https://hyp.is/8zUyWM5fEe-uIO-J34vbkg/gwern.net/doc/sociology/2021-small.pdf
         self.min_votes = 7
         self.votes = []
-        self.comments_df = []
+        self.statements_df = None
+        self.participants_df = None
         # We sometimes want to keep some participant IDs that would otherwise be removed
         # (e.g., for not meeting vote threshold), to reproduce bugs in Polis codebase algorithms.
         self.keep_participant_ids = []
@@ -44,12 +46,15 @@ class PolisClient():
     def get_participant_row_mask(self):
         raise NotImplementedError
 
-    def get_active_statement_ids(self):
+    def get_is_strict_moderation(self):
         if self.is_strict_moderation == None:
-            raise ValueError('must set is_strict_moderation to properly filter for active statements')
-        ACTIVE_MOD_STATES = [1] if self.is_strict_moderation else [1,0]
-        active_statement_ids = sorted(self.comments_df.loc[self.comments_df["moderated"].isin(ACTIVE_MOD_STATES)].index, key=int)
+            raise ValueError('is_strict_moderation cannot be auto-detected, and must be set manually')
 
+        return self.is_strict_moderation
+
+    def get_active_statement_ids(self):
+        active_statements = self.statements_df[self.statements_df["is_shown"]]
+        active_statement_ids = active_statements.index
         return active_statement_ids
 
     def get_unvoted_statement_ids(self):
@@ -281,8 +286,22 @@ class PolisClient():
         self.add_votes_batch(votes_df)
 
     def load_comments_data(self, data=None):
-        self.comments_df = pl.DataFrame.from_records(data).set_index('statement_id').sort_index()
-        for i, row in self.comments_df.iterrows():
+        statements_df = (pl.DataFrame
+            .from_records(data)
+            .set_index('statement_id')
+            .sort_index()
+        )
+
+        def is_shown(statement):
+            if self.get_is_strict_moderation():
+                active_mod_states = [ModeratedEnum.APPROVED]
+            else:
+                active_mod_states = [ModeratedEnum.APPROVED, ModeratedEnum.UNMODERATED]
+            is_shown = statement["moderated"] in active_mod_states
+            return is_shown
+
+        statements_df["is_shown"] = statements_df.apply(is_shown, axis="columns")
+        for i, row in statements_df.iterrows():
             # TODO: Why does is_meta make this mod-in.
             # Maybe I don't understand what mod-in does...
             # Note: mod-in/mod-out doesn't seem to be actually used in the front-end, so a bug here wouldn't matter.
@@ -296,3 +315,5 @@ class PolisClient():
             # Ref: https://github.com/compdemocracy/polis/blob/6d04f4d144adf9640fe49b8fbaac38943dc11b9a/math/src/polismath/math/conversation.clj#L843-L850
             if row['is_meta']:
                 self.meta_tids.append(i)
+
+        self.statements_df = statements_df

@@ -20,7 +20,7 @@ def test_meta_tids():
     with open('sample_data/below-100-ptpts/math-pca2.json', 'r') as file:
         expected_data = json.load(file)['meta-tids']
 
-    client = PolisClient()
+    client = PolisClient(is_strict_moderation=True)
     client.load_data(filepaths=['sample_data/below-100-ptpts/comments.json'])
 
     assert client.get_meta_tids() == sorted(expected_data)
@@ -29,7 +29,7 @@ def test_mod_in():
     with open('sample_data/below-100-ptpts/math-pca2.json', 'r') as file:
         expected_data = json.load(file)['mod-in']
 
-    client = PolisClient()
+    client = PolisClient(is_strict_moderation=True)
     client.load_data(filepaths=['sample_data/below-100-ptpts/comments.json'])
 
     assert client.get_mod_in() == sorted(expected_data)
@@ -38,7 +38,7 @@ def test_mod_out():
     with open('sample_data/below-100-ptpts/math-pca2.json', 'r') as file:
         expected_data = json.load(file)['mod-out']
 
-    client = PolisClient()
+    client = PolisClient(is_strict_moderation=True)
     client.load_data(filepaths=['sample_data/below-100-ptpts/comments.json'])
 
     assert sorted(client.get_mod_out()) == sorted(expected_data)
