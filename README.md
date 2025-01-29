@@ -87,6 +87,12 @@ client.load_data(filepaths=[
 ])
 ```
 
+## License
+
+[MPL 2.0: Mozilla Public License 2.0][mplv2] (See [`LICENSE`][])
+
 <!-- Links -->
    [stellarpunk]: https://www.youtube.com/watch?v=opnkQVZrhAw
    [notebook]: /docs/example-usage.ipynb
+   [MPLv2]: https://choosealicense.com/licenses/mpl-2.0/
+   [`LICENSE`]: /LICENSE
