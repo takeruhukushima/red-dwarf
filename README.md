@@ -15,6 +15,10 @@ A <em>DIM</em>ensional <em>RED</em>uction library for [stellarpunk][] democracy 
 
 Inspiration: https://chatgpt.com/share/677f7690-7188-800b-85e5-816aaa7cc8f9
 
+## Roadmap
+
+For now, see [this related issue](https://github.com/patcon/red-dwarf/issues/4)
+
 ## Goals
 
 Code that aspires to embody and support democratic values should be...
