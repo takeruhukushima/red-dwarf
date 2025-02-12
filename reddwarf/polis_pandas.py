@@ -1,12 +1,12 @@
 import pandas as pl # For sake of clean diffs
 from collections import defaultdict
-from sklearn.impute import SimpleImputer
 from sklearn.decomposition import PCA
 from sklearn.cluster import KMeans
 from sklearn.metrics import silhouette_score
 import numpy as np
 from reddwarf.data_loader import Loader
 from reddwarf.models import ModeratedEnum
+from reddwarf import utils
 
 class PolisClient():
     def __init__(self, is_strict_moderation=None) -> None:
@@ -206,18 +206,8 @@ class PolisClient():
         else:
             raise ValueError('unvoted_filter_type must be `drop` or `zero`')
 
-    # Ref: https://hyp.is/8zUyWM5fEe-uIO-J34vbkg/gwern.net/doc/sociology/2021-small.pdf
-    def impute_missing_votes(self):
-        mean_imputer = SimpleImputer(missing_values=np.nan, strategy='mean')
-        imputed_matrix = pl.DataFrame(
-            mean_imputer.fit_transform(self.matrix),
-            columns=self.matrix.columns,
-            index=self.matrix.index,
-        )
-        return imputed_matrix
-
     def run_pca(self):
-        imputed_matrix = self.impute_missing_votes()
+        imputed_matrix = utils.impute_missing_votes(self.matrix)
 
         pca = PCA(n_components=self.n_components) ## pca is apparently different, it wants
         pca.fit(imputed_matrix) ## .T transposes the matrix (flips it)
