@@ -29,7 +29,7 @@ CONVOS = {
     },
 }
 
-if False:
+if True:
     client = PolisClient()
     # client.load_data(report_id=CONVOS["rideshare-toronto"]["report_id"])
     client.load_data(report_id=CONVOS["tech-politics-2018"]["report_id"])
@@ -53,7 +53,7 @@ if False:
     print(participants_votes_df)
 
 # This is a sanity-check for equality of a participants-votes.csv dataframe generated from raw votes vs a downloaded export.
-if True:
+if False:
     # Generate the participants-votes dataframe from raw data
     client = PolisClient(is_strict_moderation=True)
     client.load_data(directory_url="https://raw.githubusercontent.com/compdemocracy/openData/refs/heads/master/london.youth.policing/")
