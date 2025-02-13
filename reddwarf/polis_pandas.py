@@ -172,16 +172,11 @@ class PolisClient():
         self.projected_data.index.name = "participant_id"
 
     def scale_projected_data(self):
-        total_active_comment_count = self.matrix.shape[1]
-        participant_vote_counts = self.matrix.count(axis="columns")
-        # Ref: https://hyp.is/x6nhItMMEe-v1KtYFgpOiA/gwern.net/doc/sociology/2021-small.pdf
-        # Ref: https://github.com/compdemocracy/polis/blob/15aa65c9ca9e37ecf57e2786d7d81a4bd4ad37ef/math/src/polismath/math/pca.clj#L155-L156
-        participant_scaling_coeffs = np.sqrt(total_active_comment_count / participant_vote_counts).values
-        # See: https://numpy.org/doc/stable/reference/generated/numpy.reshape.html
-        # Reshape scaling_coeffs list to match the shape of projected_data matrix
-        participant_scaling_coeffs = np.reshape(participant_scaling_coeffs, (-1, 1))
-
-        self.projected_data = self.projected_data * participant_scaling_coeffs
+        scaled_data = utils.scale_projected_data(
+            projected_data = self.projected_data,
+            vote_matrix = self.matrix,
+        )
+        self.projected_data = scaled_data
 
     # Not working yet.
     def build_base_clusters(self):

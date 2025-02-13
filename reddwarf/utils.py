@@ -142,3 +142,29 @@ def generate_filtered_matrix(
         raise ValueError('unvoted_filter_type must be `drop` or `zero`')
 
     return vote_matrix
+
+def scale_projected_data(
+        projected_data: pd.DataFrame,
+        vote_matrix: VoteMatrix
+) -> pd.DataFrame:
+    """
+    Scale projected participant xy points based on vote matrix, to account for any small number of
+    votes by a participant and prevent those participants for bunching up in center.
+
+    Args:
+        projected_data (pd.DataFrame): the project xy coords of participants.
+        vote_matrix (VoteMatrix): the processed vote matrix data frame, from which to generate scaling factors.
+
+    Returns:
+        scaled_projected_data (pd.DataFrame): The coord data rescaled based on participant votes.
+    """
+    total_active_comment_count = vote_matrix.shape[1]
+    participant_vote_counts = vote_matrix.count(axis="columns")
+    # Ref: https://hyp.is/x6nhItMMEe-v1KtYFgpOiA/gwern.net/doc/sociology/2021-small.pdf
+    # Ref: https://github.com/compdemocracy/polis/blob/15aa65c9ca9e37ecf57e2786d7d81a4bd4ad37ef/math/src/polismath/math/pca.clj#L155-L156
+    participant_scaling_coeffs = np.sqrt(total_active_comment_count / participant_vote_counts).values
+    # See: https://numpy.org/doc/stable/reference/generated/numpy.reshape.html
+    # Reshape scaling_coeffs list to match the shape of projected_data matrix
+    participant_scaling_coeffs = np.reshape(participant_scaling_coeffs, (-1, 1))
+
+    return projected_data * participant_scaling_coeffs
