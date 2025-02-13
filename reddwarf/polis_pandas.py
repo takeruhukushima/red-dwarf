@@ -58,10 +58,7 @@ class PolisClient():
         return active_statement_ids
 
     def get_unvoted_statement_ids(self):
-        null_column_mask = self.matrix.isnull().all()
-        null_column_ids = self.matrix.columns[null_column_mask].tolist()
-
-        return null_column_ids
+        return self.matrix.pipe(utils.get_unvoted_statement_ids)
 
     def apply_masks(self, participant_rows=True, statement_cols=True):
         raise NotImplementedError
@@ -153,27 +150,12 @@ class PolisClient():
         return participants_df
 
     def filter_matrix(self):
-        # Filter out moderated statements.
-        self.matrix = self.matrix.filter(self.get_active_statement_ids(), axis='columns')
-        # Filter out participants with less than 7 votes (keeping IDs we're forced to)
-        # Ref: https://hyp.is/JbNMus5gEe-cQpfc6eVIlg/gwern.net/doc/sociology/2021-small.pdf
-        participant_ids_meeting_vote_thresh = self.matrix[self.matrix.count(axis="columns") >= self.min_votes].index.to_list()
-        participant_ids_in = participant_ids_meeting_vote_thresh + self.keep_participant_ids
-        participant_ids_in_unique = list(set(participant_ids_in))
-        self.matrix = self.matrix.filter(participant_ids_in_unique, axis='rows')
-        # This is otherwise the more efficient way, but we want to keep some
-        # to troubleshoot bugs in upsteam Polis math.
-        # self.matrix = self.matrix.dropna(thresh=self.min_votes, axis='rows')
-
-        # TODO: What about statements with no votes? E.g., 53 in oprah. Filter out? zero?
-        # Test this on a conversation where it will actually change statement count.
-        unvoted_filter_type = 'drop' # `drop` or `zero`
-        if unvoted_filter_type == 'zero':
-            self.matrix[self.get_unvoted_statement_ids()] = 0
-        elif unvoted_filter_type == 'drop':
-            self.matrix = self.matrix.drop(self.get_unvoted_statement_ids(), axis='columns')
-        else:
-            raise ValueError('unvoted_filter_type must be `drop` or `zero`')
+        self.matrix = utils.generate_filtered_matrix(
+            vote_matrix=self.matrix,
+            min_user_vote_threshold=self.min_votes,
+            active_statement_ids=self.get_active_statement_ids(),
+            keep_participant_ids=self.keep_participant_ids,
+        )
 
     def run_pca(self):
         imputed_matrix = utils.impute_missing_votes(self.matrix)
