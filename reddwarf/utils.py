@@ -42,7 +42,7 @@ def generate_raw_matrix(
         - negative: filters out votes that many indices from end
 
     Args:
-        votes (List[Dict]): A list of vote records, where each record is a dictionary containing: \
+        votes (List[Dict]): A date-sorted list of vote records, where each record is a dictionary containing: \
             - "participant_id": The ID of the voter. \
             - "statement_id": The ID of the statement being voted on. \
             - "vote": The recorded vote value. \
@@ -56,15 +56,14 @@ def generate_raw_matrix(
                                     This includes even voters that have no votes, and statements on which no votes were placed.
     """
     if cutoff:
-        # TODO: This should already be sorted earlier. confirm.
-        date_sorted_votes = sorted([v for  v in votes], key=lambda x: x['modified'])
-        # date_sorted_votes = self.votes
+        # TODO: Add tests to confirm votes list is already date-sorted for each data_source.
+        # TODO: Detect datetime object as arg instead.
         if cutoff > 1_300_000_000:
             cutoff_timestamp = cutoff
-            votes = [v for v in date_sorted_votes if v['modified'] <= cutoff_timestamp]
+            votes = [v for v in votes if v['modified'] <= cutoff_timestamp]
         else:
             cutoff_index = cutoff
-            votes = date_sorted_votes[:cutoff_index]
+            votes = votes[:cutoff_index]
     else:
         votes = votes
 
