@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 from sklearn.impute import SimpleImputer
+from typing import List, Dict, Optional
 
 def impute_missing_votes(vote_matrix: pd.DataFrame) -> pd.DataFrame:
     """
@@ -26,7 +27,34 @@ def impute_missing_votes(vote_matrix: pd.DataFrame) -> pd.DataFrame:
     )
     return imputed_matrix
 
-def generate_raw_matrix(votes, cutoff=None):
+def generate_raw_matrix(
+        votes: List[Dict],
+        cutoff: Optional[int] = None,
+) -> pd.DataFrame:
+    """
+    Generates a raw vote matrix from a list of vote records.
+
+    If a cutoff is provided, votes are filtered based on either:
+    - An `int` representing unix timestamp (ms), keeping only votes before or at that time.
+        - Any int above 13_000_000_000 is considered a timestamp.
+    - Any other positive or negative `int` is considered an index, reflecting where to trim the time-sorted vote list.
+        - positive: filters in votes that many indices from start
+        - negative: filters out votes that many indices from end
+
+    Args:
+        votes (List[Dict]): A list of vote records, where each record is a dictionary containing: \
+            - "participant_id": The ID of the voter. \
+            - "statement_id": The ID of the statement being voted on. \
+            - "vote": The recorded vote value. \
+            - "modified": A unix timestamp object representing when the vote was made.
+
+    Returns:
+        raw_matrix (pd.DataFrame): A full raw vote matrix DataFrame with NaN values where: \
+                                        (1) rows are voters, \
+                                        (2) columns are statements, and \
+                                        (3) values are votes. \
+                                    This includes even voters that have no votes, and statements on which no votes were placed.
+    """
     if cutoff:
         # TODO: This should already be sorted earlier. confirm.
         date_sorted_votes = sorted([v for  v in votes], key=lambda x: x['modified'])
