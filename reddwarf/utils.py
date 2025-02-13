@@ -3,7 +3,7 @@ import numpy as np
 from sklearn.impute import SimpleImputer
 from sklearn.cluster import KMeans
 from sklearn.metrics import silhouette_score
-from typing import List, Dict, Tuple, Optional, TypeAlias
+from typing import List, Dict, Tuple, Optional, Literal, TypeAlias
 
 VoteMatrix: TypeAlias = pd.DataFrame
 
@@ -115,33 +115,48 @@ def generate_filtered_matrix(
         min_user_vote_threshold: int = 7,
         active_statement_ids: List[int] = [],
         keep_participant_ids: List[int] = [],
+        unvoted_filter_type: Literal["drop", "zero"] = "drop",
 ) -> VoteMatrix:
     """
     Generates a filtered vote matrix from a raw matrix and filter config.
+
+    Args:
+        vote_matrix (pd.DataFrame): The [raw] vote matrix.
+        min_user_vote_threshold (int): The number of votes a participant must make to avoid being filtered.
+        active_statement_ids (List[int]): The statement IDs that are not moderated out.
+        keep_participant_ids (List[int]): Preserve specific participants even if below threshold.
+        unvoted_filter_type ("drop" | "zero"): When a statement has no votes, it can't be imputed. \
+            This determined whether to drop the statement column, or set all the value to zero/pass. (Default: drop)
+
+    Returns:
+        filtered_vote_matrix (VoteMatrix): A vote matrix with the following filtered out: \
+            (1) statements without any votes,
+            (2) statements that have been moderated out,
+            (3) participants below the vote count threshold,
+            (4) participants who have not been explicitly selected to circumvent above filtering.
     """
     # Filter out moderated statements.
     vote_matrix = vote_matrix.filter(active_statement_ids, axis='columns')
     # Filter out participants with less than 7 votes (keeping IDs we're forced to)
     # Ref: https://hyp.is/JbNMus5gEe-cQpfc6eVIlg/gwern.net/doc/sociology/2021-small.pdf
     participant_ids_meeting_vote_thresh = vote_matrix[vote_matrix.count(axis="columns") >= min_user_vote_threshold].index.to_list()
+    # Add in some specific participant IDs for Polismath edge-cases.
+    # See: https://github.com/compdemocracy/polis/pull/1893#issuecomment-2654666421
     participant_ids_in = participant_ids_meeting_vote_thresh + keep_participant_ids
     participant_ids_in_unique = list(set(participant_ids_in))
     vote_matrix = vote_matrix.filter(participant_ids_in_unique, axis='rows')
-    # This is otherwise the more efficient way, but we want to keep some
-    # to troubleshoot bugs in upsteam Polis math.
+    # This is otherwise the more efficient way, but we want to keep some participant IDs
+    # to troubleshoot edge-cases in upsteam Polis math.
     # self.matrix = self.matrix.dropna(thresh=self.min_votes, axis='rows')
 
     unvoted_statement_ids = vote_matrix.pipe(get_unvoted_statement_ids)
 
     # TODO: What about statements with no votes? E.g., 53 in oprah. Filter out? zero?
     # Test this on a conversation where it will actually change statement count.
-    unvoted_filter_type = 'drop' # `drop` or `zero`
-    if unvoted_filter_type == 'zero':
-        vote_matrix[unvoted_statement_ids] = 0
-    elif unvoted_filter_type == 'drop':
+    if unvoted_filter_type == 'drop':
         vote_matrix = vote_matrix.drop(unvoted_statement_ids, axis='columns')
-    else:
-        raise ValueError('unvoted_filter_type must be `drop` or `zero`')
+    elif unvoted_filter_type == 'zero':
+        vote_matrix[unvoted_statement_ids] = 0
 
     return vote_matrix
 
