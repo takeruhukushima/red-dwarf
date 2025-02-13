@@ -1,7 +1,8 @@
 import pandas as pd
 import numpy as np
 from sklearn.impute import SimpleImputer
-from typing import List, Dict, Optional, TypeAlias
+from sklearn.cluster import KMeans
+from typing import List, Dict, Tuple, Optional, TypeAlias
 
 VoteMatrix: TypeAlias = pd.DataFrame
 
@@ -168,3 +169,32 @@ def scale_projected_data(
     participant_scaling_coeffs = np.reshape(participant_scaling_coeffs, (-1, 1))
 
     return projected_data * participant_scaling_coeffs
+
+# TODO: Start passing init_centers based on /math/pca2 endpoint data,
+# and see how often we get the same clusters.
+def run_kmeans(
+        dataframe: pd.DataFrame,
+        n_clusters: int = 2,
+        # TODO: Improve this type. 3d?
+        init_centers: Optional[List] = None,
+) -> Tuple[np.ndarray, np.ndarray]:
+    """
+    Args:
+        dataframe (pd.DataFrame): A dataframe with two columns (assumed `x` and `y`).
+        n_clusters (int): How many clusters k to assume.
+        init_centers (List): A list of xy coordinates to use as initial center guesses.
+
+    Returns:
+        cluster_labels (np.ndarray): A list of labels for each row in the dataframe
+        cluster_centers (np.ndarray): A list of center coords for clusters.
+    """
+    if init_centers:
+        # Pass an array of xy coords to see kmeans guesses.
+        init_arg = init_centers[:n_clusters]
+    else:
+        # Use the default strategy in sklearn.
+        init_arg = "k-means++"
+    # TODO: Set random_state to a value eventually, so calculation is deterministic.
+    kmeans = KMeans(n_clusters=n_clusters, random_state=None, init=init_arg, n_init="auto").fit(dataframe)
+
+    return kmeans.labels_, kmeans.cluster_centers_

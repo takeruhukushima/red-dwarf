@@ -1,7 +1,6 @@
 import pandas as pl # For sake of clean diffs
 from collections import defaultdict
 from sklearn.decomposition import PCA
-from sklearn.cluster import KMeans
 from sklearn.metrics import silhouette_score
 import numpy as np
 from reddwarf.data_loader import Loader
@@ -184,7 +183,7 @@ class PolisClient():
         n_clusters=min(self.base_cluster_count, self.participant_count)
         # Ref: Polis math values, base-iters
         print(self.eigenvectors)
-        cluster_labels, cluster_centers = self.run_kmeans(self.eigenvectors, n_clusters=n_clusters)
+        cluster_labels, cluster_centers = utils.run_kmeans(self.eigenvectors, n_clusters=n_clusters)
         # ptpt_to_cluster_mapping = dict(zip(self.matrix.index, range(len(kmeans.labels_))))
         # cluster_to_ptpt_mapping = {v: k for k, v in ptpt_to_cluster_mapping.items()}
         participant_df = pl.DataFrame.from_dict(
@@ -203,25 +202,13 @@ class PolisClient():
     def load_base_clusters_from_math(self):
         self.base_clusters = self.data_loader.math_data["base-clusters"]
 
-    # TODO: Start passing init_centers based on /math/pca2 endpoint data,
-    # and see how often we get the same clusters.
-    def run_kmeans(self, dataframe, n_clusters=2, init_centers=None):
-        if init_centers:
-            # Pass an array of xy coords to see kmeans guesses.
-            init = init_centers[:n_clusters]
-        else:
-            # Use the default strategy in sklearn.
-            init = "k-means++"
-        kmeans = KMeans(n_clusters=n_clusters, random_state=None, init=init, n_init="auto").fit(dataframe)
-        return kmeans.labels_, kmeans.cluster_centers_
-
     def find_optimal_k(self):
         K_RANGE = range(2, 6)
         K_best = 0 # Best K so far.
         silhouette_best = -np.inf
 
         for K in K_RANGE:
-            cluster_labels, _ = self.run_kmeans(dataframe=self.projected_data, n_clusters=K)
+            cluster_labels, _ = utils.run_kmeans(dataframe=self.projected_data, n_clusters=K)
             silhouette_K = silhouette_score(self.projected_data, cluster_labels)
             print(f"{K=}, {silhouette_K=}")
             if silhouette_K >= silhouette_best:
