@@ -1,8 +1,6 @@
 import pandas as pl # For sake of clean diffs
 from collections import defaultdict
 from sklearn.decomposition import PCA
-from sklearn.metrics import silhouette_score
-import numpy as np
 from reddwarf.data_loader import Loader
 from reddwarf.models import ModeratedEnum
 from reddwarf import utils
@@ -13,6 +11,7 @@ class PolisClient():
         self.n_components = 2
         # Ref: https://hyp.is/8zUyWM5fEe-uIO-J34vbkg/gwern.net/doc/sociology/2021-small.pdf
         self.min_votes = 7
+        self.max_group_count = 5
         self.votes = []
         self.statements_df = None
         self.participants_df = None
@@ -203,22 +202,14 @@ class PolisClient():
         self.base_clusters = self.data_loader.math_data["base-clusters"]
 
     def find_optimal_k(self):
-        K_RANGE = range(2, 6)
-        K_best = 0 # Best K so far.
-        silhouette_best = -np.inf
-
-        for K in K_RANGE:
-            cluster_labels, _ = utils.run_kmeans(dataframe=self.projected_data, n_clusters=K)
-            silhouette_K = silhouette_score(self.projected_data, cluster_labels)
-            print(f"{K=}, {silhouette_K=}")
-            if silhouette_K >= silhouette_best:
-                K_best = K
-                silhouette_best = silhouette_K
-                clusters_K_best = cluster_labels
-
-        self.optimal_k = K_best
-        self.optimal_silhouette = silhouette_best
-        self.optimal_cluster_labels = clusters_K_best
+        best_k, silhouette_score, cluster_labels = utils.find_optimal_k(
+            projected_data=self.projected_data,
+            max_group_count=self.max_group_count,
+            debug=True,
+        )
+        self.optimal_k = best_k
+        self.optimal_silhouette = silhouette_score
+        self.optimal_cluster_labels = cluster_labels
 
     def load_data(self, filepaths=[], conversation_id=None, report_id=None, directory_url=None, data_source="api"):
         if conversation_id or report_id or filepaths or directory_url:

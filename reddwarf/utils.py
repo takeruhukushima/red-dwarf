@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 from sklearn.impute import SimpleImputer
 from sklearn.cluster import KMeans
+from sklearn.metrics import silhouette_score
 from typing import List, Dict, Tuple, Optional, TypeAlias
 
 VoteMatrix: TypeAlias = pd.DataFrame
@@ -198,3 +199,41 @@ def run_kmeans(
     kmeans = KMeans(n_clusters=n_clusters, random_state=None, init=init_arg, n_init="auto").fit(dataframe)
 
     return kmeans.labels_, kmeans.cluster_centers_
+
+def find_optimal_k(
+        projected_data: pd.DataFrame,
+        max_group_count: int = 5,
+        debug: bool = False,
+) -> Tuple[int, float, np.ndarray]:
+    """
+    Use silhouette scores to find the best number of clusters k to assume to fit the data.
+
+    Args:
+        projected_data (pd.DataFrame): A dataframe with two columns (assumed `x` and `y`).
+        max_group_count (int): The max K number of groups to test for. (Default: 5)
+        debug (bool): Whether to print debug output. (Default: False)
+
+    Returns:
+        optimal_k (int): Ideal number of clusters.
+        optimal_silhouette_score (float): Silhouette score for this K value.
+        optimal_cluster_labels (np.ndarray): A list of index labels assigned a group to each row in projected_date.
+    """
+    K_RANGE = range(2, max_group_count+1)
+    k_best = 0 # Best K so far.
+    best_silhouette_score = -np.inf
+
+    for k_test in K_RANGE:
+        cluster_labels, _ = run_kmeans(dataframe=projected_data, n_clusters=k_test)
+        this_silhouette_score = silhouette_score(projected_data, cluster_labels)
+        if debug:
+            print(f"{k_test=}, {this_silhouette_score=}")
+        if this_silhouette_score >= best_silhouette_score:
+            k_best = k_test
+            best_silhouette_score = this_silhouette_score
+            best_cluster_labels = cluster_labels
+
+    optimal_k = k_best
+    optimal_silhouette = best_silhouette_score
+    optimal_cluster_labels = best_cluster_labels
+
+    return optimal_k, optimal_silhouette, optimal_cluster_labels
