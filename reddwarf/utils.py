@@ -15,15 +15,16 @@ def impute_missing_votes(vote_matrix: VoteMatrix) -> VoteMatrix:
 
     Reference:
         Small, C. (2021). "Polis: Scaling Deliberation by Mapping High Dimensional Opinion Spaces."
-        Specific highlight: https://hyp.is/8zUyWM5fEe-uIO-J34vbkg/gwern.net/doc/sociology/2021-small.pdf
+        Specific highlight: <https://hyp.is/8zUyWM5fEe-uIO-J34vbkg/gwern.net/doc/sociology/2021-small.pdf>
 
     Args:
-    vote_matrix (pd.DataFrame):  A vote matrix DataFrame with NaN values where: \
-                                    (1) rows are voters, \
-                                    (2) columns are statements, and \
-                                    (3) values are votes.
+        vote_matrix (pd.DataFrame):  A vote matrix DataFrame with NaN values where: \
+                                        1. rows are voters, \
+                                        2. columns are statements, and \
+                                        3. values are votes.
+
     Returns:
-    imputed_matrix (pd.DataFrame): The same vote matrix DataFrame imputing NaN values with column mean.
+        imputed_matrix (pd.DataFrame): The same vote matrix DataFrame imputing NaN values with column mean.
     """
     mean_imputer = SimpleImputer(missing_values=np.nan, strategy='mean')
     imputed_matrix = pd.DataFrame(
@@ -100,7 +101,7 @@ def get_unvoted_statement_ids(vote_matrix: VoteMatrix) -> List[int]:
     """
     A method intended to be piped into a VoteMatrix DataFrame, returning list of unvoted statement IDs.
 
-    See: https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.pipe.html
+    See: <https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.pipe.html>
 
     Args:
         vote_matrix (pd.DataFrame): A pivot of statements (cols), participants (rows), with votes as values.
@@ -109,6 +110,7 @@ def get_unvoted_statement_ids(vote_matrix: VoteMatrix) -> List[int]:
         unvoted_statement_ids (List[int]): list of statement IDs with no votes.
 
     Example:
+
         unused_statement_ids = vote_matrix.pipe(get_unvoted_statement_ids)
     """
     null_column_mask = vote_matrix.isnull().all()
@@ -135,11 +137,12 @@ def generate_filtered_matrix(
             This determined whether to drop the statement column, or set all the value to zero/pass. (Default: drop)
 
     Returns:
-        filtered_vote_matrix (VoteMatrix): A vote matrix with the following filtered out: \
-            (1) statements without any votes,
-            (2) statements that have been moderated out,
-            (3) participants below the vote count threshold,
-            (4) participants who have not been explicitly selected to circumvent above filtering.
+        filtered_vote_matrix (VoteMatrix): A vote matrix with the following filtered out:
+
+            1. statements without any votes,
+            2. statements that have been moderated out,
+            4. participants below the vote count threshold,
+            5. participants who have not been explicitly selected to circumvent above filtering.
     """
     # Filter out moderated statements.
     vote_matrix = vote_matrix.filter(active_statement_ids, axis='columns')
