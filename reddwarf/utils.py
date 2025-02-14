@@ -3,6 +3,7 @@ import numpy as np
 from sklearn.impute import SimpleImputer
 from sklearn.cluster import KMeans
 from sklearn.metrics import silhouette_score
+from sklearn.decomposition import PCA
 from typing import List, Dict, Tuple, Optional, Literal, TypeAlias
 
 VoteMatrix: TypeAlias = pd.DataFrame
@@ -168,6 +169,40 @@ def generate_filtered_matrix(
         vote_matrix[unvoted_statement_ids] = 0
 
     return vote_matrix
+
+def run_pca(
+        vote_matrix: VoteMatrix,
+        n_components: int,
+) -> Tuple[ pd.DataFrame, np.ndarray, np.ndarray ]:
+    """
+    Process a prepared vote matrix to be imputed and return projected participant data,
+    as well as eigenvectors and eigenvalues.
+
+    The vote matrix should not yet be imputed, as this will happen within the method.
+
+    Args:
+        vote_matrix (pd.DataFrame): A vote matrix of data. Non-imputed values are expected.
+        n_components (int): Number n of principal components to decompose the `vote_matrix` into.
+
+    Returns:
+        projected_data (pd.DataFrame): A dataframe of projected xy coordinates for each `vote_matrix` row.
+        eigenvectors (List[List[float]]): Principal `n` components, one per row.
+        eigenvalues (List[float]): Explained variance,  one per row.
+    """
+    imputed_matrix = impute_missing_votes(vote_matrix)
+
+    pca = PCA(n_components=n_components) ## pca is apparently different, it wants
+    pca.fit(imputed_matrix) ## .T transposes the matrix (flips it)
+
+    eigenvectors = pca.components_
+    eigenvalues = pca.explained_variance_
+
+    # Project participant vote data onto 2D using eigenvectors.
+    projected_data = pca.transform(imputed_matrix)
+    projected_data = pd.DataFrame(projected_data, index=imputed_matrix.index, columns=["x", "y"])
+    projected_data.index.name = "participant_id"
+
+    return projected_data, eigenvectors, eigenvalues
 
 def scale_projected_data(
         projected_data: pd.DataFrame,

@@ -1,6 +1,5 @@
-import pandas as pl # For sake of clean diffs
+import pandas as pd # For sake of clean diffs
 from collections import defaultdict
-from sklearn.decomposition import PCA
 from reddwarf.data_loader import Loader
 from reddwarf.models import ModeratedEnum
 from reddwarf import utils
@@ -135,7 +134,7 @@ class PolisClient():
             # TODO: Implement this.
             return None
 
-        participants_df = (pl.DataFrame()
+        participants_df = (pd.DataFrame()
             .assign(participant_id=vote_matrix.index)
             .set_index('participant_id')
             .assign(xid=[get_xid(pid) for pid in vote_matrix.index])
@@ -156,18 +155,14 @@ class PolisClient():
         )
 
     def run_pca(self):
-        imputed_matrix = utils.impute_missing_votes(self.matrix)
+        components, explained_variance, projected_data = utils.run_pca(
+            vote_matrix=self.matrix,
+            n_components=self.n_components,
+        )
 
-        pca = PCA(n_components=self.n_components) ## pca is apparently different, it wants
-        pca.fit(imputed_matrix) ## .T transposes the matrix (flips it)
-
-        self.eigenvectors = pca.components_
-        self.eigenvalues = pca.explained_variance_
-
-        # Project participant vote data onto 2D using eigenvectors.
-        self.projected_data = pca.transform(imputed_matrix)
-        self.projected_data = pl.DataFrame(self.projected_data, index=imputed_matrix.index, columns=["x", "y"])
-        self.projected_data.index.name = "participant_id"
+        self.eigenvectors = components
+        self.eigenvalues = explained_variance
+        self.projected_data = projected_data
 
     def scale_projected_data(self):
         scaled_data = utils.scale_projected_data(
@@ -185,7 +180,7 @@ class PolisClient():
         cluster_labels, cluster_centers = utils.run_kmeans(self.eigenvectors, n_clusters=n_clusters)
         # ptpt_to_cluster_mapping = dict(zip(self.matrix.index, range(len(kmeans.labels_))))
         # cluster_to_ptpt_mapping = {v: k for k, v in ptpt_to_cluster_mapping.items()}
-        participant_df = pl.DataFrame.from_dict(
+        participant_df = pd.DataFrame.from_dict(
             {
                 'participant_id': self.matrix.index,
                 'cluster_id': cluster_labels.tolist(),
@@ -225,11 +220,11 @@ class PolisClient():
                 self.load_votes_data(data=self.data_loader.votes_data)
 
     def load_votes_data(self, data=None):
-        votes_df = pl.DataFrame.from_records(data).astype({'modified': 'int64'})
+        votes_df = pd.DataFrame.from_records(data).astype({'modified': 'int64'})
         self.add_votes_batch(votes_df)
 
     def load_comments_data(self, data=None):
-        statements_df = (pl.DataFrame
+        statements_df = (pd.DataFrame
             .from_records(data)
             .set_index('statement_id')
             .sort_index()

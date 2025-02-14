@@ -14,6 +14,10 @@
     options:
         show_root_heading: true
 
+### ::: reddwarf.utils.run_pca
+    options:
+        show_root_heading: true
+
 ### ::: reddwarf.utils.scale_projected_data
     options:
         show_root_heading: true
