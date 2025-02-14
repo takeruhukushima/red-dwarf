@@ -31,7 +31,7 @@ Code that aspires to embody and support democratic values should be...
 
 See [`docs/example-usage.ipynb`][notebook]
 
-[![screen of the sample jupyter notebook](/docs/notebook-screenshot.png)][notebook]
+[![screen of the sample jupyter notebook](docs/notebook-screenshot.png)][notebook]
 
 ### Loading Data
 
@@ -93,10 +93,10 @@ client.load_data(filepaths=[
 
 ## License
 
-[MPL 2.0: Mozilla Public License 2.0][mplv2] (See [`LICENSE`][])
+[MPL 2.0: Mozilla Public License 2.0][mplv2] (See [`LICENSE`][license])
 
 <!-- Links -->
    [stellarpunk]: https://www.youtube.com/watch?v=opnkQVZrhAw
-   [notebook]: /docs/example-usage.ipynb
+   [notebook]: https://github.com/polis-community/red-dwarf/blob/main/docs/example-usage.ipynb
    [MPLv2]: https://choosealicense.com/licenses/mpl-2.0/
-   [`LICENSE`]: /LICENSE
+   [license]: https://github.com/polis-community/red-dwarf/blob/main/LICENSE
