@@ -40,7 +40,8 @@ def generate_raw_matrix(
     """
     Generates a raw vote matrix from a list of vote records.
 
-    If a cutoff is provided, votes are filtered based on either:
+    If a `cutoff` is provided, votes are filtered based on either:
+
     - An `int` representing unix timestamp (ms), keeping only votes before or at that time.
         - Any int above 13_000_000_000 is considered a timestamp.
     - Any other positive or negative `int` is considered an index, reflecting where to trim the time-sorted vote list.
@@ -48,18 +49,23 @@ def generate_raw_matrix(
         - negative: filters out votes that many indices from end
 
     Args:
-        votes (List[Dict]): A date-sorted list of vote records, where each record is a dictionary containing: \
-            - "participant_id": The ID of the voter. \
-            - "statement_id": The ID of the statement being voted on. \
-            - "vote": The recorded vote value. \
+        votes (List[Dict]): A date-sorted list of vote records, where each record is a dictionary containing:
+
+            - "participant_id": The ID of the voter.
+            - "statement_id": The ID of the statement being voted on.
+            - "vote": The recorded vote value.
             - "modified": A unix timestamp object representing when the vote was made.
 
+        cutoff (int): A cutoff unix timestamp (ms) or index position in date-sorted votes list.
+
     Returns:
-        raw_matrix (pd.DataFrame): A full raw vote matrix DataFrame with NaN values where: \
-                                        (1) rows are voters, \
-                                        (2) columns are statements, and \
-                                        (3) values are votes. \
-                                    This includes even voters that have no votes, and statements on which no votes were placed.
+        raw_matrix (pd.DataFrame): A full raw vote matrix DataFrame with NaN values where:
+
+            1. rows are voters,
+            2. columns are statements, and
+            3. values are votes.
+
+            This includes even voters that have no votes, and statements on which no votes were placed.
     """
     if cutoff:
         # TODO: Add tests to confirm votes list is already date-sorted for each data_source.
