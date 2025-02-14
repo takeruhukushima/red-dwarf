@@ -30,9 +30,10 @@ jobs:
           version: "latest"
 
       - name: Install dependencies
-        run: uv sync --python 3.10
+        run: make install-dev
 
-      - run: mkdocs build
+      - name: Build MkDocs site
+        run: make docs-build
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
