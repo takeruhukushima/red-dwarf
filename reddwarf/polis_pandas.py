@@ -155,7 +155,7 @@ class PolisClient():
         )
 
     def run_pca(self):
-        components, explained_variance, projected_data = utils.run_pca(
+        projected_data, components, explained_variance = utils.run_pca(
             vote_matrix=self.matrix,
             n_components=self.n_components,
         )
