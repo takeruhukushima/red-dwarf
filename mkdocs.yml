@@ -1,0 +1,14 @@
+site_name: "red-dwarf"
+docs_dir: .
+
+theme:
+  name: "readthedocs"
+
+nav:
+  - Home: README.md
+  - "API Reference": docs/api_reference.md
+
+plugins:
+- search
+- same-dir
+- mkdocstrings
