@@ -7,7 +7,7 @@ install-dev: ## Install development dependencies
 docs-build: ## Build the static docs ./site directory
 	uv run mkdocs build
 
-docs: ## Serve the documentation dev site
+docs-serve: ## Serve the documentation dev site
 	uv run mkdocs serve
 
 debug: ## Run the debug.py script
