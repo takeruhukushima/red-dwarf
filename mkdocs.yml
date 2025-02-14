@@ -1,6 +1,9 @@
 site_name: "red-dwarf"
 docs_dir: .
 
+exclude_docs: |
+  /tests
+
 theme:
   name: "readthedocs"
 
