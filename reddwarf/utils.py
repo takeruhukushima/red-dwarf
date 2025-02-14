@@ -175,7 +175,7 @@ def scale_projected_data(
 ) -> pd.DataFrame:
     """
     Scale projected participant xy points based on vote matrix, to account for any small number of
-    votes by a participant and prevent those participants for bunching up in center.
+    votes by a participant and prevent those participants from bunching up in the center.
 
     Args:
         projected_data (pd.DataFrame): the project xy coords of participants.
@@ -204,13 +204,17 @@ def run_kmeans(
         init_centers: Optional[List] = None,
 ) -> Tuple[np.ndarray, np.ndarray]:
     """
+    Runs K-Means clustering on a 2D DataFrame of xy points, for a specific K,
+    and returns labels for each row and cluster centers. Optionally accepts
+    guesses on cluster centers.
+
     Args:
         dataframe (pd.DataFrame): A dataframe with two columns (assumed `x` and `y`).
         n_clusters (int): How many clusters k to assume.
         init_centers (List): A list of xy coordinates to use as initial center guesses.
 
     Returns:
-        cluster_labels (np.ndarray): A list of labels for each row in the dataframe
+        cluster_labels (np.ndarray): A list of zero-indexed labels for each row in the dataframe
         cluster_centers (np.ndarray): A list of center coords for clusters.
     """
     if init_centers:
