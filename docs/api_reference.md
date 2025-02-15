@@ -33,3 +33,9 @@
 ### ::: reddwarf.utils.get_unvoted_statement_ids
     options:
         show_root_heading: true
+
+## `reddwarf.data_presenter`
+
+### ::: reddwarf.data_presenter.generate_figure
+    options:
+        show_root_heading: true
