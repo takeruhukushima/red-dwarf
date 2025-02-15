@@ -34,7 +34,6 @@ if True:
     print(f"Loading data from report: https://pol.is/report/{report_id}")
 
     client = PolisClient()
-    # client.load_data(report_id=CONVOS["rideshare-toronto"]["report_id"])
     client.load_data(report_id=report_id)
     client.get_matrix(is_filtered=True)
     client.run_pca()
@@ -44,6 +43,16 @@ if True:
     presenter = DataPresenter(client=client)
     presenter.render_optimal_cluster_figure()
     # client.generate_figure(coord_dataframe=client.projected_data)
+
+if False:
+    # Show convo with duplicate votes.
+    # Shareable demo: https://gist.github.com/patcon/9c1a39291cd75b23722a5379d7cfc3cc
+    report_id = CONVOS["tech-politics-2018"]["report_id"]
+    print(f"Loading data from report: https://pol.is/report/{report_id}")
+
+    client = PolisClient(is_strict_moderation=False)
+    client.load_data(report_id=report_id, data_source="csv_export")
+    client.get_matrix(is_filtered=True)
 
 if False:
     client = PolisClient()
