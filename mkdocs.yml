@@ -1,6 +1,9 @@
 site_name: "red-dwarf"
 docs_dir: .
 
+repo_url: https://github.com/polis-community/red-dwarf/
+edit_uri: edit/main/
+
 exclude_docs: |
   /tests
 
