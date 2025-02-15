@@ -106,14 +106,19 @@ class PolisClient():
     def get_matrix(self, is_filtered=False, cutoff=None):
         # Only generate matrix when needed.
         if self.matrix is None:
-            raw_matrix = utils.generate_raw_matrix(self.votes, cutoff=cutoff)
-            self.statement_count = raw_matrix.notna().any().sum()
-            self.participant_count = len(raw_matrix)
+            vote_matrix = utils.generate_raw_matrix(self.votes, cutoff=cutoff)
+            self.statement_count = vote_matrix.notna().any().sum()
+            self.participant_count = len(vote_matrix)
 
-            self.matrix = raw_matrix
+            if is_filtered:
+                vote_matrix = utils.generate_filtered_matrix(
+                    vote_matrix=vote_matrix,
+                    min_user_vote_threshold=self.min_votes,
+                    active_statement_ids=self.get_active_statement_ids(),
+                    keep_participant_ids=self.keep_participant_ids,
+                )
 
-        if is_filtered:
-            self.filter_matrix()
+            self.matrix = vote_matrix
 
         return self.matrix
 
@@ -145,14 +150,6 @@ class PolisClient():
             .assign(n_disagree=vote_matrix.apply(lambda row: row.eq(-1).sum(), axis="columns"))
         )
         return participants_df
-
-    def filter_matrix(self):
-        self.matrix = utils.generate_filtered_matrix(
-            vote_matrix=self.matrix,
-            min_user_vote_threshold=self.min_votes,
-            active_statement_ids=self.get_active_statement_ids(),
-            keep_participant_ids=self.keep_participant_ids,
-        )
 
     def run_pca(self):
         projected_data, components, explained_variance = utils.run_pca(
