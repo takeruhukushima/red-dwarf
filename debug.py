@@ -30,9 +30,12 @@ CONVOS = {
 }
 
 if True:
+    report_id = CONVOS["tech-politics-2018"]["report_id"]
+    print(f"Loading data from report: https://pol.is/report/{report_id}")
+
     client = PolisClient()
     # client.load_data(report_id=CONVOS["rideshare-toronto"]["report_id"])
-    client.load_data(report_id=CONVOS["tech-politics-2018"]["report_id"])
+    client.load_data(report_id=report_id)
     client.get_matrix(is_filtered=True)
     client.run_pca()
     client.scale_projected_data()
