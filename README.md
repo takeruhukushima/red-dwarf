@@ -18,6 +18,8 @@ Inspiration: https://chatgpt.com/share/677f7690-7188-800b-85e5-816aaa7cc8f9
 [![Thanks to generous sponsorship from Agora Citizen Network](docs/agora-sponsorship-header.png)][agora]
 <!-- Generated from: https://leviarista.github.io/github-profile-header-generator/ meta: kalam, ubuntu, 223, 251, 215 -->
 
+<sup>(See [_Sponsorship_](#sponsorship) section below.)</sup>
+
 ## Roadmap
 
 For now, see [this related issue](https://github.com/patcon/red-dwarf/issues/4)
@@ -94,6 +96,12 @@ client.load_data(filepaths=[
 ])
 ```
 
+## Sponsorship
+
+> Red Dwarf is generously sponsored by [**ZKorum**][zkorum], creators of the [**Agora Citizen Network**][agora], through [their funding][ngi-funding] from the NGI TrustChain program, part of the EU's Horizon Europe 2020 research and innovation program. Work on this project would not be sustainable without them.
+
+Are you or your organization eager to see more platforms and community built around democracy-supporting algorithms like these? **Please consider getting in touch on Discord and supporting our continued work!**
+
 ## License
 
 [MPL 2.0: Mozilla Public License 2.0][mplv2] (See [`LICENSE`][license])
@@ -101,6 +109,8 @@ client.load_data(filepaths=[
 <!-- Links -->
    [stellarpunk]: https://www.youtube.com/watch?v=opnkQVZrhAw
    [notebook]: https://github.com/polis-community/red-dwarf/blob/main/docs/example-usage.ipynb
+   [ZKorum]: https://github.com/zkorum
    [agora]: https://agoracitizen.network/
+   [ngi-funding]: https://trustchain.ngi.eu/zkorum/
    [MPLv2]: https://choosealicense.com/licenses/mpl-2.0/
    [license]: https://github.com/polis-community/red-dwarf/blob/main/LICENSE
