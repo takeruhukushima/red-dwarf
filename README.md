@@ -15,6 +15,9 @@ A <em>DIM</em>ensional <em>RED</em>uction library for [stellarpunk][] democracy 
 
 Inspiration: https://chatgpt.com/share/677f7690-7188-800b-85e5-816aaa7cc8f9
 
+[![Thanks to generous sponsorship from Agora Citizen Network](docs/agora-sponsorship-header.png)][agora]
+<!-- Generated from: https://leviarista.github.io/github-profile-header-generator/ meta: kalam, ubuntu, 223, 251, 215 -->
+
 ## Roadmap
 
 For now, see [this related issue](https://github.com/patcon/red-dwarf/issues/4)
@@ -98,5 +101,6 @@ client.load_data(filepaths=[
 <!-- Links -->
    [stellarpunk]: https://www.youtube.com/watch?v=opnkQVZrhAw
    [notebook]: https://github.com/polis-community/red-dwarf/blob/main/docs/example-usage.ipynb
+   [agora]: https://agoracitizen.network/
    [MPLv2]: https://choosealicense.com/licenses/mpl-2.0/
    [license]: https://github.com/polis-community/red-dwarf/blob/main/LICENSE
