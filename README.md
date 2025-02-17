@@ -96,6 +96,14 @@ client.load_data(filepaths=[
 ])
 ```
 
+## Get Involved
+
+- [Join][pug-discord] the _Polis User Group (PUG)_ **Discord** server.
+- Open a **GitHub issue**.
+- Submit a **GitHub pull request**.
+- Review the [**_Awesome Polis_ directory**][awesome-polis] to learn about related projects, academic papers, and other resources.
+   - Use the _"People"_ section to find other individuals and groups working in the field.
+
 ## Sponsorship
 
 > Red Dwarf is generously sponsored by [**ZKorum**][zkorum], creators of the [**Agora Citizen Network**][agora], through [their funding][ngi-funding] from the NGI TrustChain program, part of the EU's Horizon Europe 2020 research and innovation program. Work on this project would not be sustainable without them.
@@ -114,3 +122,5 @@ Are you or your organization eager to see more platforms and community built aro
    [ngi-funding]: https://trustchain.ngi.eu/zkorum/
    [MPLv2]: https://choosealicense.com/licenses/mpl-2.0/
    [license]: https://github.com/polis-community/red-dwarf/blob/main/LICENSE
+   [pug-discord]: https://discord.com/invite/wFWB8kzQpP
+   [awesome-polis]: http://patcon.github.io/awesome-polis/
