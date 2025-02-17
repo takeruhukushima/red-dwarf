@@ -108,7 +108,7 @@ client.load_data(filepaths=[
 
 > Red Dwarf is generously sponsored by [**ZKorum**][zkorum], creators of the [**Agora Citizen Network**][agora], through [their funding][ngi-funding] from the NGI TrustChain program, part of the EU's Horizon Europe 2020 research and innovation program. Work on this project would not be sustainable without them.
 
-Are you or your organization eager to see more platforms and community built around democracy-supporting algorithms like these? **Please consider getting in touch on Discord and supporting our continued work!**
+Are you or your organization eager to see more platforms and community built around democracy-supporting algorithms like these? **Please consider [getting in touch on Discord](#get-involved) and supporting our continued work!** (ping @patcon)
 
 ## License
 
