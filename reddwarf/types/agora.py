@@ -1,20 +1,25 @@
-from typing import TypedDict, TypeAlias, List, Dict
+from typing import TypedDict, List
 from enum import Enum
 
 IncrementingId = int
 
-class Statement(TypedDict):  # exported type
+class Statement(TypedDict):
      id: IncrementingId
 
-class Participant(TypedDict):  # exported type
+class Participant(TypedDict):
     id: IncrementingId
 
-class VoteValueEnum(Enum):  # exported type
+class ClusteredParticipant(Participant):
+    x: float
+    y: float
+
+class VoteValueEnum(Enum):
     AGREE = "agree"
     DISAGREE = "disagree"
-    # NO "PASS". Pass is usually needed for things like "comment_priorities", but we don't need that here.
+    # Can withhold using "pass" at own discretion.
+    PASS = "pass"
 
-class Options(TypedDict):  # exported type
+class Options(TypedDict):
     pass
     # define some general options
     # you tell me what you need.
@@ -26,21 +31,20 @@ class Vote(TypedDict):
     statement_id: IncrementingId
     voted_by_participant_id: IncrementingId
 
-    value: VoteValueEnum
+    vote: VoteValueEnum
 
-class Conversation(TypedDict):  # exported type
+class Conversation(TypedDict):
     id: IncrementingId
-    opinions: List[Statement]
+    statements: List[Statement]
     participants: List[Participant]
-    # This is redundant, only one of them is enouh, _you_ tell me what you need:
+    # votes_by_participants or votes_by_statement can be easily generated from this if required.
     votes: List[Vote]
-    # votes_by_participants: Dict[int, Dict[int, VoteValueEnum]] # key is opinion.id]  # key is participant.id
-    # votes_by_opinions: Dict[int, Dict[int, VoteValueEnum]] # key is participant.id]  # key is opinion.id
     options: Options
 
-
 class Cluster(TypedDict):  ## exported type
-    members: List[Participant]  # list of participants belonging to this cluster
+    center_x: float
+    center_y: float
+    participants: List[ClusteredParticipant]
     # we don't need anything else,
     # because the function caller already has all the information necessary
     # to calculate the statistical information about how a cluster voted on each opinions,
@@ -48,14 +52,11 @@ class Cluster(TypedDict):  ## exported type
     # alone without the help of an external library
     # (majority opinions, controversial opinions, etc)
 
-Clusters = List[Cluster] ## exported type, between 2 and 6 clusters, amount selected based on the "best" according to the alg
+ClusteringResult = List[Cluster] ## exported type, between 2 and 6 clusters, amount selected based on the "best" according to the alg
 
-ClustersByConversations: TypeAlias = Dict[int, Clusters]  # exported type--key is conversation.id
-
-# the function I need
-def calculate_clusters(
+def run_clustering(
     *,
-    conversations: List[Conversation],
+    conversation: Conversation,
     options: Options,
-) -> ClustersByConversations:
+) -> ClusteringResult:
     raise NotImplementedError
