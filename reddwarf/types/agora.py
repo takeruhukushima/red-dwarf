@@ -1,5 +1,5 @@
 from typing import TypedDict, List, Optional
-from enum import Enum
+from enum import IntEnum
 
 IncrementingId = int
 
@@ -14,11 +14,11 @@ class ClusteredParticipant(TypedDict):
     x: float
     y: float
 
-class VoteValueEnum(Enum):
-    AGREE = "agree"
-    DISAGREE = "disagree"
+class VoteValueEnum(IntEnum):
+    AGREE = 1
+    DISAGREE = -1
     # Can withhold using "pass" at own discretion.
-    PASS = "pass"
+    PASS = 0
 
 class Vote(TypedDict):
     statement_id: IncrementingId # statement.id
