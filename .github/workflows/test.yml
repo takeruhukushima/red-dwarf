@@ -23,7 +23,7 @@ jobs:
 
       - uses: astral-sh/setup-uv@v5
         with:
-          enable-cache: ${{ github.event_name != "workflow_dispatch" || inputs.enableCache }}
+          enable-cache: ${{ github.event_name != 'workflow_dispatch' || inputs.enableCache }}
           version: "latest"
 
       - name: Install dependencies
