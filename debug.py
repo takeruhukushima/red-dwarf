@@ -1,4 +1,4 @@
-from reddwarf.polis_pandas import PolisClient
+from reddwarf.polis import PolisClient
 from reddwarf.data_presenter import DataPresenter
 import pandas as pd
 

@@ -44,7 +44,7 @@ Let's say that you have a conversation for which you know the conversation url, 
 - archived CSV export: https://github.com/compdemocracy/openData/tree/master/scoop-hivemind.ubi
 
 ```py
-from reddwarf.polis_pandas import PolisClient
+from reddwarf.polis import PolisClient
 
 # If you only know the conversation ID, you can fetch the live data from the Polis APIs.
 # Note that this may be fresher than a static export hosted elsewhere.
