@@ -181,7 +181,12 @@ def filter_matrix(
     # See: https://github.com/compdemocracy/polis/pull/1893#issuecomment-2654666421
     participant_ids_in = participant_ids_meeting_vote_thresh + keep_participant_ids
     participant_ids_in_unique = list(set(participant_ids_in))
-    vote_matrix = vote_matrix.filter(participant_ids_in_unique, axis='rows')
+    vote_matrix = (vote_matrix
+        .filter(participant_ids_in_unique, axis='rows')
+        # .filter() and .drop() lost the index name, so bring it back.
+        .rename_axis("participant_id")
+    )
+
     # This is otherwise the more efficient way, but we want to keep some participant IDs
     # to troubleshoot edge-cases in upsteam Polis math.
     # self.matrix = self.matrix.dropna(thresh=self.min_votes, axis='rows')
