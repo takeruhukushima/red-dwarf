@@ -133,22 +133,19 @@ def test_matrix_cutoff_timestamp():
     assert math.isnan(cutoff_matrix.loc[vote_after["participant_id"], vote_after["statement_id"]])
     assert not math.isnan(full_matrix.loc[vote_after["participant_id"], vote_after["statement_id"]])
 
-def test_client_no_warnings_for_csv_urls(caplog):
-    client = PolisClient(is_strict_moderation=True)
-    client.load_data(report_id="r5hr48j8y8mpcffk7crmk", data_source="csv_export")
-    assert len(caplog.records) == 0
+class Test_Client:
+    # Was getting a wall of warnings about reponses from API not following HTTP spec.
+    # Checking this to ensure it doesn't return and confuse users.
+    # See: https://github.com/urllib3/urllib3/blob/04662c9ae08c9f63fa254772d7618db65123a35e/src/urllib3/response.py#L692-L704
+    def test_client_no_warnings_for_csv_urls(self, caplog):
+        client = PolisClient(is_strict_moderation=True)
+        client.load_data(report_id="r5hr48j8y8mpcffk7crmk", data_source="csv_export")
+        assert len(caplog.records) == 0
 
-def test_client_no_unexpected_warnings_for_api_urls(caplog):
-    client = PolisClient()
-    client.load_data(report_id="r5hr48j8y8mpcffk7crmk", data_source="api")
-    # Filter out expected warning being thrown by urllib3 for Polis API.
-    # See: https://github.com/urllib3/urllib3/blob/04662c9ae08c9f63fa254772d7618db65123a35e/src/urllib3/response.py#L693-L704
-    # TODO: Figure out a way to hide these noisy WARNING's in caplog, for clarity on other test failures.
-    expected_warnings = [r for r in caplog.records if "RFC 7230 sec 3.3.2" in r.message]
-    assert len(caplog.records) - len(expected_warnings) == 0
-
-    # Fail test if expected urllib warnings disappear, so we can update test and remove accomodation.
-    assert len(expected_warnings) > 0
+    def test_client_no_warnings_for_api_urls(self, caplog):
+        client = PolisClient()
+        client.load_data(report_id="r5hr48j8y8mpcffk7crmk", data_source="api")
+        assert len(caplog.records) == 0
 
 # def test_group_cluster_count():
 #     with open('sample_data/below-100-ptpts/math-pca2.json', 'r') as file:
