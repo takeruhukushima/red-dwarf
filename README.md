@@ -1,5 +1,7 @@
 # Red Dwarf
 
+[![Run Tests](https://github.com/polis-community/red-dwarf-democracy/actions/workflows/test.yml/badge.svg)](https://github.com/polis-community/red-dwarf-democracy/actions/workflows/test.yml)
+
 A <em>DIM</em>ensional <em>RED</em>uction library for [stellarpunk][] democracy into the long haul.
 
 > Stars are fires that burn for thousands of years. Some of them burn slow and
