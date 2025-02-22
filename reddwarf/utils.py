@@ -142,8 +142,8 @@ def generate_filtered_matrix(
 
             1. statements without any votes,
             2. statements that have been moderated out,
-            4. participants below the vote count threshold,
-            5. participants who have not been explicitly selected to circumvent above filtering.
+            3. participants below the vote count threshold,
+            4. participants who have not been explicitly selected to circumvent above filtering.
     """
     # Filter out moderated statements.
     vote_matrix = vote_matrix.filter(active_statement_ids, axis='columns')
