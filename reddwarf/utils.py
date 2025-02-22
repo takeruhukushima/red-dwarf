@@ -172,7 +172,7 @@ def generate_filtered_matrix(
 
 def run_pca(
         vote_matrix: VoteMatrix,
-        n_components: int,
+        n_components: int = 2,
 ) -> Tuple[ pd.DataFrame, np.ndarray, np.ndarray ]:
     """
     Process a prepared vote matrix to be imputed and return projected participant data,
