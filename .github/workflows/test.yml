@@ -1,4 +1,11 @@
-on: [push]
+on:
+  push:
+  workflow_dispatch:
+    inputs:
+      enableCache:
+        description: "Enable cache of installed dependencies"
+        type: boolean
+        default: true
 
 jobs:
   test:
@@ -14,7 +21,7 @@ jobs:
 
       - uses: astral-sh/setup-uv@v5
         with:
-          enable-cache: true
+          enable-cache: ${{ github.event_name != "workflow_dispatch" || inputs.enableCache }}
           version: "latest"
 
       - name: Install dependencies
