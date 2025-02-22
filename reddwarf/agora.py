@@ -12,7 +12,7 @@ def run_clustering(
     vote_matrix = utils.generate_raw_matrix(votes=conversation["votes"])
     # Any statements with votes are included.
     all_statement_ids = vote_matrix.columns
-    vote_matrix = utils.generate_filtered_matrix(
+    vote_matrix = utils.filter_matrix(
         vote_matrix=vote_matrix,
         min_user_vote_threshold=options.get("min_user_vote_threshold", DEFAULT_MIN_USER_VOTE_THRESHOLD),
         active_statement_ids=all_statement_ids,
