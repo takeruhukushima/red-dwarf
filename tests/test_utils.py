@@ -1,8 +1,9 @@
+from reddwarf import utils
+
 import pytest
-from collections import namedtuple
-import pandas as pd
-from reddwarf.utils import generate_raw_matrix
 from pandas.testing import assert_frame_equal
+import pandas as pd
+from collections import namedtuple
 from random import shuffle
 from numpy import nan
 
@@ -48,15 +49,16 @@ def simple_vote_matrix():
 
 def test_generate_raw_matrix_simple(simple_votes, simple_vote_matrix):
     expected = simple_vote_matrix
-    vote_matrix = generate_raw_matrix(votes=simple_votes)
+    vote_matrix = utils.generate_raw_matrix(votes=simple_votes)
     assert_frame_equal(vote_matrix, expected)
 
+# TODO: Convert these to unit tests of filter_votes()?
 def test_generate_raw_matrix_cutoff_from_timestamp(simple_timestamped_votes):
     shuffled_votes = simple_timestamped_votes.copy()
     shuffle(shuffled_votes)
 
     last_vote_timestamp = 1735000000
-    vote_matrix = generate_raw_matrix(votes=shuffled_votes, cutoff=last_vote_timestamp)
+    vote_matrix = utils.generate_raw_matrix(votes=shuffled_votes, cutoff=last_vote_timestamp)
 
     vote_before = simple_timestamped_votes[-3]
     assert not pd.isna(vote_matrix.at[vote_before["participant_id"], vote_before["statement_id"]])
@@ -68,7 +70,7 @@ def test_generate_raw_matrix_cutoff_from_start(simple_timestamped_votes):
     shuffled_votes = simple_timestamped_votes.copy()
     shuffle(shuffled_votes)
 
-    vote_matrix = generate_raw_matrix(votes=shuffled_votes, cutoff=4)
+    vote_matrix = utils.generate_raw_matrix(votes=shuffled_votes, cutoff=4)
 
     vote_before = simple_timestamped_votes[3]
     assert not pd.isna(vote_matrix.at[vote_before["participant_id"], vote_before["statement_id"]])
