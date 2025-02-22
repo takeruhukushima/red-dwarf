@@ -9,6 +9,9 @@ from numpy import nan
 
 Vote = namedtuple("Vote", ["participant_id", "statement_id", "vote", "modified"])
 
+statement_count = lambda vote_matrix: vote_matrix.shape[1]
+participant_count = lambda vote_matrix: vote_matrix.shape[0]
+
 @pytest.fixture
 def simple_timestamped_votes():
     # TODO: Make this work with participant and statement indexes that don't start at zero.
@@ -102,9 +105,80 @@ def test_get_unvoted_statement_ids(simple_vote_matrix):
     unused_statement_ids = simple_vote_matrix.pipe(utils.get_unvoted_statement_ids)
     assert unused_statement_ids == [1, 3]
 
-@pytest.mark.skip
-def test_filter_matrix():
-    raise
+def test_filter_matrix_no_filtering(simple_vote_matrix):
+    initial_matrix = simple_vote_matrix
+    all_statement_ids = initial_matrix.columns
+    filtered_matrix = utils.filter_matrix(
+        vote_matrix=initial_matrix,
+        active_statement_ids=all_statement_ids,
+        min_user_vote_threshold=0,
+    )
+
+    # No filtering
+    assert participant_count(initial_matrix) == participant_count(filtered_matrix)
+    assert statement_count(initial_matrix) == statement_count(filtered_matrix)
+
+def test_filter_matrix_min_user_vote(simple_vote_matrix):
+    initial_matrix = simple_vote_matrix
+    all_statement_ids = initial_matrix.columns
+    filtered_matrix = utils.filter_matrix(
+        vote_matrix=initial_matrix,
+        active_statement_ids=all_statement_ids,
+        min_user_vote_threshold=2,
+    )
+
+    below_threshold_participant_id = 2
+    assert below_threshold_participant_id in initial_matrix.index
+    assert below_threshold_participant_id not in filtered_matrix.index
+
+    # No statements filtered
+    assert statement_count(initial_matrix) == statement_count(filtered_matrix)
+
+def test_filter_matrix_min_user_vote_bypass(simple_vote_matrix):
+    initial_matrix = simple_vote_matrix
+    all_statement_ids = initial_matrix.columns
+    filtered_matrix = utils.filter_matrix(
+        vote_matrix=initial_matrix,
+        active_statement_ids=all_statement_ids,
+        min_user_vote_threshold=2,
+        keep_participant_ids=[2],
+    )
+
+    below_threshold_participant_id = 2
+    assert below_threshold_participant_id in initial_matrix.index
+    assert below_threshold_participant_id in filtered_matrix.index
+
+    # No statements filtered
+    assert statement_count(initial_matrix) == statement_count(filtered_matrix)
+
+def test_filter_matrix_mod_out_statement(simple_vote_matrix):
+    initial_matrix = simple_vote_matrix
+    all_statement_ids_but_one = initial_matrix.columns[:-1]
+    filtered_matrix = utils.filter_matrix(
+        vote_matrix=initial_matrix,
+        active_statement_ids=all_statement_ids_but_one,
+        min_user_vote_threshold=0,
+    )
+
+    assert participant_count(initial_matrix) == participant_count(filtered_matrix)
+
+    assert statement_count(initial_matrix) == 3
+    assert statement_count(filtered_matrix) == 2
+
+def test_filter_matrix_mod_out_statement_with_zero(simple_vote_matrix):
+    initial_matrix = simple_vote_matrix
+    # Set statement 1 to have no votes.
+    initial_matrix[1] = None
+    all_statement_ids = initial_matrix.columns
+    filtered_matrix = utils.filter_matrix(
+        vote_matrix=initial_matrix,
+        active_statement_ids=all_statement_ids,
+        min_user_vote_threshold=0,
+        unvoted_filter_type="zero",
+    )
+    assert statement_count(initial_matrix) == statement_count(filtered_matrix)
+
+    assert (filtered_matrix[1] == 0).all()
 
 @pytest.mark.skip
 def test_run_pca():
