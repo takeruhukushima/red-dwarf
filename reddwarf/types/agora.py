@@ -38,6 +38,7 @@ class ClusteringResult(TypedDict):
 
 class ClusteringOptions(TypedDict):
     min_user_vote_threshold: Optional[int]
+    max_clusters: Optional[int]
 
 def run_clustering(conversation: Conversation, options: ClusteringOptions) -> ClusteringResult:
     raise NotImplementedError
