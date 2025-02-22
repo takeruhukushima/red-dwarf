@@ -2,6 +2,10 @@
 
 ## `reddwarf.utils`
 
+### ::: reddwarf.utils.filter_votes
+    options:
+        show_root_heading: true
+
 ### ::: reddwarf.utils.generate_raw_matrix
     options:
         show_root_heading: true

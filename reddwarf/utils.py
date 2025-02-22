@@ -35,12 +35,12 @@ def impute_missing_votes(vote_matrix: VoteMatrix) -> VoteMatrix:
     )
     return imputed_matrix
 
-def generate_raw_matrix(
+def filter_votes(
         votes: List[Dict],
         cutoff: Optional[int] = None,
-) -> VoteMatrix:
+) -> List[Dict]:
     """
-    Generates a raw vote matrix from a list of vote records.
+    Filters a list of votes.
 
     If a `cutoff` is provided, votes are filtered based on either:
 
@@ -51,7 +51,43 @@ def generate_raw_matrix(
         - negative: filters out votes that many indices from end
 
     Args:
-        votes (List[Dict]): A date-sorted list of vote records, where each record is a dictionary containing:
+        votes (List[Dict]): An unsorted list of vote records, where each record is a dictionary containing:
+
+            - "participant_id": The ID of the voter.
+            - "statement_id": The ID of the statement being voted on.
+            - "vote": The recorded vote value.
+            - "modified": A unix timestamp object representing when the vote was made.
+
+        cutoff (int): A cutoff unix timestamp (ms) or index position in date-sorted votes list.
+
+    Returns:
+        votes (List[Dict]): An list of vote records, sorted by `modified` if index-based filtering occurred.
+    """
+    if cutoff:
+        # TODO: Detect datetime object as arg instead.
+        if cutoff > 1_300_000_000:
+            cutoff_timestamp = cutoff
+            votes = [v for v in votes if v['modified'] <= cutoff_timestamp]
+        else:
+            cutoff_index = cutoff
+            votes = sorted(votes, key=lambda x: x["modified"])
+            votes = votes[:cutoff_index]
+
+    return votes
+
+
+
+def generate_raw_matrix(
+        votes: List[Dict],
+        cutoff: Optional[int] = None,
+) -> VoteMatrix:
+    """
+    Generates a raw vote matrix from a list of vote records.
+
+    See `filter_votes` method for details of `cutoff` arg.
+
+    Args:
+        votes (List[Dict]): An unsorted list of vote records, where each record is a dictionary containing:
 
             - "participant_id": The ID of the voter.
             - "statement_id": The ID of the statement being voted on.
@@ -70,16 +106,7 @@ def generate_raw_matrix(
             This includes even voters that have no votes, and statements on which no votes were placed.
     """
     if cutoff:
-        # TODO: Add tests to confirm votes list is already date-sorted for each data_source.
-        # TODO: Detect datetime object as arg instead.
-        if cutoff > 1_300_000_000:
-            cutoff_timestamp = cutoff
-            votes = [v for v in votes if v['modified'] <= cutoff_timestamp]
-        else:
-            cutoff_index = cutoff
-            votes = votes[:cutoff_index]
-    else:
-        votes = votes
+        votes = filter_votes(votes=votes, cutoff=cutoff)
 
     raw_matrix = pd.DataFrame.from_dict(votes)
     raw_matrix = raw_matrix.pivot(
