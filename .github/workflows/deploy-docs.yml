@@ -8,6 +8,11 @@ on:
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
+    inputs:
+      enableCache:
+        description: "Enable cache of installed dependencies"
+        type: boolean
+        default: true
 
 # Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
 # However, do NOT cancel in-progress runs as we want to allow these production deployments to complete.
@@ -29,8 +34,14 @@ jobs:
 
       - uses: astral-sh/setup-uv@v5
         with:
-          enable-cache: true
+          enable-cache: ${{ github.event_name != 'workflow_dispatch' || inputs.enableCache }}
           version: "latest"
+          # As a library, we're not version-controlling uv.lock, so need pyproject.toml check.
+          # See: https://github.com/astral-sh/setup-uv/issues/261#issue-2818259989
+          cache-dependency-glob: |
+            **/*(requirements|constraints)*.(txt|in)
+            **/pyproject.toml
+            **/uv.lock
 
       - name: Install dependencies
         run: make install-dev
@@ -45,6 +56,7 @@ jobs:
 
   # Deploy job
   deploy:
+    name: Deploy
     # Add a dependency to the build job
     needs: build
 

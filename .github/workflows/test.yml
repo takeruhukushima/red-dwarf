@@ -25,6 +25,12 @@ jobs:
         with:
           enable-cache: ${{ github.event_name != 'workflow_dispatch' || inputs.enableCache }}
           version: "latest"
+          # As a library, we're not version-controlling uv.lock, so need pyproject.toml check.
+          # See: https://github.com/astral-sh/setup-uv/issues/261#issue-2818259989
+          cache-dependency-glob: |
+            **/*(requirements|constraints)*.(txt|in)
+            **/pyproject.toml
+            **/uv.lock
 
       - name: Install dependencies
         run: make install-dev
