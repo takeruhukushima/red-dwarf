@@ -237,16 +237,18 @@ def run_kmeans(
         n_clusters: int = 2,
         # TODO: Improve this type. 3d?
         init_centers: Optional[List] = None,
+        random_state: Optional[int] = None,
 ) -> Tuple[np.ndarray, np.ndarray]:
     """
     Runs K-Means clustering on a 2D DataFrame of xy points, for a specific K,
     and returns labels for each row and cluster centers. Optionally accepts
-    guesses on cluster centers.
+    guesses on cluster centers, and a random_state to reproducibility.
 
     Args:
         dataframe (pd.DataFrame): A dataframe with two columns (assumed `x` and `y`).
         n_clusters (int): How many clusters k to assume.
         init_centers (List): A list of xy coordinates to use as initial center guesses.
+        random_state (int): Determines random number generation for centroid initialization. Use an int to make the randomness deterministic.
 
     Returns:
         cluster_labels (np.ndarray): A list of zero-indexed labels for each row in the dataframe
@@ -259,13 +261,19 @@ def run_kmeans(
         # Use the default strategy in sklearn.
         init_arg = "k-means++"
     # TODO: Set random_state to a value eventually, so calculation is deterministic.
-    kmeans = KMeans(n_clusters=n_clusters, random_state=None, init=init_arg, n_init="auto").fit(dataframe)
+    kmeans = KMeans(
+        n_clusters=n_clusters,
+        random_state=random_state,
+        init=init_arg,
+        n_init="auto"
+    ).fit(dataframe)
 
     return kmeans.labels_, kmeans.cluster_centers_
 
 def find_optimal_k(
         projected_data: pd.DataFrame,
         max_group_count: int = 5,
+        random_state: Optional[int] = None,
         debug: bool = False,
 ) -> Tuple[int, float, np.ndarray]:
     """
@@ -274,6 +282,7 @@ def find_optimal_k(
     Args:
         projected_data (pd.DataFrame): A dataframe with two columns (assumed `x` and `y`).
         max_group_count (int): The max K number of groups to test for. (Default: 5)
+        random_state (int): Determines random number generation for centroid initialization. Use an int to make the randomness deterministic.
         debug (bool): Whether to print debug output. (Default: False)
 
     Returns:
@@ -286,7 +295,11 @@ def find_optimal_k(
     best_silhouette_score = -np.inf
 
     for k_test in K_RANGE:
-        cluster_labels, _ = run_kmeans(dataframe=projected_data, n_clusters=k_test)
+        cluster_labels, _ = run_kmeans(
+            dataframe=projected_data,
+            n_clusters=k_test,
+            random_state=random_state,
+        )
         this_silhouette_score = silhouette_score(projected_data, cluster_labels)
         if debug:
             print(f"{k_test=}, {this_silhouette_score=}")
