@@ -52,6 +52,10 @@ def test_generate_raw_matrix_simple(simple_votes, simple_vote_matrix):
     vote_matrix = utils.generate_raw_matrix(votes=simple_votes)
     assert_frame_equal(vote_matrix, expected)
 
+@pytest.mark.skip
+def test_filter_votes():
+    raise
+
 # TODO: Convert these to unit tests of filter_votes()?
 def test_generate_raw_matrix_cutoff_from_timestamp(simple_timestamped_votes):
     shuffled_votes = simple_timestamped_votes.copy()
@@ -97,3 +101,23 @@ def test_get_unvoted_statement_ids(simple_vote_matrix):
     simple_vote_matrix[3] = None
     unused_statement_ids = simple_vote_matrix.pipe(utils.get_unvoted_statement_ids)
     assert unused_statement_ids == [1, 3]
+
+@pytest.mark.skip
+def test_filter_matrix():
+    raise
+
+@pytest.mark.skip
+def test_run_pca():
+    raise
+
+@pytest.mark.skip
+def test_run_kmeans():
+    raise
+
+@pytest.mark.skip
+def test_find_optimal_k():
+    raise
+
+@pytest.mark.skip
+def test_scale_projected_data():
+    raise
