@@ -119,7 +119,7 @@ def get_unvoted_statement_ids(vote_matrix: VoteMatrix) -> List[int]:
 
     return null_column_ids
 
-def generate_filtered_matrix(
+def filter_matrix(
         vote_matrix: VoteMatrix,
         min_user_vote_threshold: int = 7,
         active_statement_ids: List[int] = [],

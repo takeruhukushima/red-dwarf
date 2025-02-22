@@ -6,7 +6,7 @@
     options:
         show_root_heading: true
 
-### ::: reddwarf.utils.generate_filtered_matrix
+### ::: reddwarf.utils.filter_matrix
     options:
         show_root_heading: true
 

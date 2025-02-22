@@ -111,7 +111,7 @@ class PolisClient():
             self.participant_count = len(vote_matrix)
 
             if is_filtered:
-                vote_matrix = utils.generate_filtered_matrix(
+                vote_matrix = utils.filter_matrix(
                     vote_matrix=vote_matrix,
                     min_user_vote_threshold=self.min_votes,
                     active_statement_ids=self.get_active_statement_ids(),
