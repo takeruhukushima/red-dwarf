@@ -82,10 +82,18 @@ def test_generate_raw_matrix_cutoff_from_end(simple_timestamped_votes):
     shuffled_votes = simple_timestamped_votes.copy()
     shuffle(shuffled_votes)
 
-    vote_matrix = generate_raw_matrix(votes=shuffled_votes, cutoff=-2)
+    vote_matrix = utils.generate_raw_matrix(votes=shuffled_votes, cutoff=-2)
 
     third_last_vote = simple_timestamped_votes[-3]
     assert not pd.isna(vote_matrix.at[third_last_vote["participant_id"], third_last_vote["statement_id"]])
 
     second_last_vote = simple_timestamped_votes[-2]
     assert pd.isna(vote_matrix.at[second_last_vote["participant_id"], second_last_vote["statement_id"]])
+
+def test_get_unvoted_statement_ids(simple_vote_matrix):
+    # Null out existing statement column.
+    simple_vote_matrix[1] = nan
+    # Null out new statement column.
+    simple_vote_matrix[3] = None
+    unused_statement_ids = simple_vote_matrix.pipe(utils.get_unvoted_statement_ids)
+    assert unused_statement_ids == [1, 3]
