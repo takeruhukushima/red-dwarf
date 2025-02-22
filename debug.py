@@ -35,6 +35,11 @@ if True:
 
     client = PolisClient()
     client.load_data(report_id=report_id)
+    # To see the consequences of not having pass/neutral/zero votes
+    DO_STRIP_PASS=False
+    if DO_STRIP_PASS:
+        client.votes = []
+        client.load_votes_data(data=[v for v in client.data_loader.votes_data if v["vote"] != 0])
     client.get_matrix(is_filtered=True)
     client.run_pca()
     client.scale_projected_data()
