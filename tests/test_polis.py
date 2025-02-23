@@ -134,9 +134,9 @@ def test_matrix_cutoff_timestamp():
     assert not math.isnan(full_matrix.loc[vote_after["participant_id"], vote_after["statement_id"]])
 
 class Test_Client:
-    # Was getting a wall of warnings about reponses from API not following HTTP spec.
+    # Was getting a wall of warnings due to requests-cache bug.
     # Checking this to ensure it doesn't return and confuse users.
-    # See: https://github.com/urllib3/urllib3/blob/04662c9ae08c9f63fa254772d7618db65123a35e/src/urllib3/response.py#L692-L704
+    # Fixed here: https://github.com/requests-cache/requests-cache/pull/1068
     def test_client_no_warnings_for_csv_urls(self, caplog):
         client = PolisClient(is_strict_moderation=True)
         client.load_data(report_id="r5hr48j8y8mpcffk7crmk", data_source="csv_export")
