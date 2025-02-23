@@ -16,6 +16,13 @@ debug: ## Run the debug.py script
 test: ## Run tests via pytest
 	uv run pytest
 
+test-cov: ## Run tests via pytest (with coverage report)
+	uv run pytest --cov=reddwarf --cov-report term-missing:skip-covered
+
+cov-report-html: ## Build and open html coverage report
+	uv run pytest --cov=reddwarf --cov-report html
+	open htmlcov/index.html
+
 test-debug: ## Run test via pytest (with verbose debugging)
 	# Make sure stdout is rendered to screen.
 	# Show full diffs on failure.

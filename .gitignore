@@ -11,3 +11,6 @@ site/
 __pycache__
 *.egg-info
 .DS_Store
+
+# python-cov
+.coverage
