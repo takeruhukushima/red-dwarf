@@ -1,5 +1,5 @@
 install: ## Install production dependencies
-	uv run pip install -e .
+	uv pip install --editable .
 
 install-dev: ## Install development dependencies
 	uv sync --extra dev
