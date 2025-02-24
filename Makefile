@@ -31,6 +31,9 @@ test-debug: ## Run test via pytest (with verbose debugging)
 clear-test-cache: ## Cleak the SQLite database of cached HTTP requests
 	rm -f test_cache.sqlite
 
+download: install ## Download Polis data into fixtures dir (Ex: make download CONVO_ID=7vampckwrh DIR=example)
+	uv run scripts/download_sample_data.py $(CONVO_ID) $(DIR)
+
 # These make tasks allow the default help text to work properly.
 %:
 	@true
