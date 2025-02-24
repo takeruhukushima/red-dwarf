@@ -6,7 +6,7 @@ import pytest
 
 @pytest.fixture
 def small_convo_math_data():
-    path = "sample_data/below-100-ptpts"
+    path = "tests/fixtures/below-100-ptpts"
     filename = "math-pca2.json"
     with open(f"{path}/{filename}", 'r') as f:
         data = json.load(f)
@@ -83,8 +83,8 @@ def test_statement_count(small_convo_math_data):
 
     assert client.statement_count == expected_data
 
-def test_impute_missing_values():
-    path = 'sample_data/below-100-ptpts'
+def test_impute_missing_values(small_convo_math_data):
+    _, path, _ = small_convo_math_data
     client = PolisClient(is_strict_moderation=False)
     client.load_data(filepaths=[
         f'{path}/votes.json',
