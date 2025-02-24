@@ -180,6 +180,49 @@ def test_filter_matrix_mod_out_statement_with_zero(simple_vote_matrix):
 
     assert (filtered_matrix[1] == 0).all()
 
+def test_impute_missing_votes():
+    # Manually calculated
+    expected_matrix = pd.DataFrame(
+        [
+            [ 0,    1,    0,  1/3],
+            [-1,    0,    0,   -1],
+            [-1,  0.5,    0,    1],
+            [-1,  0.5,    0,    1],
+        ],
+        columns=[0, 1, 2, 3], # statement_ids
+        index=[0, 1, 2, 3], # participant_ids
+        dtype=float,
+    )
+
+    initial_matrix = pd.DataFrame(
+        [
+            [ 0,    1, None, None],
+            [-1,    0, None,   -1],
+            [-1, None, None,    1],
+            [-1, None,    0,    1],
+        ],
+        columns=[0, 1, 2, 3], # statement_ids
+        index=[0, 1, 2, 3], # participant_ids
+        dtype=float,
+    )
+    imputed_matrix = utils.impute_missing_votes(vote_matrix=initial_matrix)
+    assert_frame_equal(imputed_matrix, expected_matrix)
+
+def test_impute_missing_votes_no_vote_statement_error():
+    initial_matrix = pd.DataFrame(
+        [
+            [ 0,    1, None, None],
+            [-1,    0, None,   -1],
+            [-1, None, None,    1],
+            [-1, None, None,    1],
+        ],
+        columns=[0, 1, 2, 3], # statement_ids
+        index=[0, 1, 2, 3], # participant_ids
+        dtype=float,
+    )
+    with pytest.raises(ValueError):
+        utils.impute_missing_votes(vote_matrix=initial_matrix)
+
 @pytest.mark.skip
 def test_run_pca():
     raise
