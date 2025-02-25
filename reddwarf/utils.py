@@ -118,14 +118,6 @@ def generate_raw_matrix(
         columns="statement_id",
     )
 
-    participant_count = raw_matrix.index.max() + 1
-    comment_count = raw_matrix.columns.max() + 1
-    raw_matrix = raw_matrix.reindex(
-        index=range(participant_count),
-        columns=range(comment_count),
-        fill_value=np.nan,
-    )
-
     return raw_matrix
 
 def get_unvoted_statement_ids(vote_matrix: VoteMatrix) -> List[int]:
