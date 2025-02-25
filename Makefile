@@ -1,5 +1,5 @@
 install: ## Install production dependencies
-	uv run pip install -e .
+	uv pip install --editable .
 
 install-dev: ## Install development dependencies
 	uv sync --extra dev
@@ -16,6 +16,13 @@ debug: ## Run the debug.py script
 test: ## Run tests via pytest
 	uv run pytest
 
+test-cov: ## Run tests via pytest (with coverage report)
+	uv run pytest --cov=reddwarf --cov-report term-missing:skip-covered
+
+cov-report-html: ## Build and open html coverage report
+	uv run pytest --cov=reddwarf --cov-report html
+	open htmlcov/index.html
+
 test-debug: ## Run test via pytest (with verbose debugging)
 	# Make sure stdout is rendered to screen.
 	# Show full diffs on failure.
@@ -23,6 +30,9 @@ test-debug: ## Run test via pytest (with verbose debugging)
 
 clear-test-cache: ## Cleak the SQLite database of cached HTTP requests
 	rm -f test_cache.sqlite
+
+download: install ## Download Polis data into fixtures dir (Ex: make download CONVO_ID=7vampckwrh DIR=example)
+	uv run scripts/download_sample_data.py $(CONVO_ID) $(DIR)
 
 # These make tasks allow the default help text to work properly.
 %:
