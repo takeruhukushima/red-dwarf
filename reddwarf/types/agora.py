@@ -1,16 +1,16 @@
-from typing import TypedDict, List, Optional
+from typing import TypedDict, List, Optional, Union
 from enum import IntEnum
 
-IncrementingId = int
+Identifier = Union[int, str]
 
 class Statement(TypedDict):
-     id: IncrementingId
+     id: Identifier
 
 class Participant(TypedDict):
-    id: IncrementingId
+    id: Identifier
 
 class ClusteredParticipant(TypedDict):
-    id: IncrementingId # participant.id
+    id: Identifier # participant.id
     x: float
     y: float
 
@@ -21,8 +21,8 @@ class VoteValueEnum(IntEnum):
     PASS = 0
 
 class Vote(TypedDict):
-    statement_id: IncrementingId # statement.id
-    participant_id: IncrementingId # participant.id
+    statement_id: Identifier # statement.id
+    participant_id: Identifier # participant.id
 
     vote: VoteValueEnum
 
@@ -30,7 +30,7 @@ class Conversation(TypedDict):
     votes: List[Vote]
 
 class Cluster(TypedDict):
-    label: int
+    id: int
     participants: List[ClusteredParticipant]
 
 class ClusteringResult(TypedDict):
