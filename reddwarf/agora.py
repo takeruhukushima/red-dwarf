@@ -31,14 +31,14 @@ def run_clustering(
     )
 
     # Add cluster label column to dataframe.
-    projected_data = projected_data.assign(cluster_label=cluster_labels)
+    projected_data = projected_data.assign(cluster_id=cluster_labels)
     # Convert participant_id index into regular column, for ease of transformation.
     projected_data = projected_data.reset_index()
 
     result: ClusteringResult = {
         "clusters": [
             {
-                "label": cluster_label,
+                "id": cluster_id,
                 "participants": [
                     {
                         "id": row.participant_id,
@@ -48,7 +48,7 @@ def run_clustering(
                     for row in group.itertuples(index=False)
                 ]
             }
-            for cluster_label, group in projected_data.groupby("cluster_label")
+            for cluster_id, group in projected_data.groupby("cluster_id")
         ]
     }
 
