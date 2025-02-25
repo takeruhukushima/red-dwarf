@@ -5,10 +5,35 @@ DEFAULT_MIN_USER_VOTE_THRESHOLD = 7
 DEFAULT_MAX_CLUSTERS = 5
 DEFAULT_KMEANS_RANDOM_STATE = 123456789
 
-def run_clustering(
+def run_clustering_v1(
     conversation: Conversation,
     options: ClusteringOptions = {},
 ) -> ClusteringResult:
+    """
+    A minimal Polis-based clustering agorithm suitable for use by Agora Citizen Network.
+
+    This does the following:
+
+    1. builds a vote matrix (includes as statement with at least 1 participant vote),
+    2. filters out any participants with less than 7 votes,
+    3. runs PCA and projects active participants into 2D coordinates,
+    4. scales the projected participants out from center when low number of votes,
+    5. test 2-5 groups for best k-means fit via silhouette scores (random state set for reproducibility)
+    6. returns a list of clusters, each with a list of participant members and their projected 2D coordinates.
+
+    Warning:
+        This will technically function without PASS votes, but scaling
+        factors will not be effective in compensating for missing votes,
+        and so participant projections will be bunched up closer to the
+        origin.
+
+    Args:
+        conversation (Conversation): A minimal conversation object with votes.
+        options (ClusteringOptions): Configuration options for override defaults.
+
+    Returns:
+        result (ClusteringResult): Results of the clustering operation.
+    """
     vote_matrix = utils.generate_raw_matrix(votes=conversation["votes"])
     # Any statements with votes are included.
     all_statement_ids = vote_matrix.columns
