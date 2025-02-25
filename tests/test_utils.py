@@ -1,4 +1,5 @@
 from reddwarf import utils
+from reddwarf.exceptions import RedDwarfError
 
 import pytest
 from pandas.testing import assert_frame_equal
@@ -142,7 +143,7 @@ def test_generate_raw_matrix_cutoff_from_timestamp(make_votes):
     vote_after = simple_timestamped_votes[-2]
     assert pd.isna(vote_matrix.at[vote_after["participant_id"], vote_after["statement_id"]])
 
-def test_generate_raw_matrix_cutoff_from_start(make_votes):
+def test_generate_raw_matrix_cutoff_from_index_start(make_votes):
     simple_timestamped_votes = make_votes(include_timestamp=True)
     shuffled_votes = simple_timestamped_votes.copy()
     shuffle(shuffled_votes)
@@ -155,7 +156,7 @@ def test_generate_raw_matrix_cutoff_from_start(make_votes):
     vote_after = simple_timestamped_votes[4]
     assert pd.isna(vote_matrix.at[vote_after["participant_id"], vote_after["statement_id"]])
 
-def test_generate_raw_matrix_cutoff_from_end(make_votes):
+def test_generate_raw_matrix_cutoff_from_index_end(make_votes):
     simple_timestamped_votes = make_votes(include_timestamp=True)
     shuffled_votes = simple_timestamped_votes.copy()
     shuffle(shuffled_votes)
@@ -167,6 +168,23 @@ def test_generate_raw_matrix_cutoff_from_end(make_votes):
 
     second_last_vote = simple_timestamped_votes[-2]
     assert pd.isna(vote_matrix.at[second_last_vote["participant_id"], second_last_vote["statement_id"]])
+
+def test_generate_raw_matrix_cutoff_from_timestamp_missing_error(make_votes):
+    simple_timestamped_votes = make_votes(include_timestamp=False)
+    shuffled_votes = simple_timestamped_votes.copy()
+    shuffle(shuffled_votes)
+
+    last_vote_timestamp = 1735000000
+    with pytest.raises(RedDwarfError):
+        utils.generate_raw_matrix(votes=shuffled_votes, cutoff=last_vote_timestamp)
+
+def test_generate_raw_matrix_cutoff_from_index_missing_error(make_votes):
+    simple_timestamped_votes = make_votes(include_timestamp=False)
+    shuffled_votes = simple_timestamped_votes.copy()
+    shuffle(shuffled_votes)
+
+    with pytest.raises(RedDwarfError):
+        utils.generate_raw_matrix(votes=shuffled_votes, cutoff=-4)
 
 def test_get_unvoted_statement_ids(make_vote_matrix):
     simple_vote_matrix = make_vote_matrix()
@@ -292,7 +310,7 @@ def test_impute_missing_votes_no_vote_statement_error():
         index=[0, 1, 2, 3], # participant_ids
         dtype=float,
     )
-    with pytest.raises(ValueError):
+    with pytest.raises(RedDwarfError):
         utils.impute_missing_votes(vote_matrix=initial_matrix)
 
 def test_run_pca_toy():

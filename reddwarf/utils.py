@@ -5,6 +5,7 @@ from sklearn.cluster import KMeans
 from sklearn.metrics import silhouette_score
 from sklearn.decomposition import PCA
 from typing import List, Dict, Tuple, Optional, Literal, TypeAlias
+from reddwarf.exceptions import RedDwarfError
 
 VoteMatrix: TypeAlias = pd.DataFrame
 
@@ -28,7 +29,7 @@ def impute_missing_votes(vote_matrix: VoteMatrix) -> VoteMatrix:
         imputed_matrix (pd.DataFrame): The same vote matrix DataFrame imputing missing values with column mean.
     """
     if vote_matrix.isna().all(axis="rows").any():
-        raise ValueError("impute_missing_votes does not support vote matrices containing statement columns with no votes.")
+        raise RedDwarfError("impute_missing_votes does not support vote matrices containing statement columns with no votes.")
 
     mean_imputer = SimpleImputer(missing_values=np.nan, strategy='mean')
     imputed_matrix = pd.DataFrame(
@@ -68,13 +69,16 @@ def filter_votes(
     """
     if cutoff:
         # TODO: Detect datetime object as arg instead.
-        if cutoff > 1_300_000_000:
-            cutoff_timestamp = cutoff
-            votes = [v for v in votes if v['modified'] <= cutoff_timestamp]
-        else:
-            cutoff_index = cutoff
-            votes = sorted(votes, key=lambda x: x["modified"])
-            votes = votes[:cutoff_index]
+        try:
+            if cutoff > 1_300_000_000:
+                cutoff_timestamp = cutoff
+                votes = [v for v in votes if v['modified'] <= cutoff_timestamp]
+            else:
+                cutoff_index = cutoff
+                votes = sorted(votes, key=lambda x: x["modified"])
+                votes = votes[:cutoff_index]
+        except KeyError as e:
+            raise RedDwarfError("The `modified` key is missing from a vote object that must be sorted") from e
 
     return votes
 
