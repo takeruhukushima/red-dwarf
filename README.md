@@ -26,8 +26,18 @@ For now, see [this related issue](https://github.com/patcon/red-dwarf/issues/4)
 Code that aspires to embody and support democratic values should be...
 
 - **Legible.** It should be explorable and auditable not just to researchers, but to as many curious citizens as possible.
-- **Re-usable.** It should be easily used in contexts in which it's original creators did not anticipate, nor perhaps even desire.
+- **Re-usable.** It should be easily used in contexts in which its original creators did not anticipate, nor perhaps even desire.
 - **Collectively stewarded.** It should grow and govern itself democratically and in a plural fashion.
+
+## Sponsors
+
+<p>
+  <a href="https://agoracitizen.network" rel="noopener sponsored" target="_blank"><img width="167" src="https://agoracitizen.network/images/big_logo_agora.png" alt="Agora Citizen Network" title="Where citizens converge to exchange and debate ideas" loading="lazy" /></a>
+</p>
+
+Red Dwarf is generously sponsored by [ZKorum SAS](https://zkorum.com), creators of the [Agora Citizen Network](https://agoracitizen.network).
+
+Are you or your organization eager to see more platforms and community built around democracy-supporting algorithms like these? **Please consider [getting in touch on Discord](#get-involved) and supporting our continued work!** (ping @patcon)
 
 ## Usage
 
@@ -93,6 +103,15 @@ client.load_data(filepaths=[
 ])
 ```
 
+## Get Involved
+
+- [Join][pug-discord] the _Polis User Group (PUG)_ **Discord** server.
+- Open a **GitHub issue**.
+- Submit a **GitHub pull request**.
+- Review the [**_Awesome Polis_ directory**][awesome-polis] to learn about related projects, academic papers, and other resources.
+   - Use the _"People"_ section to find other individuals and groups working in the field.
+
+
 ## License
 
 [MPL 2.0: Mozilla Public License 2.0][mplv2] (See [`LICENSE`][license])
@@ -100,5 +119,10 @@ client.load_data(filepaths=[
 <!-- Links -->
    [stellarpunk]: https://www.youtube.com/watch?v=opnkQVZrhAw
    [notebook]: https://github.com/polis-community/red-dwarf/blob/main/docs/example-usage.ipynb
+   [ZKorum]: https://github.com/zkorum
+   [agora]: https://agoracitizen.network/
+   [ngi-funding]: https://trustchain.ngi.eu/zkorum/
    [MPLv2]: https://choosealicense.com/licenses/mpl-2.0/
    [license]: https://github.com/polis-community/red-dwarf/blob/main/LICENSE
+   [pug-discord]: https://discord.com/invite/wFWB8kzQpP
+   [awesome-polis]: http://patcon.github.io/awesome-polis/
