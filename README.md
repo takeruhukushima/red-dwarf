@@ -15,11 +15,6 @@ A <em>DIM</em>ensional <em>RED</em>uction library for [stellarpunk][] democracy 
 
 Inspiration: https://chatgpt.com/share/677f7690-7188-800b-85e5-816aaa7cc8f9
 
-[![Thanks to generous sponsorship from Agora Citizen Network](docs/agora-sponsorship-header.png)][agora]
-<!-- Generated from: https://leviarista.github.io/github-profile-header-generator/ meta: kalam, ubuntu, 223, 251, 215 -->
-
-<sup>(See [_Sponsorship_](#sponsorship) section below.)</sup>
-
 ## Roadmap
 
 For now, see [this related issue](https://github.com/patcon/red-dwarf/issues/4)
@@ -29,8 +24,18 @@ For now, see [this related issue](https://github.com/patcon/red-dwarf/issues/4)
 Code that aspires to embody and support democratic values should be...
 
 - **Legible.** It should be explorable and auditable not just to researchers, but to as many curious citizens as possible.
-- **Re-usable.** It should be easily used in contexts in which it's original creators did not anticipate, nor perhaps even desire.
+- **Re-usable.** It should be easily used in contexts in which its original creators did not anticipate, nor perhaps even desire.
 - **Collectively stewarded.** It should grow and govern itself democratically and in a plural fashion.
+
+## Sponsors
+
+<p>
+  <a href="https://agoracitizen.network" rel="noopener sponsored" target="_blank"><img width="222" src="https://agoracitizen.network/images/big_logo_agora.png" alt="Agora Citizen Network" title="Where citizens converge to exchange and debate ideas" loading="lazy" /></a>
+</p>
+
+Red Dwarf is generously sponsored by [ZKorum SAS](https://zkorum.com), creators of the [Agora Citizen Network](https://agoracitizen.network).
+
+Are you or your organization eager to see more platforms and community built around democracy-supporting algorithms like these? **Please consider [getting in touch on Discord](#get-involved) and supporting our continued work!** (ping @patcon)
 
 ## Usage
 
@@ -104,11 +109,6 @@ client.load_data(filepaths=[
 - Review the [**_Awesome Polis_ directory**][awesome-polis] to learn about related projects, academic papers, and other resources.
    - Use the _"People"_ section to find other individuals and groups working in the field.
 
-## Sponsorship
-
-> Red Dwarf is generously sponsored by [**ZKorum**][zkorum], creators of the [**Agora Citizen Network**][agora], through [their funding][ngi-funding] from the NGI TrustChain program, part of the EU's Horizon Europe 2020 research and innovation program. Work on this project would not be sustainable without them.
-
-Are you or your organization eager to see more platforms and community built around democracy-supporting algorithms like these? **Please consider [getting in touch on Discord](#get-involved) and supporting our continued work!** (ping @patcon)
 
 ## License
 
