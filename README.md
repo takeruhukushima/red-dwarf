@@ -112,6 +112,10 @@ client.load_data(filepaths=[
    - Use the _"People"_ section to find other individuals and groups working in the field.
 
 
+## Changelog
+
+See [`CHANGELOG.md`][changelog].
+
 ## License
 
 [MPL 2.0: Mozilla Public License 2.0][mplv2] (See [`LICENSE`][license])
@@ -126,3 +130,4 @@ client.load_data(filepaths=[
    [license]: https://github.com/polis-community/red-dwarf/blob/main/LICENSE
    [pug-discord]: https://discord.com/invite/wFWB8kzQpP
    [awesome-polis]: http://patcon.github.io/awesome-polis/
+   [changelog]: CHANGELOG.md
