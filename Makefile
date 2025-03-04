@@ -34,6 +34,9 @@ clear-test-cache: ## Cleak the SQLite database of cached HTTP requests
 download: install ## Download Polis data into fixtures dir (Ex: make download CONVO_ID=7vampckwrh DIR=example)
 	uv run scripts/download_sample_data.py $(CONVO_ID) $(DIR)
 
+release: ## Print no-op documentation to guide the release process
+	uv run scripts/release.py
+
 # These make tasks allow the default help text to work properly.
 %:
 	@true
