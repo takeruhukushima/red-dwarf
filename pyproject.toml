@@ -24,7 +24,9 @@ dependencies = [
 include = ["reddwarf*"]
 
 [tool.setuptools]
-license-files = ["LICENSE"]
+# Work-around for `uv`/`setuptools` bug.
+# See: https://github.com/ToucanToco/peakina/pull/957/files
+license-files = []
 
 [tool.uv.sources]
 requests-cache = { git = "https://github.com/requests-cache/requests-cache", rev = "12af54ded36" }
