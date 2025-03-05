@@ -1,8 +1,8 @@
 # Changelog
 
 ## [Unreleased][] (YYYY-MM-DD)
-
-_No changes yet._
+### Fixed
+- Relax seaborn version constraint to be compatible with TabPFN. ([#16](https://github.com/polis-community/red-dwarf/issues/16))
 
 ## [0.1.1][] (2025-03-04)
 ### Bugfixes
