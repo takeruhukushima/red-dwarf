@@ -4,6 +4,10 @@
 
 _No changes yet._
 
+## [0.1.1][] (2025-03-04)
+### Bugfixes
+- Fix publishing issue with missing license file. ([#19](https://github.com/polis-community/red-dwarf/issues/19))
+
 ## [0.1.0][] (2025-03-04)
 
 - Add Agora/ZKorum to README as sponsor.
@@ -26,5 +30,6 @@ _No changes yet._
     - Add integration tests.
 
 <!-- Links -->
-   [Unreleased]: https://github.com/polis-community/red-dwarf/compare/v0.1.0...main
+   [Unreleased]: https://github.com/polis-community/red-dwarf/compare/v0.1.1...main
+   [0.1.1]: https://github.com/polis-community/red-dwarf/releases/tag/v0.1.1
    [0.1.0]: https://github.com/polis-community/red-dwarf/releases/tag/v0.1.0

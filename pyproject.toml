@@ -1,6 +1,6 @@
 [project]
 name = "reddwarf"
-version = "0.1.0"
+version = "0.1.1"
 description = "A dimensional reduction library for stellarpunk democracy into the long haul"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -22,6 +22,9 @@ dependencies = [
 
 [tool.setuptools.packages.find]
 include = ["reddwarf*"]
+
+[tool.setuptools]
+license-files = ["LICENSE"]
 
 [tool.uv.sources]
 requests-cache = { git = "https://github.com/requests-cache/requests-cache", rev = "12af54ded36" }
