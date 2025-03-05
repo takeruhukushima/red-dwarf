@@ -1,5 +1,5 @@
 [project]
-name = "reddwarf"
+name = "red-dwarf-democracy"
 version = "0.1.1"
 description = "A dimensional reduction library for stellarpunk democracy into the long haul"
 readme = "README.md"

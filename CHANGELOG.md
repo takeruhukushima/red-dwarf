@@ -8,6 +8,7 @@ _No changes yet._
 ### Bugfixes
 - Fix publishing issue with missing license file. ([#19](https://github.com/polis-community/red-dwarf/issues/19))
     - Workaround for [`pypa/setuptools#4769`](https://github.com/pypa/setuptools/issues/4759).
+- Change package name from `reddwarf` to `red-dwarf-democracy`.
 
 ## [0.1.0][] (2025-03-04)
 
