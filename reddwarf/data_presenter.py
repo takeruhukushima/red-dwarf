@@ -66,7 +66,12 @@ def generate_figure(
                 edgecolor=None,
             )
             plt.gca().add_patch(polygon)
-    plt.scatter(**scatter_kwargs)
+    scatter = plt.scatter(**scatter_kwargs)
+
+    # Add a legend if labels are provided
+    if labels is not None:
+        plt.colorbar(scatter, label="Cluster", ticks=labels)
+
     plt.show()
 
     return None
