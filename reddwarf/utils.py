@@ -344,3 +344,73 @@ def find_optimal_k(
     optimal_cluster_labels = best_cluster_labels
 
     return optimal_k, optimal_silhouette, optimal_cluster_labels
+
+
+def calculate_representativeness(
+        vote_matrix: VoteMatrix,
+        cluster_labels: np.ndarray,
+        group_id: int,
+        pseudo_count: int = 1,
+) -> pd.DataFrame:
+    """
+    Calculate the Polis representativeness metric for every statement for a specific group.
+
+    The representativeness metric is defined as:
+    R_v(g,c) = P_v(g,c) / P_v(~g,c)
+
+    Where:
+    - P_v(g,c) is probability of vote v on comment c in group g
+    - P_v(~g,c) is probability of vote v on comment c in all groups except g
+
+    Args:
+        vote_matrix (VoteMatrix): The vote matrix where rows are voters, columns are statements,
+                                  and values are votes (1 for agree, -1 for disagree, 0 for pass).
+        cluster_labels (np.ndarray): Array of cluster labels for each participant in the vote matrix.
+        group_id (int): The ID of the group/cluster to calculate representativeness for.
+        pseudo_count (int): Smoothing parameter to avoid division by zero. Default is 1.
+
+    Returns:
+        representativeness (pd.DataFrame): DataFrame containing representativeness scores for each comment,
+                                          with columns for agree_repr, disagree_repr, and n_votes.
+    """
+    # Create mask for the participants in target group
+    in_group_mask = (cluster_labels == group_id)
+    out_group_mask = ~in_group_mask
+
+    # Get the vote matrix values
+    X = vote_matrix.values
+    X_in_group = X[in_group_mask]
+    X_out_group = X[out_group_mask]
+
+    # Count any votes [-1, 0, 1] for all statements/features at once
+
+    # For in-group
+    n_agree_in_group = np.sum(X_in_group == 1, axis=0)
+    n_disagree_in_group = np.sum(X_in_group == -1, axis=0)
+    n_votes_in_group = np.sum(np.isfinite(X_in_group), axis=0)
+
+    # For out-group
+    n_agree_out_group = np.sum(X_out_group == 1, axis=0)
+    n_disagree_out_group = np.sum(X_out_group == -1, axis=0)
+    n_votes_out_group = np.sum(np.isfinite(X_out_group), axis=0)
+
+    # Apply Laplace smoothing and calculate probabilities
+    p_agree_in_group = (pseudo_count + n_agree_in_group) / (2*pseudo_count + n_votes_in_group)
+    p_agree_out_group = (pseudo_count + n_agree_out_group) / (2*pseudo_count + n_votes_out_group)
+
+    p_disagree_in_group = (pseudo_count + n_disagree_in_group) / (2*pseudo_count + n_votes_in_group)
+    p_disagree_out_group = (pseudo_count + n_disagree_out_group) / (2*pseudo_count + n_votes_out_group)
+
+    # Calculate representativeness
+    agree_repr = p_agree_in_group / p_agree_out_group
+    disagree_repr = p_disagree_in_group / p_disagree_out_group
+
+    # Create result DataFrame
+    group_representativeness = pd.DataFrame({
+        'agree_repr': agree_repr,
+        'disagree_repr': disagree_repr,
+        'n_votes_in_group': n_votes_in_group,
+        'n_votes_out_group': n_votes_out_group
+    }, index=vote_matrix.columns)
+
+    return group_representativeness

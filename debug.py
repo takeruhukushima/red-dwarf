@@ -2,6 +2,8 @@ from reddwarf.polis import PolisClient
 from reddwarf.data_presenter import DataPresenter
 import pandas as pd
 
+from reddwarf import utils
+
 
 CONVOS = {
     # Topic: What were the most significant developments in tech and politics in 2018?
@@ -30,6 +32,35 @@ CONVOS = {
 }
 
 if True:
+    # testing representativeness calculations
+    report_id = CONVOS["tech-politics-2018"]["report_id"]
+    print(f"Loading data from report: https://pol.is/report/{report_id}")
+
+    client = PolisClient()
+    client.load_data(report_id=report_id)
+
+    # Generate vote matrix and run clustering
+    vote_matrix = client.get_matrix(is_filtered=True)
+    client.run_pca()
+    client.scale_projected_data()
+    client.find_optimal_k()  # Find optimal number of clusters
+    cluster_labels = client.optimal_cluster_labels
+    group_count = cluster_labels.max()+1
+
+    for group_id in range(group_count):
+        print(f"representativeness for group {group_id}")
+        group_representativeness = utils.calculate_representativeness(
+            vote_matrix=vote_matrix,
+            cluster_labels=cluster_labels,
+            group_id=group_id,
+        )
+        print(group_representativeness)
+
+    presenter = DataPresenter(client=client)
+    presenter.render_optimal_cluster_figure()
+
+
+if False:
     # test agora method
     from reddwarf.agora import run_clustering
     from reddwarf.types.agora import Conversation

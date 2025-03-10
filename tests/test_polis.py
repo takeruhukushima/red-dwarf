@@ -1,17 +1,9 @@
-import json
 from reddwarf.polis import PolisClient
 from reddwarf import utils
 import math
 import pytest
 
-@pytest.fixture
-def small_convo_math_data():
-    path = "tests/fixtures/below-100-ptpts"
-    filename = "math-pca2.json"
-    with open(f"{path}/{filename}", 'r') as f:
-        data = json.load(f)
-
-    return data, path, filename
+from tests.fixtures import small_convo_math_data
 
 def test_user_vote_counts(small_convo_math_data):
     data, path, _ = small_convo_math_data
