@@ -374,8 +374,8 @@ def calculate_representativeness(
                                           with columns for agree_repr, disagree_repr, and n_votes.
     """
     # Create mask for the participants in target group
-    group_mask = (cluster_labels == group_id)
-    not_group_mask = ~group_mask
+    in_group_mask = (cluster_labels == group_id)
+    out_group_mask = ~in_group_mask
 
     # Create feature names for the comments
     feature_names = [f"Vote_{i}" for i in range(vote_matrix.shape[1])]
@@ -389,24 +389,24 @@ def calculate_representativeness(
     # For each comment/feature
     for j in range(X.shape[1]):
         # Calculate agree representativeness (v=1)
-        n_agree_in_group = np.sum((X[group_mask, j] == 1))
-        n_votes_in_group = np.sum((X[group_mask, j] != 0))
+        n_agree_in_group = np.sum((X[in_group_mask, j] == 1))
+        n_votes_in_group = np.sum((X[in_group_mask, j] != 0))
         p_agree_in_group = (pseudo_count + n_agree_in_group) / (2*pseudo_count + n_votes_in_group)
 
-        n_agree_not_in_group = np.sum((X[not_group_mask, j] == 1))
-        n_votes_not_in_group = np.sum((X[not_group_mask, j] != 0))
-        p_agree_not_in_group = (pseudo_count + n_agree_not_in_group) / (2*pseudo_count + n_votes_not_in_group)
+        n_agree_out_group = np.sum((X[out_group_mask, j] == 1))
+        n_votes_out_group = np.sum((X[out_group_mask, j] != 0))
+        p_agree_out_group = (pseudo_count + n_agree_out_group) / (2*pseudo_count + n_votes_out_group)
 
         # Calculate disagree representativeness (v=-1)
-        n_disagree_in_group = np.sum((X[group_mask, j] == -1))
+        n_disagree_in_group = np.sum((X[in_group_mask, j] == -1))
         p_disagree_in_group = (pseudo_count + n_disagree_in_group) / (2*pseudo_count + n_votes_in_group)
 
-        n_disagree_not_in_group = np.sum((X[not_group_mask, j] == -1))
-        p_disagree_not_in_group = (pseudo_count + n_disagree_not_in_group) / (2*pseudo_count + n_votes_not_in_group)
+        n_disagree_out_group = np.sum((X[out_group_mask, j] == -1))
+        p_disagree_out_group = (pseudo_count + n_disagree_out_group) / (2*pseudo_count + n_votes_out_group)
 
         # Store representativeness
-        representativeness.loc[feature_names[j], 'agree_repr'] = p_agree_in_group / p_agree_not_in_group
-        representativeness.loc[feature_names[j], 'disagree_repr'] = p_disagree_in_group / p_disagree_not_in_group
-        representativeness.loc[feature_names[j], 'n_votes'] = n_votes_in_group + n_votes_not_in_group
+        representativeness.loc[feature_names[j], 'agree_repr'] = p_agree_in_group / p_agree_out_group
+        representativeness.loc[feature_names[j], 'disagree_repr'] = p_disagree_in_group / p_disagree_out_group
+        representativeness.loc[feature_names[j], 'n_votes'] = n_votes_in_group + n_votes_out_group
 
     return representativeness
