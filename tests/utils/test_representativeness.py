@@ -95,7 +95,7 @@ def get_all_participant_ids(group_clusters_participant):
 
 def test_calculate_representativeness_real_data(small_convo_math_data):
     math_data, path, _ = small_convo_math_data
-    client = PolisClient(is_strict_moderation=True)
+    client = PolisClient(is_strict_moderation=False)
     client.load_data(filepaths=[
         f'{path}/votes.json',
         f'{path}/comments.json',
