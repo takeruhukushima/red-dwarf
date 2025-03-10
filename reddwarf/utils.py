@@ -344,3 +344,69 @@ def find_optimal_k(
     optimal_cluster_labels = best_cluster_labels
 
     return optimal_k, optimal_silhouette, optimal_cluster_labels
+
+
+def calculate_representativeness(
+        vote_matrix: VoteMatrix,
+        cluster_labels: np.ndarray,
+        group_id: int,
+        pseudo_count: int = 1,
+) -> pd.DataFrame:
+    """
+    Calculate the Polis representativeness metric for a specific group.
+
+    The representativeness metric is defined as:
+    R_v(g,c) = P_v(g,c) / P_v(~g,c)
+
+    Where:
+    - P_v(g,c) is probability of vote v on comment c in group g
+    - P_v(~g,c) is probability of vote v on comment c in all groups except g
+
+    Args:
+        vote_matrix (VoteMatrix): The vote matrix where rows are voters, columns are statements,
+                                  and values are votes (1 for agree, -1 for disagree, 0 for pass).
+        cluster_labels (np.ndarray): Array of cluster labels for each participant in the vote matrix.
+        group_id (int): The ID of the group/cluster to calculate representativeness for.
+        pseudo_count (int): Smoothing parameter to avoid division by zero. Default is 1.
+
+    Returns:
+        representativeness (pd.DataFrame): DataFrame containing representativeness scores for each comment,
+                                          with columns for agree_repr, disagree_repr, and n_votes.
+    """
+    # Create mask for the participants in target group
+    group_mask = (cluster_labels == group_id)
+    not_group_mask = ~group_mask
+
+    # Create feature names for the comments
+    feature_names = [f"Vote_{i}" for i in range(vote_matrix.shape[1])]
+
+    # Create DataFrame to store representativeness scores
+    representativeness = pd.DataFrame(index=feature_names)
+
+    # Get the vote matrix values
+    X = vote_matrix.values
+
+    # For each comment/feature
+    for j in range(X.shape[1]):
+        # Calculate agree representativeness (v=1)
+        n_agree_in_group = np.sum((X[group_mask, j] == 1))
+        n_votes_in_group = np.sum((X[group_mask, j] != 0))
+        p_agree_in_group = (pseudo_count + n_agree_in_group) / (2*pseudo_count + n_votes_in_group)
+
+        n_agree_not_in_group = np.sum((X[not_group_mask, j] == 1))
+        n_votes_not_in_group = np.sum((X[not_group_mask, j] != 0))
+        p_agree_not_in_group = (pseudo_count + n_agree_not_in_group) / (2*pseudo_count + n_votes_not_in_group)
+
+        # Calculate disagree representativeness (v=-1)
+        n_disagree_in_group = np.sum((X[group_mask, j] == -1))
+        p_disagree_in_group = (pseudo_count + n_disagree_in_group) / (2*pseudo_count + n_votes_in_group)
+
+        n_disagree_not_in_group = np.sum((X[not_group_mask, j] == -1))
+        p_disagree_not_in_group = (pseudo_count + n_disagree_not_in_group) / (2*pseudo_count + n_votes_not_in_group)
+
+        # Store representativeness
+        representativeness.loc[feature_names[j], 'agree_repr'] = p_agree_in_group / p_agree_not_in_group
+        representativeness.loc[feature_names[j], 'disagree_repr'] = p_disagree_in_group / p_disagree_not_in_group
+        representativeness.loc[feature_names[j], 'n_votes'] = n_votes_in_group + n_votes_not_in_group
+
+    return representativeness
