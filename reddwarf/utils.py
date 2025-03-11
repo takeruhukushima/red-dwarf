@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+import math
 from sklearn.impute import SimpleImputer
 from sklearn.cluster import KMeans
 from sklearn.metrics import silhouette_score
@@ -345,6 +346,33 @@ def find_optimal_k(
 
     return optimal_k, optimal_silhouette, optimal_cluster_labels
 
+# Calculate representativeness two-prop test
+def two_prop_test(succ_in, succ_out, pop_in, pop_out):
+    """Two-prop test ported from Polis. Accepts numpy arrays for bulk processing."""
+    # Ported with adaptation from Polis
+    # See: https://github.com/compdemocracy/polis/blob/90bcb43e67dad660629e0888fedc0d32379f375d/math/src/polismath/math/stats.clj#L18-L33
+
+    # Laplace smoothing (add 1 to each count)
+    succ_in = np.asarray(succ_in) + 1
+    succ_out = np.asarray(succ_out) +  1
+    pop_in = np.asarray(pop_in) +  1
+    pop_out = np.asarray(pop_out) +  1
+
+    # Compute proportions
+    pi1 = succ_in / pop_in
+    pi2 = succ_out / pop_out
+    pi_hat = (succ_in + succ_out) / (pop_in + pop_out)
+
+    # Handle edge case when pi_hat == 1
+    # TODO: Handle when divide by zero.
+    if np.any(pi_hat == 1):
+        # XXX: Not technically correct; limit-based solution needed.
+        return np.where(pi_hat == 1, 0, (pi1 - pi2) / np.sqrt(pi_hat * (1 - pi_hat) * (1 / pop_in + 1 / pop_out)))
+
+    # Compute the test statistic
+    denominator = np.sqrt(pi_hat * (1 - pi_hat) * (1 / pop_in + 1 / pop_out))
+
+    return (pi1 - pi2) / denominator
 
 def calculate_representativeness(
         vote_matrix: VoteMatrix,
@@ -405,10 +433,16 @@ def calculate_representativeness(
     agree_repr = p_agree_in_group / p_agree_out_group
     disagree_repr = p_disagree_in_group / p_disagree_out_group
 
+    rat = two_prop_test(n_agree_in_group, n_agree_out_group, n_votes_in_group, n_votes_out_group)
+    rdt = two_prop_test(n_disagree_in_group, n_disagree_out_group, n_votes_in_group, n_votes_out_group)
+
+
     # Create result DataFrame
     group_representativeness = pd.DataFrame({
         'agree_repr': agree_repr,
+        'agree_repr_test': rat,
         'disagree_repr': disagree_repr,
+        'disagree_repr_test': rdt,
         'n_votes_in_group': n_votes_in_group,
         'n_votes_out_group': n_votes_out_group
     }, index=vote_matrix.columns)

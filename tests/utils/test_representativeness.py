@@ -122,21 +122,22 @@ def test_calculate_representativeness_real_data(small_convo_math_data):
             cluster_labels=np.array(cluster_labels),
             group_id=gid,
         )
-        print(f"group {gid}")
-        print(group_repness[gid])
 
     # Cycle through all the expected data calculated by Polis platform
     repness = math_data['repness']
     for group_id, statements in math_data['repness'].items():
         group_id = int(group_id)
         for st in statements:
-            print(f"group: {group_id}, tid: {st['tid']}")
-            expected = st["repness"]
+            expected_repr = st["repness"]
+            expected_repr_test = st["repness-test"]
 
             # Fetch matching calculated values for comparison.
             if st["repful-for"] == "agree":
-                calculated = group_repness[group_id].loc[st["tid"], "agree_repr"]
+                calculated_repr = group_repness[group_id].loc[st["tid"], "agree_repr"]
+                calculated_repr_test = group_repness[group_id].loc[st["tid"], "agree_repr_test"]
             elif st["repful-for"] == "disagree":
-                calculated = group_repness[group_id].loc[st["tid"], "disagree_repr"]
+                calculated_repr = group_repness[group_id].loc[st["tid"], "disagree_repr"]
+                calculated_repr_test = group_repness[group_id].loc[st["tid"], "disagree_repr_test"]
 
-            assert calculated == pytest.approx(expected)
+            assert calculated_repr == pytest.approx(expected_repr)
+            assert calculated_repr_test == pytest.approx(expected_repr_test)
