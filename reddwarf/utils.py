@@ -393,6 +393,49 @@ def two_prop_test(
 
     return (pi1 - pi2) / denominator
 
+def z_sig_90(z_val) -> bool:
+    """Test whether z-statistic is significant at 90% confidence (one-tailed, right-side)."""
+    critical_value = norm.ppf(0.90)  # 90% confidence level, one-tailed
+    return z_val > critical_value
+
+def is_passes_by_test(pat, rat, pdt, rdt) -> bool:
+    "Decide whether we should count a statement in a group as being representative."
+    is_agreement_significant = z_sig_90(pat) and z_sig_90(rat)
+    is_disagreement_significant = z_sig_90(pdt) and z_sig_90(rdt)
+
+    return is_agreement_significant or is_disagreement_significant
+
+def beats_best_by_test(rad, rdt, current_best_z) -> bool:
+    """
+    Returns True if a given comment/group stat has a more representative z-score than
+    current_best_z. Used for ensuring at least one representative comment for every group,
+    even if none remain after more thorough filters.
+    """
+    is_no_prior_best = current_best_z is None
+    return is_no_prior_best or max(rad, rdt) > current_best_z
+
+def beats_best_agr(na, nd, ra, rat, pa, pat, ns, current_best) -> bool:
+    """
+    Like beats_best_by_test, but only considers agrees. Additionally, doesn't focus solely on repness,
+    but also on raw probability of agreement, so as to ensure that there is some representation of what
+    people in the group agree on. Also, note that this takes the current_best statement, instead of just current_best_z.
+    """
+
+    # Explicitly don't allow something that hasn't been voted on at all
+    if na == 0 and nd == 0:
+        return False
+
+    # If we have a current_best by representativeness estimate, use the more robust measurement
+    if current_best and current_best["ra"] > 1.0:
+        return (ra * rat * pa * pat) > (current_best["ra"] * current_best["rat"] * current_best["pa"] * current_best["pat"])
+
+    # If we have current_best, but only by probability estimate, just shoot for something generally agreed upon
+    if current_best:
+        return (pa * pat) > (current_best["pa"] * current_best["pat"])
+
+    # Otherwise, accept if either representativeness or probability look generally good
+    return z_sig_90(pat) or (ra > 1.0 and pa > 0.5)
+
 def calculate_representativeness(
         vote_matrix: VoteMatrix,
         cluster_labels: np.ndarray,
