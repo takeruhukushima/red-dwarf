@@ -8,6 +8,9 @@ from sklearn.decomposition import PCA
 from typing import List, Dict, Tuple, Optional, Literal, TypeAlias
 from reddwarf.exceptions import RedDwarfError
 
+from numpy.typing import ArrayLike
+from types import SimpleNamespace
+
 VoteMatrix: TypeAlias = pd.DataFrame
 
 # TODO: Extract utils methods into individual modules.
@@ -346,8 +349,24 @@ def find_optimal_k(
 
     return optimal_k, optimal_silhouette, optimal_cluster_labels
 
+def one_prop_test(
+    succ: ArrayLike,
+    n: ArrayLike,
+) -> np.float64 | np.ndarray[np.float64]:
+    # Convert inputs to numpy arrays (if they aren't already)
+    succ = np.asarray(succ) + 1
+    n = np.asarray(n) + 1
+
+    # Compute the test statistic
+    return 2 * np.sqrt(n) * ((succ / n) - 0.5)
+
 # Calculate representativeness two-prop test
-def two_prop_test(succ_in, succ_out, pop_in, pop_out):
+def two_prop_test(
+    succ_in: ArrayLike,
+    succ_out: ArrayLike,
+    n_in: ArrayLike,
+    n_out: ArrayLike,
+) -> np.float64 | np.ndarray[np.float64]:
     """Two-prop test ported from Polis. Accepts numpy arrays for bulk processing."""
     # Ported with adaptation from Polis
     # See: https://github.com/compdemocracy/polis/blob/90bcb43e67dad660629e0888fedc0d32379f375d/math/src/polismath/math/stats.clj#L18-L33
@@ -355,22 +374,22 @@ def two_prop_test(succ_in, succ_out, pop_in, pop_out):
     # Laplace smoothing (add 1 to each count)
     succ_in = np.asarray(succ_in) + 1
     succ_out = np.asarray(succ_out) +  1
-    pop_in = np.asarray(pop_in) +  1
-    pop_out = np.asarray(pop_out) +  1
+    n_in = np.asarray(n_in) +  1
+    n_out = np.asarray(n_out) +  1
 
     # Compute proportions
-    pi1 = succ_in / pop_in
-    pi2 = succ_out / pop_out
-    pi_hat = (succ_in + succ_out) / (pop_in + pop_out)
+    pi1 = succ_in / n_in
+    pi2 = succ_out / n_out
+    pi_hat = (succ_in + succ_out) / (n_in + n_out)
 
     # Handle edge case when pi_hat == 1
     # TODO: Handle when divide by zero.
     if np.any(pi_hat == 1):
         # XXX: Not technically correct; limit-based solution needed.
-        return np.where(pi_hat == 1, 0, (pi1 - pi2) / np.sqrt(pi_hat * (1 - pi_hat) * (1 / pop_in + 1 / pop_out)))
+        return np.where(pi_hat == 1, 0, (pi1 - pi2) / np.sqrt(pi_hat * (1 - pi_hat) * (1 / n_in + 1 / n_out)))
 
     # Compute the test statistic
-    denominator = np.sqrt(pi_hat * (1 - pi_hat) * (1 / pop_in + 1 / pop_out))
+    denominator = np.sqrt(pi_hat * (1 - pi_hat) * (1 / n_in + 1 / n_out))
 
     return (pi1 - pi2) / denominator
 
@@ -401,50 +420,97 @@ def calculate_representativeness(
         representativeness (pd.DataFrame): DataFrame containing representativeness scores for each comment,
                                           with columns for agree_repr, disagree_repr, and n_votes.
     """
-    # Create mask for the participants in target group
-    in_group_mask = (cluster_labels == group_id)
-    out_group_mask = ~in_group_mask
+    def count_votes(
+        values: ArrayLike,
+        vote_value: Optional[int] = None,
+    ) -> np.int64 | np.ndarray[np.int64]:
+        values = np.asarray(values)
+        if vote_value:
+            # Count votes that match value.
+            return np.sum(values == vote_value, axis=0)
+        else:
+            # Count any non-missing values.
+            return np.sum(np.isfinite(values), axis=0)
+
+    def count_disagree(values: ArrayLike) -> np.int64 | np.ndarray[np.int64]:
+        return count_votes(values, -1)
+
+    def count_agree(values: ArrayLike) -> np.int64 | np.ndarray[np.int64]:
+        return count_votes(values, 1)
+
+    def count_all_votes(values: ArrayLike) -> np.int64 | np.ndarray[np.int64]:
+        return count_votes(values)
+
+    def probability(count, total, pseudo_count=pseudo_count):
+        """Probability with Laplace smoothing"""
+        return (pseudo_count + count ) / (2*pseudo_count + total)
 
     # Get the vote matrix values
     X = vote_matrix.values
-    X_in_group = X[in_group_mask]
-    X_out_group = X[out_group_mask]
 
-    # Count any votes [-1, 0, 1] for all statements/features at once
+    group_count = cluster_labels.max()+1
+    votes = SimpleNamespace(A=0, D=1)
+    statement_ids = vote_matrix.columns
 
-    # For in-group
-    n_agree_in_group = np.sum(X_in_group == 1, axis=0)
-    n_disagree_in_group = np.sum(X_in_group == -1, axis=0)
-    n_votes_in_group = np.sum(np.isfinite(X_in_group), axis=0)
+    # Set up all the variables to be populated.
+    N_g_c = np.empty([group_count, len(statement_ids)])
+    N_v_g_c = np.empty([len(votes.__dict__), group_count, len(statement_ids)])
+    P_v_g_c = np.empty([len(votes.__dict__), group_count, len(statement_ids)])
+    R_v_g_c = np.empty([len(votes.__dict__), group_count, len(statement_ids)])
+    P_v_g_c_test = np.empty([len(votes.__dict__), group_count, len(statement_ids)])
+    R_v_g_c_test = np.empty([len(votes.__dict__), group_count, len(statement_ids)])
 
-    # For out-group
-    n_agree_out_group = np.sum(X_out_group == 1, axis=0)
-    n_disagree_out_group = np.sum(X_out_group == -1, axis=0)
-    n_votes_out_group = np.sum(np.isfinite(X_out_group), axis=0)
+    for gid in range(group_count):
+        # Create mask for the participants in target group
+        in_group_mask = (cluster_labels == gid)
+        X_in_group = X[in_group_mask]
 
-    # Apply Laplace smoothing and calculate probabilities
-    p_agree_in_group = (pseudo_count + n_agree_in_group) / (2*pseudo_count + n_votes_in_group)
-    p_agree_out_group = (pseudo_count + n_agree_out_group) / (2*pseudo_count + n_votes_out_group)
+        # Count any votes [-1, 0, 1] for all statements/features at once
 
-    p_disagree_in_group = (pseudo_count + n_disagree_in_group) / (2*pseudo_count + n_votes_in_group)
-    p_disagree_out_group = (pseudo_count + n_disagree_out_group) / (2*pseudo_count + n_votes_out_group)
+        # NON-GROUP STATS
 
-    # Calculate representativeness
-    agree_repr = p_agree_in_group / p_agree_out_group
-    disagree_repr = p_disagree_in_group / p_disagree_out_group
+        # For in-group
+        n_agree_in_group    = N_v_g_c[votes.A, gid, :] = count_agree(X_in_group)    # na
+        n_disagree_in_group = N_v_g_c[votes.D, gid, :] = count_disagree(X_in_group) # nd
+        n_votes_in_group    = N_g_c[gid, :] = count_all_votes(X_in_group)           # ns
 
-    rat = two_prop_test(n_agree_in_group, n_agree_out_group, n_votes_in_group, n_votes_out_group)
-    rdt = two_prop_test(n_disagree_in_group, n_disagree_out_group, n_votes_in_group, n_votes_out_group)
+        # Calculate probabilities
+        p_agree_in_group    = P_v_g_c[votes.A, gid, :] = probability(n_agree_in_group, n_votes_in_group)    # pa
+        p_disagree_in_group = P_v_g_c[votes.D, gid, :] = probability(n_disagree_in_group, n_votes_in_group) # pd
 
+        # Calculate probability test z-scores
+        P_v_g_c_test[votes.A, gid, :] = one_prop_test(p_agree_in_group, n_votes_in_group)    # pat
+        P_v_g_c_test[votes.D, gid, :] = one_prop_test(p_disagree_in_group, n_votes_in_group) # pdt
+
+        # GROUP COMPARISON STATS
+
+        out_group_mask = ~in_group_mask
+        X_out_group = X[out_group_mask]
+
+        # For out-group
+        n_agree_out_group = count_agree(X_out_group)
+        n_disagree_out_group = count_disagree(X_out_group)
+        n_votes_out_group = count_all_votes(X_out_group)
+
+        # Calculate out-group probabilities
+        p_agree_out_group    = probability(n_agree_out_group, n_votes_out_group)
+        p_disagree_out_group = probability(n_disagree_out_group, n_votes_out_group)
+
+        # Calculate representativeness
+        R_v_g_c[votes.A, gid, :] = p_agree_in_group / p_agree_out_group       # ra
+        R_v_g_c[votes.D, gid, :] = p_disagree_in_group / p_disagree_out_group # rd
+
+        # Calculate representativeness test z-scores
+        R_v_g_c_test[votes.A, gid, :] = two_prop_test(n_agree_in_group, n_agree_out_group, n_votes_in_group, n_votes_out_group)       # rat
+        R_v_g_c_test[votes.D, gid, :] = two_prop_test(n_disagree_in_group, n_disagree_out_group, n_votes_in_group, n_votes_out_group) # rdt
 
     # Create result DataFrame
     group_representativeness = pd.DataFrame({
-        'agree_repr': agree_repr,
-        'agree_repr_test': rat,
-        'disagree_repr': disagree_repr,
-        'disagree_repr_test': rdt,
-        'n_votes_in_group': n_votes_in_group,
-        'n_votes_out_group': n_votes_out_group
+        'agree_repr':         R_v_g_c[votes.A, group_id, :],
+        'disagree_repr':      R_v_g_c[votes.D, group_id, :],
+        'agree_repr_test':    R_v_g_c_test[votes.A, group_id, :],
+        'disagree_repr_test': R_v_g_c_test[votes.D, group_id, :],
+        'n_votes_in_group':   N_g_c[group_id, :],
     }, index=vote_matrix.columns)
 
     return group_representativeness
