@@ -130,14 +130,22 @@ def test_calculate_representativeness_real_data(small_convo_math_data):
         for st in statements:
             expected_repr = st["repness"]
             expected_repr_test = st["repness-test"]
+            expected_prob = st["p-success"]
+            expected_prob_test = st["p-test"]
 
             # Fetch matching calculated values for comparison.
+            keys = ["prob", "prob_test", "repness", "repness_test"]
             if st["repful-for"] == "agree":
-                calculated_repr = group_repness[group_id].loc[st["tid"], "agree_repr"]
-                calculated_repr_test = group_repness[group_id].loc[st["tid"], "agree_repr_test"]
+                key_map = dict(zip(keys, ["pa", "pat", "ra", "rat"]))
             elif st["repful-for"] == "disagree":
-                calculated_repr = group_repness[group_id].loc[st["tid"], "disagree_repr"]
-                calculated_repr_test = group_repness[group_id].loc[st["tid"], "disagree_repr_test"]
+                key_map = dict(zip(keys, ["pd", "pdt", "rd", "rdt"]))
 
-            assert calculated_repr == pytest.approx(expected_repr)
-            assert calculated_repr_test == pytest.approx(expected_repr_test)
+            actual = {
+                k: group_repness[group_id].loc[st["tid"], v]
+                for k,v in key_map.items()
+            }
+
+            assert actual["prob"] == pytest.approx(expected_prob)
+            assert actual["prob_test"] == pytest.approx(expected_prob_test)
+            assert actual["repness"] == pytest.approx(expected_repr)
+            assert actual["repness_test"] == pytest.approx(expected_repr_test)

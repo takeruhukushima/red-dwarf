@@ -547,13 +547,19 @@ def calculate_representativeness(
         R_v_g_c_test[votes.A, gid, :] = two_prop_test(n_agree_in_group, n_agree_out_group, n_votes_in_group, n_votes_out_group)       # rat
         R_v_g_c_test[votes.D, gid, :] = two_prop_test(n_disagree_in_group, n_disagree_out_group, n_votes_in_group, n_votes_out_group) # rdt
 
-    # Create result DataFrame
+    # Create result DataFrame (use variable names from polismath)
     group_representativeness = pd.DataFrame({
-        'agree_repr':         R_v_g_c[votes.A, group_id, :],
-        'disagree_repr':      R_v_g_c[votes.D, group_id, :],
-        'agree_repr_test':    R_v_g_c_test[votes.A, group_id, :],
-        'disagree_repr_test': R_v_g_c_test[votes.D, group_id, :],
-        'n_votes_in_group':   N_g_c[group_id, :],
+        'na':  N_v_g_c[votes.A, group_id, :],
+        'nd':  N_v_g_c[votes.D, group_id, :],
+        'ns':  N_g_c[group_id, :],
+        'pa':  P_v_g_c[votes.A, group_id, :],
+        'pd':  P_v_g_c[votes.D, group_id, :],
+        'pat': P_v_g_c_test[votes.A, group_id, :],
+        'pdt': P_v_g_c_test[votes.D, group_id, :],
+        'ra':  R_v_g_c[votes.A, group_id, :],
+        'rd':  R_v_g_c[votes.D, group_id, :],
+        'rat': R_v_g_c_test[votes.A, group_id, :],
+        'rdt': R_v_g_c_test[votes.D, group_id, :],
     }, index=vote_matrix.columns)
 
     return group_representativeness
