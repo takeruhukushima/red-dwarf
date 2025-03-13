@@ -522,8 +522,8 @@ def calculate_representativeness(
         p_disagree_in_group = P_v_g_c[votes.D, gid, :] = probability(n_disagree_in_group, n_votes_in_group) # pd
 
         # Calculate probability test z-scores
-        P_v_g_c_test[votes.A, gid, :] = one_prop_test(p_agree_in_group, n_votes_in_group)    # pat
-        P_v_g_c_test[votes.D, gid, :] = one_prop_test(p_disagree_in_group, n_votes_in_group) # pdt
+        P_v_g_c_test[votes.A, gid, :] = one_prop_test(n_agree_in_group, n_votes_in_group)    # pat
+        P_v_g_c_test[votes.D, gid, :] = one_prop_test(n_disagree_in_group, n_votes_in_group) # pdt
 
         # GROUP COMPARISON STATS
 
