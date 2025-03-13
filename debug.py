@@ -30,6 +30,7 @@ CONVOS = {
         "convo_id": "4kjz5rrrfe",
     },
 }
+from tests.utils.test_representativeness import expand_group_clusters_to_participants, get_clusters_by_participant_id
 
 if True:
     # testing representativeness calculations
@@ -43,18 +44,52 @@ if True:
     vote_matrix = client.get_matrix(is_filtered=True)
     client.run_pca()
     client.scale_projected_data()
-    client.find_optimal_k()  # Find optimal number of clusters
-    cluster_labels = client.optimal_cluster_labels
-    group_count = cluster_labels.max()+1
 
-    for group_id in range(group_count):
-        print(f"representativeness for group {group_id}")
-        group_representativeness = utils.calculate_representativeness(
-            vote_matrix=vote_matrix,
-            cluster_labels=cluster_labels,
-            group_id=group_id,
-        )
-        print(group_representativeness)
+    RECALC_CLUSTERS = False
+    if RECALC_CLUSTERS:
+        client.find_optimal_k()  # Find optimal number of clusters
+        cluster_labels = client.optimal_cluster_labels
+    else:
+        group_clusters_participant = expand_group_clusters_to_participants(client.data_loader.math_data)
+        cluster_labels = get_clusters_by_participant_id(group_clusters_participant)
+        client.optimal_cluster_labels = cluster_labels
+
+    stats_by_group = utils.calculate_comment_statistics_by_group(
+        vote_matrix=vote_matrix,
+        cluster_labels=cluster_labels,
+    )
+    for gid, stats_df in enumerate(stats_by_group):
+        print(f"Group ID: {gid}")
+
+        group_data = {}
+        group_data["sufficient"] = []
+        def create_filter_mask(row):
+            return utils.is_passes_by_test(row["pat"], row["rat"], row["pdt"], row["rdt"])
+        group_data["sufficient"] = stats_df[stats_df.apply(create_filter_mask, axis=1)]
+        group_data["sufficient"] = pd.DataFrame([
+            utils.finalize_cmt_stats(row)
+            for _, row in group_data["sufficient"].reset_index().iterrows()
+        ], index=group_data["sufficient"].index)
+        if len(group_data["sufficient"]) > 0:
+            repness_metric = lambda row: row["repness"] * row["repness-test"] * row["p-success"] * row["p-test"]
+            group_data["sufficient"] = group_data["sufficient"].assign(sort_order=repness_metric).sort_values(by="sort_order", ascending=False)
+        print(group_data["sufficient"])
+
+        # Track the best, even if doesn't meet sufficient minimum, to have at least one.
+        # TODO: Merge this wil above iteration
+        if len(group_data["sufficient"]) == 0:
+            group_data["best"] = {}
+            for _, row in stats_df.reset_index().iterrows():
+                if utils.beats_best_by_test(row["rat"], row["rdt"], group_data["best"].get("repness-test", None)):
+                    group_data["best"] = utils.finalize_cmt_stats(row)
+            print(group_data["best"])
+
+        # Track the best-agree, to bring to top if exists.
+        group_data["best-agree"] = None
+        for _, row in stats_df.reset_index().iterrows():
+            if utils.beats_best_agr(row["na"], row["nd"], row["ra"], row["rat"], row["pa"], row["pat"], row["ns"], group_data["best-agree"]):
+                group_data["best-agree"] = row
+        print(group_data["best-agree"])
 
     presenter = DataPresenter(client=client)
     presenter.render_optimal_cluster_figure()

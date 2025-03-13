@@ -7,6 +7,7 @@ from sklearn.metrics import silhouette_score
 from sklearn.decomposition import PCA
 from typing import List, Dict, Tuple, Optional, Literal, TypeAlias
 from reddwarf.exceptions import RedDwarfError
+from scipy.stats import norm
 
 from numpy.typing import ArrayLike
 from types import SimpleNamespace
@@ -426,73 +427,54 @@ def beats_best_agr(na, nd, ra, rat, pa, pat, ns, current_best) -> bool:
         return False
 
     # If we have a current_best by representativeness estimate, use the more robust measurement
-    if current_best and current_best["ra"] > 1.0:
+    if current_best is not None and current_best["ra"] > 1.0:
         return (ra * rat * pa * pat) > (current_best["ra"] * current_best["rat"] * current_best["pa"] * current_best["pat"])
 
     # If we have current_best, but only by probability estimate, just shoot for something generally agreed upon
-    if current_best:
+    if current_best is not None:
         return (pa * pat) > (current_best["pa"] * current_best["pat"])
 
     # Otherwise, accept if either representativeness or probability look generally good
     return z_sig_90(pat) or (ra > 1.0 and pa > 0.5)
 
-def calculate_representativeness(
-        vote_matrix: VoteMatrix,
-        cluster_labels: np.ndarray,
-        group_id: int,
-        pseudo_count: int = 1,
-) -> pd.DataFrame:
-    """
-    Calculate the Polis representativeness metric for every statement for a specific group.
+# For making it more legible to get index of agree/disagree votes in numpy array.
+votes = SimpleNamespace(A=0, D=1)
 
-    The representativeness metric is defined as:
-    R_v(g,c) = P_v(g,c) / P_v(~g,c)
+def count_votes(
+    values: ArrayLike,
+    vote_value: Optional[int] = None,
+) -> np.int64 | np.ndarray[np.int64]:
+    values = np.asarray(values)
+    if vote_value:
+        # Count votes that match value.
+        return np.sum(values == vote_value, axis=0)
+    else:
+        # Count any non-missing values.
+        return np.sum(np.isfinite(values), axis=0)
 
-    Where:
-    - P_v(g,c) is probability of vote v on comment c in group g
-    - P_v(~g,c) is probability of vote v on comment c in all groups except g
+def count_disagree(values: ArrayLike) -> np.int64 | np.ndarray[np.int64]:
+    return count_votes(values, -1)
 
-    Args:
-        vote_matrix (VoteMatrix): The vote matrix where rows are voters, columns are statements,
-                                  and values are votes (1 for agree, -1 for disagree, 0 for pass).
-        cluster_labels (np.ndarray): Array of cluster labels for each participant in the vote matrix.
-        group_id (int): The ID of the group/cluster to calculate representativeness for.
-        pseudo_count (int): Smoothing parameter to avoid division by zero. Default is 1.
+def count_agree(values: ArrayLike) -> np.int64 | np.ndarray[np.int64]:
+    return count_votes(values, 1)
 
-    Returns:
-        representativeness (pd.DataFrame): DataFrame containing representativeness scores for each comment,
-                                          with columns for agree_repr, disagree_repr, and n_votes.
-    """
-    def count_votes(
-        values: ArrayLike,
-        vote_value: Optional[int] = None,
-    ) -> np.int64 | np.ndarray[np.int64]:
-        values = np.asarray(values)
-        if vote_value:
-            # Count votes that match value.
-            return np.sum(values == vote_value, axis=0)
-        else:
-            # Count any non-missing values.
-            return np.sum(np.isfinite(values), axis=0)
+def count_all_votes(values: ArrayLike) -> np.int64 | np.ndarray[np.int64]:
+    return count_votes(values)
 
-    def count_disagree(values: ArrayLike) -> np.int64 | np.ndarray[np.int64]:
-        return count_votes(values, -1)
+def probability(count, total, pseudo_count=1):
+    """Probability with Laplace smoothing"""
+    return (pseudo_count + count ) / (2*pseudo_count + total)
 
-    def count_agree(values: ArrayLike) -> np.int64 | np.ndarray[np.int64]:
-        return count_votes(values, 1)
-
-    def count_all_votes(values: ArrayLike) -> np.int64 | np.ndarray[np.int64]:
-        return count_votes(values)
-
-    def probability(count, total, pseudo_count=pseudo_count):
-        """Probability with Laplace smoothing"""
-        return (pseudo_count + count ) / (2*pseudo_count + total)
-
+def calculate_comment_statistics(
+    vote_matrix: VoteMatrix,
+    cluster_labels: list[int],
+    pseudo_count: int = 1,
+) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    cluster_labels = np.asarray(cluster_labels)
     # Get the vote matrix values
     X = vote_matrix.values
 
     group_count = cluster_labels.max()+1
-    votes = SimpleNamespace(A=0, D=1)
     statement_ids = vote_matrix.columns
 
     # Set up all the variables to be populated.
@@ -547,19 +529,80 @@ def calculate_representativeness(
         R_v_g_c_test[votes.A, gid, :] = two_prop_test(n_agree_in_group, n_agree_out_group, n_votes_in_group, n_votes_out_group)       # rat
         R_v_g_c_test[votes.D, gid, :] = two_prop_test(n_disagree_in_group, n_disagree_out_group, n_votes_in_group, n_votes_out_group) # rdt
 
-    # Create result DataFrame (use variable names from polismath)
-    group_representativeness = pd.DataFrame({
-        'na':  N_v_g_c[votes.A, group_id, :],
-        'nd':  N_v_g_c[votes.D, group_id, :],
-        'ns':  N_g_c[group_id, :],
-        'pa':  P_v_g_c[votes.A, group_id, :],
-        'pd':  P_v_g_c[votes.D, group_id, :],
-        'pat': P_v_g_c_test[votes.A, group_id, :],
-        'pdt': P_v_g_c_test[votes.D, group_id, :],
-        'ra':  R_v_g_c[votes.A, group_id, :],
-        'rd':  R_v_g_c[votes.D, group_id, :],
-        'rat': R_v_g_c_test[votes.A, group_id, :],
-        'rdt': R_v_g_c_test[votes.D, group_id, :],
-    }, index=vote_matrix.columns)
+    return (
+        N_g_c, # ns
+        N_v_g_c, # na / nd
+        P_v_g_c, # pa / pd
+        R_v_g_c, # ra / rd
+        P_v_g_c_test, # pat / pdt
+        R_v_g_c_test, # rat / rdt
+    )
 
-    return group_representativeness
+def finalize_cmt_stats(cmt: pd.Series) -> dict:
+    if cmt["rat"] > cmt["rdt"]:
+        vals = [cmt[k] for k in ["na", "ns", "pa", "pat", "ra", "rat"]] + ["agree"]
+    else:
+        vals = [cmt[k] for k in ["nd", "ns", "pd", "pdt", "rd", "rdt"]] + ["disagree"]
+
+    return {
+        "tid":          cmt["statement_id"],
+        "n-success":    vals[0],
+        "n-trials":     vals[1],
+        "p-success":    vals[2],
+        "p-test":       vals[3],
+        "repness":      vals[4],
+        "repness-test": vals[5],
+        "repful-for":   vals[6],
+    }
+
+def calculate_comment_statistics_by_group(
+    vote_matrix: VoteMatrix,
+    cluster_labels: list[int],
+    pseudo_count: int = 1,
+) -> list[pd.DataFrame]:
+    """
+    Calculate the Polis representativeness metric for every statement for a specific group.
+
+    The representativeness metric is defined as:
+    R_v(g,c) = P_v(g,c) / P_v(~g,c)
+
+    Where:
+    - P_v(g,c) is probability of vote v on comment c in group g
+    - P_v(~g,c) is probability of vote v on comment c in all groups except g
+
+    Args:
+        vote_matrix (VoteMatrix): The vote matrix where rows are voters, columns are statements,
+                                  and values are votes (1 for agree, -1 for disagree, 0 for pass).
+        cluster_labels (np.ndarray): Array of cluster labels for each participant in the vote matrix.
+        group_id (int): The ID of the group/cluster to calculate representativeness for.
+        pseudo_count (int): Smoothing parameter to avoid division by zero. Default is 1.
+
+    Returns:
+        representativeness (pd.DataFrame): DataFrame containing representativeness scores for each comment,
+                                          with columns for agree_repr, disagree_repr, and n_votes.
+    """
+    cluster_labels = np.asarray(cluster_labels)
+    N_g_c, N_v_g_c, P_v_g_c, R_v_g_c, P_v_g_c_test, R_v_g_c_test = calculate_comment_statistics(
+        vote_matrix=vote_matrix,
+        cluster_labels=cluster_labels,
+        pseudo_count=pseudo_count,
+    )
+
+    group_count = cluster_labels.max()+1
+    group_stats = [None] * group_count
+    for group_id in range(group_count):
+        group_stats[group_id] = pd.DataFrame({
+            'na':  N_v_g_c[votes.A, group_id, :],
+            'nd':  N_v_g_c[votes.D, group_id, :],
+            'ns':  N_g_c[group_id, :],
+            'pa':  P_v_g_c[votes.A, group_id, :],
+            'pd':  P_v_g_c[votes.D, group_id, :],
+            'pat': P_v_g_c_test[votes.A, group_id, :],
+            'pdt': P_v_g_c_test[votes.D, group_id, :],
+            'ra':  R_v_g_c[votes.A, group_id, :],
+            'rd':  R_v_g_c[votes.D, group_id, :],
+            'rat': R_v_g_c_test[votes.A, group_id, :],
+            'rdt': R_v_g_c_test[votes.D, group_id, :],
+        }, index=vote_matrix.columns)
+
+    return group_stats

@@ -70,7 +70,7 @@ def get_clusters_by_participant_id(group_clusters_participant):
     # Extract just the cluster IDs in order
     cluster_ids_in_order = [pair[1] for pair in sorted_pairs]
 
-    return cluster_ids_in_order
+    return np.asarray(cluster_ids_in_order)
 
 def get_all_participant_ids(group_clusters_participant):
     """
@@ -114,14 +114,11 @@ def test_calculate_representativeness_real_data(small_convo_math_data):
     # Get sorted list of cluster labels from
     cluster_labels = get_clusters_by_participant_id(group_clusters_participant)
 
-    # Generate representativeness data for all groups and all statements.
-    group_repness = {}
-    for gid in range(group_count):
-        group_repness[gid] = utils.calculate_representativeness(
-            vote_matrix=vote_matrix,
-            cluster_labels=np.array(cluster_labels),
-            group_id=gid,
-        )
+    # Generate stats all groups and all statements.
+    group_stats = utils.calculate_comment_statistics_by_group(
+        vote_matrix=vote_matrix,
+        cluster_labels=np.array(cluster_labels),
+    )
 
     # Cycle through all the expected data calculated by Polis platform
     repness = math_data['repness']
@@ -141,10 +138,12 @@ def test_calculate_representativeness_real_data(small_convo_math_data):
                 key_map = dict(zip(keys, ["pd", "pdt", "rd", "rdt"]))
 
             actual = {
-                k: group_repness[group_id].loc[st["tid"], v]
+                k: group_stats[group_id].loc[st["tid"], v]
                 for k,v in key_map.items()
             }
 
+            print(st)
+            print(actual)
             assert actual["prob"] == pytest.approx(expected_prob)
             assert actual["prob_test"] == pytest.approx(expected_prob_test)
             assert actual["repness"] == pytest.approx(expected_repr)
