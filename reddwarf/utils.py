@@ -1,6 +1,5 @@
 import pandas as pd
 import numpy as np
-import math
 from sklearn.impute import SimpleImputer
 from sklearn.cluster import KMeans
 from sklearn.metrics import silhouette_score
@@ -614,6 +613,67 @@ def calculate_comment_statistics_by_group(
         }, index=vote_matrix.columns)
 
     return group_stats
+
+# Figuring out select-rep-comments flow
+# See: https://github.com/compdemocracy/polis/blob/7bf9eccc287586e51d96fdf519ae6da98e0f4a70/math/src/polismath/math/repness.clj#L209C7-L209C26
+# TODO: omg please clean this up.
+def select_rep_comments(stats_by_group: list[pd.DataFrame], pick_n: int = 5):
+    polis_repness = {}
+    for gid, stats_df in enumerate(stats_by_group):
+        group_data = {}
+        group_data["sufficient"] = []
+        def create_filter_mask(row):
+            return is_passes_by_test(row["pat"], row["rat"], row["pdt"], row["rdt"])
+        group_data["sufficient"] = stats_df[stats_df.apply(create_filter_mask, axis=1)]
+        group_data["sufficient"] = pd.DataFrame([
+                finalize_cmt_stats(row)
+                for _, row in group_data["sufficient"].reset_index().iterrows()
+            ],
+            index=group_data["sufficient"].index,
+        )
+        if len(group_data["sufficient"]) > 0:
+            repness_metric = lambda row: row["repness"] * row["repness-test"] * row["p-success"] * row["p-test"]
+            group_data["sufficient"] = (group_data["sufficient"]
+                .assign(sort_order=repness_metric)
+                .sort_values(by="sort_order", ascending=False)
+            )
+
+        # Track the best, even if doesn't meet sufficient minimum, to have at least one.
+        # TODO: Merge this wil above iteration
+        if len(group_data["sufficient"]) == 0:
+            group_data["best"] = {}
+            for _, row in stats_df.reset_index().iterrows():
+                if beats_best_by_test(row["rat"], row["rdt"], group_data["best"].get("repness-test", None)):
+                    group_data["best"] = finalize_cmt_stats(row)
+
+        # Track the best-agree, to bring to top if exists.
+        group_data["best-agree"] = None
+        for _, row in stats_df.reset_index().iterrows():
+            if beats_best_agr(row["na"], row["nd"], row["ra"], row["rat"], row["pa"], row["pat"], row["ns"], group_data["best-agree"]):
+                group_data["best-agree"] = row
+
+        # Start building repness key
+        best_agree = group_data.get("best-agree")
+        best = group_data.get("best")
+        if best_agree is not None:
+            best_agree = finalize_cmt_stats(best_agree)
+            best_agree.update({"n-agree": best_agree["n-success"], "best-agree": True})
+            best_head = [best_agree]
+        elif best is not None:
+            best_head = [best]
+        else:
+            best_head = []
+
+        if len(group_data["sufficient"]) > 0:
+            group_data["sufficient"] = group_data["sufficient"].drop(columns="sort_order")
+        if len(best_head) > 0:
+            selected = best_head + [dict(row) for _, row in group_data["sufficient"].iterrows() if row["tid"] != best_head[0]["tid"]]
+        else:
+            selected = [dict(row) for _, row in group_data["sufficient"].iterrows()]
+        # sorted() does the work of agrees-before-disagrees in polismath
+        polis_repness[str(gid)] = sorted(selected[:pick_n], key=lambda x: x["repful-for"])
+
+    return polis_repness
 
 ## POLISMATH HELPERS
 #

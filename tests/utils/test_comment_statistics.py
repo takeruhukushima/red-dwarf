@@ -3,8 +3,17 @@ from tests.fixtures import small_convo_math_data
 import numpy as np
 import pytest
 
-from reddwarf.data_loader import Loader
 from reddwarf.polis import PolisClient
+from reddwarf.types.polis import PolisRepness
+
+def get_grouped_statement_ids(repness: PolisRepness) -> dict[str, list[dict[str, list[int]]]]:
+    groups = []
+
+    for key, statements in repness.items():
+        group = {"id": str(key), "members": [stmt["tid"] for stmt in statements]} # type:ignore
+        groups.append(group)
+
+    return {"groups": groups}
 
 def test_calculate_representativeness_real_data(small_convo_math_data):
     math_data, path, _ = small_convo_math_data
@@ -19,7 +28,6 @@ def test_calculate_representativeness_real_data(small_convo_math_data):
         group_clusters=math_data["group-clusters"],
         base_clusters=math_data["base-clusters"],
     )
-    group_count = len(group_clusters_with_pids)
 
     # Get list of all active participant ids, since Polis has some edge-cases
     # that keep specific participants, and we need to keep them from being filtered out.
@@ -31,13 +39,17 @@ def test_calculate_representativeness_real_data(small_convo_math_data):
     cluster_labels = utils.generate_cluster_labels(group_clusters_with_pids)
 
     # Generate stats all groups and all statements.
-    group_stats = utils.calculate_comment_statistics_by_group(
+    stats_by_group = utils.calculate_comment_statistics_by_group(
         vote_matrix=vote_matrix,
         cluster_labels=np.array(cluster_labels),
     )
 
+    polis_repness = utils.select_rep_comments(stats_by_group=stats_by_group)
+    actual_repness: PolisRepness = polis_repness # type:ignore
+    expected_repness: PolisRepness = math_data["repness"] # type:ignore
+    assert get_grouped_statement_ids(actual_repness) == get_grouped_statement_ids(expected_repness)
+
     # Cycle through all the expected data calculated by Polis platform
-    repness = math_data['repness']
     for group_id, statements in math_data['repness'].items():
         group_id = int(group_id)
         for st in statements:
@@ -54,7 +66,7 @@ def test_calculate_representativeness_real_data(small_convo_math_data):
                 key_map = dict(zip(keys, ["pd", "pdt", "rd", "rdt"]))
 
             actual = {
-                k: group_stats[group_id].loc[st["tid"], v]
+                k: stats_by_group[group_id].loc[st["tid"], v]
                 for k,v in key_map.items()
             }
 
