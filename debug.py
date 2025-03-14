@@ -1,3 +1,4 @@
+from typing import Any
 from reddwarf.polis import PolisClient
 from reddwarf.data_presenter import DataPresenter
 import pandas as pd
@@ -41,7 +42,7 @@ if True:
 
     USE_POLISMATH_CLUSTERING = True
     if USE_POLISMATH_CLUSTERING:
-        math_data = client.data_loader.math_data
+        math_data: Any = client.data_loader.math_data # type:ignore
         group_clusters_with_pids = utils.expand_group_clusters_with_participants(
             group_clusters=math_data["group-clusters"],
             base_clusters=math_data["base-clusters"],
@@ -57,7 +58,7 @@ if True:
     client.scale_projected_data()
 
     if USE_POLISMATH_CLUSTERING:
-        cluster_labels = utils.generate_cluster_labels(group_clusters_with_pids)
+        cluster_labels = utils.generate_cluster_labels(group_clusters_with_pids) # type:ignore
         client.optimal_cluster_labels = cluster_labels
     else:
         client.find_optimal_k()  # Find optimal number of clusters
@@ -65,15 +66,13 @@ if True:
 
     stats_by_group = utils.calculate_comment_statistics_by_group(
         vote_matrix=vote_matrix,
-        cluster_labels=cluster_labels,
+        cluster_labels=cluster_labels, # type:ignore
     )
 
     # Figuring out select-rep-comments flow
     # See: https://github.com/compdemocracy/polis/blob/7bf9eccc287586e51d96fdf519ae6da98e0f4a70/math/src/polismath/math/repness.clj#L209C7-L209C26
     polis_repness = {}
     for gid, stats_df in enumerate(stats_by_group):
-        print(f"Group ID: {gid}")
-
         group_data = {}
         group_data["sufficient"] = []
         def create_filter_mask(row):
