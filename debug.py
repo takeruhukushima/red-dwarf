@@ -80,12 +80,17 @@ if True:
             return utils.is_passes_by_test(row["pat"], row["rat"], row["pdt"], row["rdt"])
         group_data["sufficient"] = stats_df[stats_df.apply(create_filter_mask, axis=1)]
         group_data["sufficient"] = pd.DataFrame([
-            utils.finalize_cmt_stats(row)
-            for _, row in group_data["sufficient"].reset_index().iterrows()
-        ], index=group_data["sufficient"].index)
+                utils.finalize_cmt_stats(row)
+                for _, row in group_data["sufficient"].reset_index().iterrows()
+            ],
+            index=group_data["sufficient"].index,
+        )
         if len(group_data["sufficient"]) > 0:
             repness_metric = lambda row: row["repness"] * row["repness-test"] * row["p-success"] * row["p-test"]
-            group_data["sufficient"] = group_data["sufficient"].assign(sort_order=repness_metric).sort_values(by="sort_order", ascending=False)
+            group_data["sufficient"] = (group_data["sufficient"]
+                .assign(sort_order=repness_metric)
+                .sort_values(by="sort_order", ascending=False)
+            )
 
         # Track the best, even if doesn't meet sufficient minimum, to have at least one.
         # TODO: Merge this wil above iteration
