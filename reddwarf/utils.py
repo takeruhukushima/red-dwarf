@@ -12,6 +12,14 @@ from scipy.stats import norm
 from numpy.typing import ArrayLike
 from types import SimpleNamespace
 
+from reddwarf.types.polis import (
+    PolisBaseClusters,
+    PolisGroupCluster,
+    PolisGroupClusterExpanded,
+    GroupId,
+    ParticipantId,
+)
+
 VoteMatrix: TypeAlias = pd.DataFrame
 
 # TODO: Extract utils methods into individual modules.
@@ -606,3 +614,98 @@ def calculate_comment_statistics_by_group(
         }, index=vote_matrix.columns)
 
     return group_stats
+
+def expand_group_clusters_with_participants(
+    group_clusters: list[PolisGroupCluster],
+    base_clusters: PolisBaseClusters,
+) -> list[PolisGroupClusterExpanded]:
+    """
+    Expand group clusters to include direct participant IDs instead of base cluster IDs.
+
+    Args:
+        group_clusters (list[PolisGroupCluster]): Group cluster data from Polis math data, with base cluster ID membership.
+        base_clusters (PolisBaseClusters): Base cluster data from Polis math data, with participant ID membership.
+
+    Returns:
+        group_clusters_with_participant_ids (list[PolisGroupClusterExpanded]): A list of group clusters with participant IDs.
+    """
+    # Extract base clusters and their members
+    base_cluster_ids = base_clusters["id"]
+    base_cluster_participant_ids = base_clusters["members"]
+
+    # Create a mapping from base cluster ID to member participant IDs
+    base_to_participant_mapping = dict(zip(base_cluster_ids, base_cluster_participant_ids))
+
+    # Create the new group-clusters-participant list
+    group_clusters_with_participant_ids = []
+
+    for group in group_clusters:
+        # Get all participant IDs for this group by expanding and flattening the base cluster members.
+        group_participant_ids = [
+            participant_id
+            for base_cluster_id in group["members"]
+            for participant_id in base_to_participant_mapping[base_cluster_id]
+        ]
+
+        # Create the new group object with expanded participant IDs
+        expanded_group = {
+            **group,
+            "id": group["id"],
+            "members": group_participant_ids,
+        }
+
+        group_clusters_with_participant_ids.append(expanded_group)
+
+    return group_clusters_with_participant_ids
+
+def generate_cluster_labels(
+    group_clusters_with_pids: list[PolisGroupClusterExpanded],
+) -> np.ndarray[GroupId]:
+    """
+    Transform group_clusters_with_pid into an ordered list of cluster IDs
+    sorted by participant ID, suitable for cluster labels.
+
+    Args:
+        group_clusters_with_pids (list[PolisGroupClusterExpanded]): List of group clusters with expanded participant IDs
+
+    Returns:
+        np.ndarray[GroupId]: A list of cluster IDs ordered by participant ID
+    """
+    # Create a list of (participant_id, cluster_id) pairs
+    participant_cluster_pairs = []
+
+    for cluster in group_clusters_with_pids:
+        cluster_id = cluster["id"]
+        for participant_id in cluster["members"]:
+            participant_cluster_pairs.append((participant_id, cluster_id))
+
+    # Sort the list by participant_id
+    sorted_pairs = sorted(participant_cluster_pairs, key=lambda x: x[0])
+
+    # Extract just the cluster IDs in order
+    cluster_ids_in_order = [pair[1] for pair in sorted_pairs]
+
+    return np.asarray(cluster_ids_in_order)
+
+def get_all_participant_ids(
+    group_clusters_with_pids: list[PolisGroupClusterExpanded],
+) -> list[ParticipantId]:
+    """
+    Extract all unique participant IDs from group_clusters_with_pids.
+
+    Args:
+        group_clusters_with_pids (list): List of group clusters with expanded participant IDs
+
+    Returns:
+        list: A sorted list of all unique participant IDs
+    """
+    # Gather all participant IDs from all clusters
+    all_participant_ids = []
+
+    for cluster in group_clusters_with_pids:
+        all_participant_ids.extend(cluster["members"])
+
+    # Remove duplicates and sort
+    unique_participant_ids = sorted(set(all_participant_ids))
+
+    return unique_participant_ids
