@@ -119,7 +119,7 @@ if True:
             best_head = []
 
         if len(group_data["sufficient"]) > 0:
-            group_data["sufficient"] = group_data["sufficient"].drop(columns="sort_order").astype({"tid": "int32", "n-success": "int32", "n-trials": "int32"})
+            group_data["sufficient"] = group_data["sufficient"].drop(columns="sort_order")
         if len(best_head) > 0:
             selected = best_head + [dict(row) for _, row in group_data["sufficient"].iterrows() if row["tid"] != best_head[0]["tid"]]
         else:
