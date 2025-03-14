@@ -39,21 +39,27 @@ if True:
     client = PolisClient()
     client.load_data(report_id=report_id)
 
-    # Generate vote matrix and run clustering
-    vote_matrix = client.get_matrix(is_filtered=True)
-    client.run_pca()
-    client.scale_projected_data()
-
     RECALC_CLUSTERS = False
-    if RECALC_CLUSTERS:
-        client.find_optimal_k()  # Find optimal number of clusters
-        cluster_labels = client.optimal_cluster_labels
-    else:
+    if not RECALC_CLUSTERS:
         math_data = client.data_loader.math_data
         group_clusters_with_pids = utils.expand_group_clusters_with_participants(
             group_clusters=math_data["group-clusters"],
             base_clusters=math_data["base-clusters"],
         )
+        # Get list of all active participant ids, since Polis has some edge-cases
+        # that keep specific participants, and we need to keep them from being filtered out.
+        all_participant_ids = utils.get_all_participant_ids(group_clusters_with_pids)
+        client.keep_participant_ids = all_participant_ids
+
+    # Generate vote matrix and run clustering
+    vote_matrix = client.get_matrix(is_filtered=True)
+    client.run_pca()
+    client.scale_projected_data()
+
+    if RECALC_CLUSTERS:
+        client.find_optimal_k()  # Find optimal number of clusters
+        cluster_labels = client.optimal_cluster_labels
+    else:
         cluster_labels = utils.generate_cluster_labels(group_clusters_with_pids)
         client.optimal_cluster_labels = cluster_labels
 
