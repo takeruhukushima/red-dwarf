@@ -40,17 +40,17 @@ if True:
     client = PolisClient()
     client.load_data(report_id=report_id)
 
+    # This allows us to skip recalculating clustering, and instead rely on
+    # clustering results from polismath's API endpoint. The value of this is
+    # being able to compare comment stat calculations even when clustering isn't
+    # yet reproducing Polis' exact behavior.
     USE_POLISMATH_CLUSTERING = True
     if USE_POLISMATH_CLUSTERING:
         math_data: Any = client.data_loader.math_data # type:ignore
-        group_clusters_with_pids = utils.expand_group_clusters_with_participants(
-            group_clusters=math_data["group-clusters"],
-            base_clusters=math_data["base-clusters"],
-        )
-        # Get list of all active participant ids, since Polis has some edge-cases
-        # that keep specific participants, and we need to keep them from being filtered out.
-        all_participant_ids = utils.get_all_participant_ids(group_clusters_with_pids)
-        client.keep_participant_ids = all_participant_ids
+        all_clustered_participant_ids, cluster_labels = utils.extract_data_from_polismath(math_data)
+        # Force same participant subset (Polis has some edge-cases where it
+        # keeps participants that would otherwise be cut)
+        client.keep_participant_ids = all_clustered_participant_ids
 
     # Generate vote matrix and run clustering
     vote_matrix = client.get_matrix(is_filtered=True)
@@ -58,8 +58,8 @@ if True:
     client.scale_projected_data()
 
     if USE_POLISMATH_CLUSTERING:
-        cluster_labels = utils.generate_cluster_labels(group_clusters_with_pids) # type:ignore
-        client.optimal_cluster_labels = cluster_labels
+        # Fake optimal labels from polismath data.
+        client.optimal_cluster_labels = cluster_labels #type:ignore
     else:
         client.find_optimal_k()  # Find optimal number of clusters
         cluster_labels = client.optimal_cluster_labels

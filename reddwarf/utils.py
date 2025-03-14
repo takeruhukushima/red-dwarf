@@ -5,7 +5,7 @@ from sklearn.impute import SimpleImputer
 from sklearn.cluster import KMeans
 from sklearn.metrics import silhouette_score
 from sklearn.decomposition import PCA
-from typing import List, Dict, Tuple, Optional, Literal, TypeAlias
+from typing import Any, List, Dict, Tuple, Optional, Literal, TypeAlias
 from reddwarf.exceptions import RedDwarfError
 from scipy.stats import norm
 
@@ -615,6 +615,11 @@ def calculate_comment_statistics_by_group(
 
     return group_stats
 
+## POLISMATH HELPERS
+#
+# These functions are generally used to transform data from the polismath object
+# that gets returned from the /api/v3/math/pca2 endpoint.
+
 def expand_group_clusters_with_participants(
     group_clusters: list[PolisGroupCluster],
     base_clusters: PolisBaseClusters,
@@ -709,3 +714,26 @@ def get_all_participant_ids(
     unique_participant_ids = sorted(set(all_participant_ids))
 
     return unique_participant_ids
+
+def extract_data_from_polismath(math_data: Any):
+    """
+    A helper to extract specific types of data from polismath data, to avoid having to recalculate it.
+
+    This is mostly helpful for debugging and working with the existing Polis platform API.
+
+    Args:
+        math_data (Any): The polismath data object that is returned from /api/v3/math/pca2
+
+    Returns:
+        list[ParticipantId]: A sorted list of all clustered/grouped Polis participant IDs
+        np.ndarray[GroupId]: A list of all cluster labels (aka group IDs), sorted by participant ID
+    """
+    group_clusters_with_pids = expand_group_clusters_with_participants(
+        group_clusters=math_data["group-clusters"],
+        base_clusters=math_data["base-clusters"],
+    )
+
+    grouped_participant_ids = get_all_participant_ids(group_clusters_with_pids)
+    cluster_labels = generate_cluster_labels(group_clusters_with_pids)
+
+    return grouped_participant_ids, cluster_labels
