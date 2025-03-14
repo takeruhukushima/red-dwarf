@@ -30,7 +30,7 @@ CONVOS = {
         "convo_id": "4kjz5rrrfe",
     },
 }
-from tests.utils.test_representativeness import expand_group_clusters_to_participants, get_clusters_by_participant_id
+from tests.utils.test_representativeness import expand_group_clusters_with_participants, generate_cluster_labels
 
 if True:
     # testing representativeness calculations
@@ -50,8 +50,12 @@ if True:
         client.find_optimal_k()  # Find optimal number of clusters
         cluster_labels = client.optimal_cluster_labels
     else:
-        group_clusters_participant = expand_group_clusters_to_participants(client.data_loader.math_data)
-        cluster_labels = get_clusters_by_participant_id(group_clusters_participant)
+        math_data = client.data_loader.math_data
+        group_clusters_with_pids = expand_group_clusters_with_participants(
+            group_clusters=math_data["group-clusters"],
+            base_clusters=math_data["base-clusters"],
+        )
+        cluster_labels = generate_cluster_labels(group_clusters_with_pids)
         client.optimal_cluster_labels = cluster_labels
 
     stats_by_group = utils.calculate_comment_statistics_by_group(
