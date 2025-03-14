@@ -39,8 +39,8 @@ if True:
     client = PolisClient()
     client.load_data(report_id=report_id)
 
-    RECALC_CLUSTERS = False
-    if not RECALC_CLUSTERS:
+    USE_POLISMATH_CLUSTERING = True
+    if USE_POLISMATH_CLUSTERING:
         math_data = client.data_loader.math_data
         group_clusters_with_pids = utils.expand_group_clusters_with_participants(
             group_clusters=math_data["group-clusters"],
@@ -56,12 +56,12 @@ if True:
     client.run_pca()
     client.scale_projected_data()
 
-    if RECALC_CLUSTERS:
-        client.find_optimal_k()  # Find optimal number of clusters
-        cluster_labels = client.optimal_cluster_labels
-    else:
+    if USE_POLISMATH_CLUSTERING:
         cluster_labels = utils.generate_cluster_labels(group_clusters_with_pids)
         client.optimal_cluster_labels = cluster_labels
+    else:
+        client.find_optimal_k()  # Find optimal number of clusters
+        cluster_labels = client.optimal_cluster_labels
 
     stats_by_group = utils.calculate_comment_statistics_by_group(
         vote_matrix=vote_matrix,
