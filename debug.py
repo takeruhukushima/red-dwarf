@@ -67,6 +67,10 @@ if True:
         vote_matrix=vote_matrix,
         cluster_labels=cluster_labels,
     )
+
+    # Figuring out select-rep-comments flow
+    # See: https://github.com/compdemocracy/polis/blob/7bf9eccc287586e51d96fdf519ae6da98e0f4a70/math/src/polismath/math/repness.clj#L209C7-L209C26
+    polis_repness = {}
     for gid, stats_df in enumerate(stats_by_group):
         print(f"Group ID: {gid}")
 
@@ -82,7 +86,6 @@ if True:
         if len(group_data["sufficient"]) > 0:
             repness_metric = lambda row: row["repness"] * row["repness-test"] * row["p-success"] * row["p-test"]
             group_data["sufficient"] = group_data["sufficient"].assign(sort_order=repness_metric).sort_values(by="sort_order", ascending=False)
-        print(group_data["sufficient"])
 
         # Track the best, even if doesn't meet sufficient minimum, to have at least one.
         # TODO: Merge this wil above iteration
@@ -91,18 +94,37 @@ if True:
             for _, row in stats_df.reset_index().iterrows():
                 if utils.beats_best_by_test(row["rat"], row["rdt"], group_data["best"].get("repness-test", None)):
                     group_data["best"] = utils.finalize_cmt_stats(row)
-            print(group_data["best"])
 
         # Track the best-agree, to bring to top if exists.
         group_data["best-agree"] = None
         for _, row in stats_df.reset_index().iterrows():
             if utils.beats_best_agr(row["na"], row["nd"], row["ra"], row["rat"], row["pa"], row["pat"], row["ns"], group_data["best-agree"]):
                 group_data["best-agree"] = row
-        print(group_data["best-agree"])
+
+        # Start building repness key
+        best_agree = group_data.get("best-agree")
+        best = group_data.get("best")
+        if best_agree is not None:
+            best_agree = utils.finalize_cmt_stats(best_agree)
+            best_agree.update({"n-agree": best_agree["n-success"], "best-agree": True})
+            best_head = [best_agree]
+        elif best is not None:
+            best_head = [best]
+        else:
+            best_head = []
+
+        if len(group_data["sufficient"]) > 0:
+            group_data["sufficient"] = group_data["sufficient"].drop(columns="sort_order").astype({"tid": "int32", "n-success": "int32", "n-trials": "int32"})
+        if len(best_head) > 0:
+            selected = best_head + [dict(row) for _, row in group_data["sufficient"].iterrows() if row["tid"] != best_head[0]["tid"]]
+        else:
+            selected = [dict(row) for _, row in group_data["sufficient"].iterrows()]
+        polis_repness[str(gid)] = selected[:5]
+    import json
+    print(json.dumps(polis_repness, indent=2))
 
     presenter = DataPresenter(client=client)
     presenter.render_optimal_cluster_figure()
-
 
 if False:
     # test agora method
