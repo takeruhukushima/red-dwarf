@@ -1,5 +1,5 @@
-from typing import TypedDict, TypeAlias, Literal
-from typing_extensions import NotRequired
+from typing import TypeAlias, Literal
+from typing_extensions import NotRequired, TypedDict
 
 IncrementingId: TypeAlias = int
 BaseClusterId: TypeAlias = IncrementingId
