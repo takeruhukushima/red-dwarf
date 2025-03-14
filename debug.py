@@ -119,7 +119,8 @@ if True:
             selected = best_head + [dict(row) for _, row in group_data["sufficient"].iterrows() if row["tid"] != best_head[0]["tid"]]
         else:
             selected = [dict(row) for _, row in group_data["sufficient"].iterrows()]
-        polis_repness[str(gid)] = selected[:5]
+        # sorted() does the work of agrees-before-disagrees in polismath
+        polis_repness[str(gid)] = sorted(selected[:5], key=lambda x: x["repful-for"])
     import json
     print(json.dumps(polis_repness, indent=2))
 
