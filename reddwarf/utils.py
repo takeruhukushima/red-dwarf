@@ -486,8 +486,8 @@ def calculate_comment_statistics(
     statement_ids = vote_matrix.columns
 
     # Set up all the variables to be populated.
-    N_g_c = np.empty([group_count, len(statement_ids)])
-    N_v_g_c = np.empty([len(votes.__dict__), group_count, len(statement_ids)])
+    N_g_c = np.empty([group_count, len(statement_ids)], dtype='int32')
+    N_v_g_c = np.empty([len(votes.__dict__), group_count, len(statement_ids)], dtype='int32')
     P_v_g_c = np.empty([len(votes.__dict__), group_count, len(statement_ids)])
     R_v_g_c = np.empty([len(votes.__dict__), group_count, len(statement_ids)])
     P_v_g_c_test = np.empty([len(votes.__dict__), group_count, len(statement_ids)])
