@@ -1,4 +1,5 @@
-from typing import TypedDict, TypeAlias
+from typing import TypedDict, TypeAlias, Literal
+from typing_extensions import NotRequired
 
 IncrementingId: TypeAlias = int
 BaseClusterId: TypeAlias = IncrementingId
@@ -22,3 +23,25 @@ class PolisBaseClusters(TypedDict):
     x: list[float]
     y: list[float]
     count: list[int]
+
+# Use functional form when attributes have hyphens or are string numbers.
+PolisRepnessStatement = TypedDict("PolisRepnessStatement", {
+    "tid": int,
+    "n-success": int,
+    "n-trials": int,
+    "p-success": float,
+    "p-test": float,
+    "repness": float,
+    "repness-test": float,
+    "repful-for": Literal["agree", "disagree"],
+    "best-agree": NotRequired[bool],
+    "n-agree": NotRequired[int],
+})
+
+PolisRepness = TypedDict("PolisRepness", {
+    "0": list[PolisRepnessStatement],
+    "1": list[PolisRepnessStatement],
+    "2": NotRequired[list[PolisRepnessStatement]],
+    "3": NotRequired[list[PolisRepnessStatement]],
+    "4": NotRequired[list[PolisRepnessStatement]],
+})
