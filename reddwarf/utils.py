@@ -553,13 +553,13 @@ def finalize_cmt_stats(cmt: pd.Series) -> dict:
         vals = [cmt[k] for k in ["nd", "ns", "pd", "pdt", "rd", "rdt"]] + ["disagree"]
 
     return {
-        "tid":          cmt["statement_id"],
-        "n-success":    vals[0],
-        "n-trials":     vals[1],
-        "p-success":    vals[2],
-        "p-test":       vals[3],
-        "repness":      vals[4],
-        "repness-test": vals[5],
+        "tid":          int(cmt["statement_id"]),
+        "n-success":    int(vals[0]),
+        "n-trials":     int(vals[1]),
+        "p-success":    float(vals[2]),
+        "p-test":       float(vals[3]),
+        "repness":      float(vals[4]),
+        "repness-test": float(vals[5]),
         "repful-for":   vals[6],
     }
 
