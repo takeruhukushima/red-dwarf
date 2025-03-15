@@ -413,14 +413,20 @@ def is_passes_by_test(pat, rat, pdt, rdt) -> bool:
 
     return is_agreement_significant or is_disagreement_significant
 
-def beats_best_by_test(rad, rdt, current_best_z) -> bool:
+def beats_best_by_test(rad, rdt, current_best) -> bool:
     """
     Returns True if a given comment/group stat has a more representative z-score than
     current_best_z. Used for ensuring at least one representative comment for every group,
     even if none remain after more thorough filters.
     """
-    is_no_prior_best = current_best_z is None
-    return is_no_prior_best or max(rad, rdt) > current_best_z
+    if current_best is not None:
+        this_repness_test = max(rad, rdt)
+        current_best_repness_test = max(current_best["rat"], current_best["rdt"])
+
+        return this_repness_test > current_best_repness_test
+    else:
+        return True
+
 
 def beats_best_agr(na, nd, ra, rat, pa, pat, ns, current_best) -> bool:
     """
@@ -434,7 +440,7 @@ def beats_best_agr(na, nd, ra, rat, pa, pat, ns, current_best) -> bool:
         return False
 
     # If we have a current_best by representativeness estimate, use the more robust measurement
-    if current_best is not None and current_best["ra"] > 1.0:
+    if (current_best is not None) and current_best["ra"] > 1.0:
         return (ra * rat * pa * pat) > (current_best["ra"] * current_best["rat"] * current_best["pa"] * current_best["pat"])
 
     # If we have current_best, but only by probability estimate, just shoot for something generally agreed upon
@@ -620,56 +626,56 @@ def calculate_comment_statistics_by_group(
 def select_rep_comments(stats_by_group: list[pd.DataFrame], pick_n: int = 5):
     polis_repness = {}
     for gid, stats_df in enumerate(stats_by_group):
-        group_data = {}
-        group_data["sufficient"] = []
+        sufficient_statements = []
+        best_agree_of_sufficient = None
+        best_of_all = None
+
         def create_filter_mask(row):
             return is_passes_by_test(row["pat"], row["rat"], row["pdt"], row["rdt"])
-        group_data["sufficient"] = stats_df[stats_df.apply(create_filter_mask, axis=1)]
-        group_data["sufficient"] = pd.DataFrame([
+
+        sufficient_statements = stats_df[stats_df.apply(create_filter_mask, axis=1)]
+        sufficient_statements = pd.DataFrame([
                 finalize_cmt_stats(row)
-                for _, row in group_data["sufficient"].reset_index().iterrows()
+                for _, row in sufficient_statements.reset_index().iterrows()
             ],
-            index=group_data["sufficient"].index,
+            index=sufficient_statements.index,
         )
-        if len(group_data["sufficient"]) > 0:
+
+        if len(sufficient_statements) > 0:
             repness_metric = lambda row: row["repness"] * row["repness-test"] * row["p-success"] * row["p-test"]
-            group_data["sufficient"] = (group_data["sufficient"]
+            sufficient_statements = (sufficient_statements
                 .assign(sort_order=repness_metric)
                 .sort_values(by="sort_order", ascending=False)
             )
 
         # Track the best, even if doesn't meet sufficient minimum, to have at least one.
         # TODO: Merge this wil above iteration
-        if len(group_data["sufficient"]) == 0:
-            group_data["best"] = {}
+        if len(sufficient_statements) == 0:
             for _, row in stats_df.reset_index().iterrows():
-                if beats_best_by_test(row["rat"], row["rdt"], group_data["best"].get("repness-test", None)):
-                    group_data["best"] = finalize_cmt_stats(row)
+                if beats_best_by_test(row["rat"], row["rdt"], best_of_all):
+                    best_of_all = row
 
         # Track the best-agree, to bring to top if exists.
-        group_data["best-agree"] = None
         for _, row in stats_df.reset_index().iterrows():
-            if beats_best_agr(row["na"], row["nd"], row["ra"], row["rat"], row["pa"], row["pat"], row["ns"], group_data["best-agree"]):
-                group_data["best-agree"] = row
+            if beats_best_agr(row["na"], row["nd"], row["ra"], row["rat"], row["pa"], row["pat"], row["ns"], best_agree_of_sufficient):
+                best_agree_of_sufficient = row
 
         # Start building repness key
-        best_agree = group_data.get("best-agree")
-        best = group_data.get("best")
-        if best_agree is not None:
-            best_agree = finalize_cmt_stats(best_agree)
-            best_agree.update({"n-agree": best_agree["n-success"], "best-agree": True})
-            best_head = [best_agree]
-        elif best is not None:
-            best_head = [best]
+        if best_agree_of_sufficient is not None:
+            best_agree_of_sufficient = finalize_cmt_stats(best_agree_of_sufficient)
+            best_agree_of_sufficient.update({"n-agree": best_agree_of_sufficient["n-success"], "best-agree": True})
+            best_head = [best_agree_of_sufficient]
+        elif best_of_all is not None:
+            best_head = [best_of_all]
         else:
             best_head = []
 
-        if len(group_data["sufficient"]) > 0:
-            group_data["sufficient"] = group_data["sufficient"].drop(columns="sort_order")
+        if len(sufficient_statements) > 0:
+            sufficient_statements = sufficient_statements.drop(columns="sort_order")
         if len(best_head) > 0:
-            selected = best_head + [dict(row) for _, row in group_data["sufficient"].iterrows() if row["tid"] != best_head[0]["tid"]]
+            selected = best_head + [dict(row) for _, row in sufficient_statements.iterrows() if row["tid"] != best_head[0]["tid"]]
         else:
-            selected = [dict(row) for _, row in group_data["sufficient"].iterrows()]
+            selected = [dict(row) for _, row in sufficient_statements.iterrows()]
         # sorted() does the work of agrees-before-disagrees in polismath
         polis_repness[str(gid)] = sorted(selected[:pick_n], key=lambda x: x["repful-for"])
 
