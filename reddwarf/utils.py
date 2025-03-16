@@ -402,16 +402,16 @@ def two_prop_test(
 
     return (pi1 - pi2) / denominator
 
-def z_sig_90(z_val) -> bool:
+def is_significant(z_val: float, confidence: float = 0.90) -> bool:
     """Test whether z-statistic is significant at 90% confidence (one-tailed, right-side)."""
-    critical_value = norm.ppf(0.90)  # 90% confidence level, one-tailed
+    critical_value = norm.ppf(confidence)  # 90% confidence level, one-tailed
     return z_val > critical_value
 
-def is_passes_by_test(row: pd.Series) -> bool:
+def is_passes_by_test(row: pd.Series, confidence=0.90) -> bool:
     "Decide whether we should count a statement in a group as being representative."
     pat, rat, pdt, rdt = [row[col] for col in ["pat", "rat", "pdt", "rdt"]]
-    is_agreement_significant = z_sig_90(pat) and z_sig_90(rat)
-    is_disagreement_significant = z_sig_90(pdt) and z_sig_90(rdt)
+    is_agreement_significant = is_significant(pat, confidence) and is_significant(rat, confidence)
+    is_disagreement_significant = is_significant(pdt, confidence) and is_significant(rdt, confidence)
 
     return is_agreement_significant or is_disagreement_significant
 
@@ -436,6 +436,7 @@ def beats_best_by_test(
 def beats_best_agr(
     this_row: pd.Series,
     best_row: pd.Series | None,
+    confidence: float = 0.90,
 ) -> bool:
     """
     Like beats_best_by_test, but only considers agrees. Additionally, doesn't focus solely on repness,
@@ -457,7 +458,7 @@ def beats_best_agr(
             return prob_metric(this_row) > prob_metric(best_row)
 
     # Otherwise, accept if either representativeness or probability look generally good
-    return (z_sig_90(this_row["pat"]) or
+    return (is_significant(this_row["pat"], confidence) or
         (this_row["ra"] > 1.0 and this_row["pa"] > 0.5))
 
 # For making it more legible to get index of agree/disagree votes in numpy array.
@@ -637,17 +638,16 @@ def repness_metric(df: pd.DataFrame) -> pd.Series:
 # Figuring out select-rep-comments flow
 # See: https://github.com/compdemocracy/polis/blob/7bf9eccc287586e51d96fdf519ae6da98e0f4a70/math/src/polismath/math/repness.clj#L209C7-L209C26
 # TODO: omg please clean this up.
-def select_rep_comments(stats_by_group: list[pd.DataFrame], pick_n: int = 5) -> PolisRepness:
-    # TODO: Make significance configurable. re: z_sig_90()
+def select_rep_comments(stats_by_group: list[pd.DataFrame], pick_n: int = 5, confidence: float = 0.90) -> PolisRepness:
     polis_repness = {}
     for gid, stats_df in enumerate(stats_by_group):
         best_agree = None
         # Track the best-agree, to bring to top if exists.
         for _, row in stats_df.reset_index().iterrows():
-            if beats_best_agr(row, best_agree):
+            if beats_best_agr(row, best_agree, confidence):
                 best_agree = row
 
-        sufficient_statements_row_mask = stats_df.apply(is_passes_by_test, axis="columns")
+        sufficient_statements_row_mask = stats_df.apply(lambda row: is_passes_by_test(row, confidence), axis="columns")
         sufficient_statements = stats_df[sufficient_statements_row_mask]
 
         # Track the best, even if doesn't meet sufficient minimum, to have at least one.
