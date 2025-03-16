@@ -17,6 +17,7 @@ from reddwarf.types.polis import (
     PolisGroupClusterExpanded,
     GroupId,
     ParticipantId,
+    PolisRepness,
 )
 
 VoteMatrix: TypeAlias = pd.DataFrame
@@ -636,40 +637,39 @@ def repness_metric(df: pd.DataFrame) -> pd.Series:
 # Figuring out select-rep-comments flow
 # See: https://github.com/compdemocracy/polis/blob/7bf9eccc287586e51d96fdf519ae6da98e0f4a70/math/src/polismath/math/repness.clj#L209C7-L209C26
 # TODO: omg please clean this up.
-def select_rep_comments(stats_by_group: list[pd.DataFrame], pick_n: int = 5):
+def select_rep_comments(stats_by_group: list[pd.DataFrame], pick_n: int = 5) -> PolisRepness:
+    # TODO: Make significance configurable. re: z_sig_90()
     polis_repness = {}
     for gid, stats_df in enumerate(stats_by_group):
-        sufficient_statements = []
         best_agree = None
-        best_overall = None
+        # Track the best-agree, to bring to top if exists.
+        for _, row in stats_df.reset_index().iterrows():
+            if beats_best_agr(row, best_agree):
+                best_agree = row
 
         sufficient_statements_row_mask = stats_df.apply(is_passes_by_test, axis="columns")
         sufficient_statements = stats_df[sufficient_statements_row_mask]
-        sufficient_statements = pd.DataFrame([
-                finalize_cmt_stats(row)
-                for _, row in sufficient_statements.reset_index().iterrows()
-            ],
-            index=sufficient_statements.index,
-        )
 
-        if len(sufficient_statements) > 0:
+        # Track the best, even if doesn't meet sufficient minimum, to have at least one.
+        best_overall = None
+        if len(sufficient_statements) == 0:
+            for _, row in stats_df.reset_index().iterrows():
+                if beats_best_by_test(row, best_overall):
+                    best_overall = row
+        else:
+            # Finalize statements into output format.
+            # TODO: Figure out how to finalize only at end in output. Change repness_metric?
+            sufficient_statements = pd.DataFrame([
+                    finalize_cmt_stats(row)
+                    for _, row in sufficient_statements.reset_index().iterrows()
+                ],
+                index=sufficient_statements.index,
+            )
             sufficient_statements = (sufficient_statements
                 .assign(repness_metric=repness_metric)
                 .sort_values(by="repness_metric", ascending=False)
                 .drop(columns="repness_metric")
             )
-
-        # Track the best, even if doesn't meet sufficient minimum, to have at least one.
-        # TODO: Merge this wil above iteration
-        if len(sufficient_statements) == 0:
-            for _, row in stats_df.reset_index().iterrows():
-                if beats_best_by_test(row, best_overall):
-                    best_overall = row
-
-        # Track the best-agree, to bring to top if exists.
-        for _, row in stats_df.reset_index().iterrows():
-            if beats_best_agr(row, best_agree):
-                best_agree = row
 
         # Start building repness key
         if best_agree is not None:
@@ -694,7 +694,7 @@ def select_rep_comments(stats_by_group: list[pd.DataFrame], pick_n: int = 5):
         selected = sorted(selected, key=lambda row: row["repful-for"])
         polis_repness[str(gid)] = selected
 
-    return polis_repness
+    return polis_repness # type:ignore
 
 ## POLISMATH HELPERS
 #
