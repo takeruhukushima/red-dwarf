@@ -640,11 +640,11 @@ def select_rep_comments(stats_by_group: list[pd.DataFrame], pick_n: int = 5):
     polis_repness = {}
     for gid, stats_df in enumerate(stats_by_group):
         sufficient_statements = []
-        best_agree_of_sufficient = None
-        best_of_all = None
+        best_agree = None
+        best_overall = None
 
-        statement_row_mask = stats_df.apply(is_passes_by_test, axis="columns")
-        sufficient_statements = stats_df[statement_row_mask]
+        sufficient_statements_row_mask = stats_df.apply(is_passes_by_test, axis="columns")
+        sufficient_statements = stats_df[sufficient_statements_row_mask]
         sufficient_statements = pd.DataFrame([
                 finalize_cmt_stats(row)
                 for _, row in sufficient_statements.reset_index().iterrows()
@@ -663,31 +663,36 @@ def select_rep_comments(stats_by_group: list[pd.DataFrame], pick_n: int = 5):
         # TODO: Merge this wil above iteration
         if len(sufficient_statements) == 0:
             for _, row in stats_df.reset_index().iterrows():
-                if beats_best_by_test(row, best_of_all):
-                    best_of_all = row
+                if beats_best_by_test(row, best_overall):
+                    best_overall = row
 
         # Track the best-agree, to bring to top if exists.
         for _, row in stats_df.reset_index().iterrows():
-            if beats_best_agr(row, best_agree_of_sufficient):
-                best_agree_of_sufficient = row
+            if beats_best_agr(row, best_agree):
+                best_agree = row
 
         # Start building repness key
-        if best_agree_of_sufficient is not None:
-            best_agree_of_sufficient = finalize_cmt_stats(best_agree_of_sufficient)
-            best_agree_of_sufficient.update({"n-agree": best_agree_of_sufficient["n-success"], "best-agree": True})
-            best_head = [best_agree_of_sufficient]
-        elif best_of_all is not None:
-            best_of_all = finalize_cmt_stats(best_of_all)
-            best_head = [best_of_all]
+        if best_agree is not None:
+            best_agree = finalize_cmt_stats(best_agree)
+            best_agree.update({"n-agree": best_agree["n-success"], "best-agree": True})
+            best_head = [best_agree]
+        elif best_overall is not None:
+            best_overall = finalize_cmt_stats(best_overall)
+            best_head = [best_overall]
         else:
             best_head = []
 
-        if len(best_head) > 0:
-            selected = best_head + [dict(row) for _, row in sufficient_statements.iterrows() if row["tid"] != best_head[0]["tid"]]
-        else:
-            selected = [dict(row) for _, row in sufficient_statements.iterrows()]
-        # sorted() does the work of agrees-before-disagrees in polismath
-        polis_repness[str(gid)] = sorted(selected[:pick_n], key=lambda x: x["repful-for"])
+        selected = best_head
+        selected = selected + [
+            row.to_dict() for _, row in sufficient_statements.iterrows()
+            if best_head
+                # Skip any statements already in best_head
+                and best_head[0]["tid"] != row["tid"]
+        ]
+        selected = selected[:pick_n]
+        # Does the work of agrees-before-disagrees sort in polismath, since "a" before "d".
+        selected = sorted(selected, key=lambda row: row["repful-for"])
+        polis_repness[str(gid)] = selected
 
     return polis_repness
 
