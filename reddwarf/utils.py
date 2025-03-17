@@ -407,7 +407,7 @@ def is_significant(z_val: float, confidence: float = 0.90) -> bool:
     critical_value = norm.ppf(confidence)  # 90% confidence level, one-tailed
     return z_val > critical_value
 
-def is_passes_by_test(row: pd.Series, confidence=0.90) -> bool:
+def is_statement_significant(row: pd.Series, confidence=0.90) -> bool:
     "Decide whether we should count a statement in a group as being representative."
     pat, rat, pdt, rdt = [row[col] for col in ["pat", "rat", "pdt", "rdt"]]
     is_agreement_significant = is_significant(pat, confidence) and is_significant(rat, confidence)
@@ -415,7 +415,7 @@ def is_passes_by_test(row: pd.Series, confidence=0.90) -> bool:
 
     return is_agreement_significant or is_disagreement_significant
 
-def beats_best_by_test(
+def beats_best_by_repness_test(
     this_row: pd.Series,
     best_row: pd.Series | None,
 ) -> bool:
@@ -433,15 +433,15 @@ def beats_best_by_test(
         return True
 
 
-def beats_best_agr(
+def beats_best_of_agrees(
     this_row: pd.Series,
     best_row: pd.Series | None,
     confidence: float = 0.90,
 ) -> bool:
     """
-    Like beats_best_by_test, but only considers agrees. Additionally, doesn't focus solely on repness,
-    but also on raw probability of agreement, so as to ensure that there is some representation of what
-    people in the group agree on. Also, note that this takes the current_best statement, instead of just current_best_z.
+    Like beats_best_by_repness_test, but only considers agrees. Additionally, doesn't
+    focus solely on repness, but also on raw probability of agreement, so as to
+    ensure that there is some representation of what people in the group agree on.
     """
     # Explicitly don't allow something that hasn't been voted on at all
     if this_row["na"] == 0 and this_row["nd"] == 0:
@@ -457,7 +457,8 @@ def beats_best_agr(
             prob_metric = lambda row: row["pa"] * row["pat"]
             return prob_metric(this_row) > prob_metric(best_row)
 
-    # Otherwise, accept if either representativeness or probability look generally good
+    # Otherwise, accept if either repness or probability look generally good.
+    # TODO: Hardcode significance at 90%, so lways one statement for group?
     return (is_significant(this_row["pat"], confidence) or
         (this_row["ra"] > 1.0 and this_row["pa"] > 0.5))
 
@@ -638,40 +639,58 @@ def repness_metric(df: pd.DataFrame) -> pd.Series:
 # Figuring out select-rep-comments flow
 # See: https://github.com/compdemocracy/polis/blob/7bf9eccc287586e51d96fdf519ae6da98e0f4a70/math/src/polismath/math/repness.clj#L209C7-L209C26
 # TODO: omg please clean this up.
-def select_rep_comments(stats_by_group: list[pd.DataFrame], pick_n: int = 5, confidence: float = 0.90) -> PolisRepness:
-    polis_repness = {}
-    for gid, stats_df in enumerate(stats_by_group):
+def select_group_statements(
+    grouped_stats_df: list[pd.DataFrame],
+    pick_max: int = 5,
+    confidence: float = 0.90,
+) -> PolisRepness:
+    """
+    Selects statistically representative statements from each group cluster.
+
+    This is expected to match the Polis outputs when all defaults are set.
+
+    Args:
+        grouped_stats_df (list[pd.DataFrame]): Dataframes of statement statistics, keyed to group ID
+        pick_max (int): The max number of statements that will be returned per group
+        confidence (float): A decimal percentage representing confidence interval
+
+    Returns:
+        PolisRepness: A dict object with lists of statements keyed to groups, matching Polis format.
+    """
+    repness = {}
+    for gid, stats_df in enumerate(grouped_stats_df):
+        stats_df = stats_df.reset_index()
+
         best_agree = None
         # Track the best-agree, to bring to top if exists.
-        for _, row in stats_df.reset_index().iterrows():
-            if beats_best_agr(row, best_agree, confidence):
+        for _, row in stats_df.iterrows():
+            if beats_best_of_agrees(row, best_agree, confidence):
                 best_agree = row
 
-        sufficient_statements_row_mask = stats_df.apply(lambda row: is_passes_by_test(row, confidence), axis="columns")
-        sufficient_statements = stats_df[sufficient_statements_row_mask]
+        sig_filter = lambda row: is_statement_significant(row, confidence)
+        sufficient_statements_row_mask = stats_df.apply(sig_filter, axis="columns")
+        sufficient_statements = stats_df[sufficient_statements_row_mask].reset_index()
 
         # Track the best, even if doesn't meet sufficient minimum, to have at least one.
         best_overall = None
         if len(sufficient_statements) == 0:
-            for _, row in stats_df.reset_index().iterrows():
-                if beats_best_by_test(row, best_overall):
+            for _, row in stats_df.iterrows():
+                if beats_best_by_repness_test(row, best_overall):
                     best_overall = row
         else:
             # Finalize statements into output format.
             # TODO: Figure out how to finalize only at end in output. Change repness_metric?
-            sufficient_statements = pd.DataFrame([
+            sufficient_statements = (
+                pd.DataFrame([
                     finalize_cmt_stats(row)
-                    for _, row in sufficient_statements.reset_index().iterrows()
-                ],
-                index=sufficient_statements.index,
-            )
-            sufficient_statements = (sufficient_statements
-                .assign(repness_metric=repness_metric)
-                .sort_values(by="repness_metric", ascending=False)
-                .drop(columns="repness_metric")
+                        for _, row in sufficient_statements.iterrows()
+                ])
+                    # Create a column to sort repnress, then remove.
+                    .assign(repness_metric=repness_metric)
+                    .sort_values(by="repness_metric", ascending=False)
+                    .drop(columns="repness_metric")
             )
 
-        # Start building repness key
         if best_agree is not None:
             best_agree = finalize_cmt_stats(best_agree)
             best_agree.update({"n-agree": best_agree["n-success"], "best-agree": True})
@@ -689,12 +708,12 @@ def select_rep_comments(stats_by_group: list[pd.DataFrame], pick_n: int = 5, con
                 # Skip any statements already in best_head
                 and best_head[0]["tid"] != row["tid"]
         ]
-        selected = selected[:pick_n]
+        selected = selected[:pick_max]
         # Does the work of agrees-before-disagrees sort in polismath, since "a" before "d".
         selected = sorted(selected, key=lambda row: row["repful-for"])
-        polis_repness[str(gid)] = selected
+        repness[str(gid)] = selected
 
-    return polis_repness # type:ignore
+    return repness # type:ignore
 
 ## POLISMATH HELPERS
 #
