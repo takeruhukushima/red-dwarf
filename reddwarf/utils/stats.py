@@ -4,6 +4,7 @@ from numpy.typing import ArrayLike, NDArray
 from typing import Tuple, Optional
 from types import SimpleNamespace
 from scipy.stats import norm
+from reddwarf.utils import stats
 from reddwarf.utils.matrix import VoteMatrix
 from reddwarf.types.polis import (
     PolisRepness,
@@ -147,7 +148,7 @@ def calculate_comment_statistics(
     vote_matrix: VoteMatrix,
     cluster_labels: list[int] | NDArray[np.integer],
     pseudo_count: int = 1,
-) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """
     Calculates comparative statement statistics across all votes and groups, using only efficient numpy operations.
 
@@ -173,6 +174,7 @@ def calculate_comment_statistics(
         R_v_g_c (np.ndarray[float]): numpy matrix with representativeness of vote types on comments/groups
         P_v_g_c_test (np.ndarray[float]): test z-scores for probability of votes/comments/groups
         R_v_g_c_test (np.ndarray[float]): test z-scores for representativeness of votes/comments/groups
+        C_v_c (np.ndarray[float]): group-aware consensus scores for each statement.
     """
     # Get the vote matrix values
     X = vote_matrix.values
@@ -187,6 +189,7 @@ def calculate_comment_statistics(
     R_v_g_c = np.empty([len(votes.__dict__), group_count, len(statement_ids)])
     P_v_g_c_test = np.empty([len(votes.__dict__), group_count, len(statement_ids)])
     R_v_g_c_test = np.empty([len(votes.__dict__), group_count, len(statement_ids)])
+    C_v_c = np.empty([len(votes.__dict__), len(statement_ids)])
 
     for gid in range(group_count):
         # Create mask for the participants in target group
@@ -232,6 +235,11 @@ def calculate_comment_statistics(
         R_v_g_c_test[votes.A, gid, :] = two_prop_test(n_agree_in_group, n_agree_out_group, n_votes_in_group, n_votes_out_group)       # rat
         R_v_g_c_test[votes.D, gid, :] = two_prop_test(n_disagree_in_group, n_disagree_out_group, n_votes_in_group, n_votes_out_group) # rdt
 
+    # Calculate group-aware consensus
+    # Multiply across axis 0 (aka groups)
+    C_v_c[votes.A, :] = P_v_g_c[votes.A, :, :].prod(axis=0)
+    C_v_c[votes.D, :] = P_v_g_c[votes.D, :, :].prod(axis=0)
+
     return (
         N_g_c, # ns
         N_v_g_c, # na / nd
@@ -239,6 +247,7 @@ def calculate_comment_statistics(
         R_v_g_c, # ra / rd
         P_v_g_c_test, # pat / pdt
         R_v_g_c_test, # rat / rdt
+        C_v_c, # gac
     )
 
 def finalize_cmt_stats(statement: pd.Series) -> PolisRepnessStatement:
@@ -269,13 +278,15 @@ def finalize_cmt_stats(statement: pd.Series) -> PolisRepnessStatement:
         "repful-for":   vals[6], # type:ignore
     }
 
-def calculate_comment_statistics_by_group(
+def calculate_comment_statistics_dataframes(
     vote_matrix: VoteMatrix,
     cluster_labels: list[int] | NDArray[np.integer],
     pseudo_count: int = 1,
-) -> list[pd.DataFrame]:
+) -> Tuple[list[pd.DataFrame], pd.DataFrame]:
     """
     Calculates comparative statement statistics across all votes and groups, generating dataframes.
+
+    This returns both group-specific statistics, and also overall stats (group-aware consensus).
 
     Args:
         vote_matrix (VoteMatrix): The vote matrix where rows are voters, columns are statements,
@@ -284,9 +295,10 @@ def calculate_comment_statistics_by_group(
         pseudo_count (int): Smoothing parameter to avoid division by zero. Default is 1.
 
     Returns:
-        pd.DataFrame: DataFrame containing verbose statistics for each statement.
+        list[pd.DataFrame]: DataFrames containing verbose statistics for each statement, keyed to group ID.
+        pd.DataFrame: DataFrame containing group-aware consensus scores for each statement.
     """
-    N_g_c, N_v_g_c, P_v_g_c, R_v_g_c, P_v_g_c_test, R_v_g_c_test = calculate_comment_statistics(
+    N_g_c, N_v_g_c, P_v_g_c, R_v_g_c, P_v_g_c_test, R_v_g_c_test, C_v_c = calculate_comment_statistics(
         vote_matrix=vote_matrix,
         cluster_labels=cluster_labels,
         pseudo_count=pseudo_count,
@@ -309,7 +321,9 @@ def calculate_comment_statistics_by_group(
             'rdt': R_v_g_c_test[votes.D, group_id, :], # repress of disagree test z-score
         }, index=vote_matrix.columns)
 
-    return group_stats
+    group_aware_consensus_df = pd.DataFrame(C_v_c[votes.A, :], index=vote_matrix.columns)
+
+    return group_stats, group_aware_consensus_df
 
 def repness_metric(df: pd.DataFrame) -> pd.Series:
     metric = df["repness"] * df["repness-test"] * df["p-success"] * df["p-test"]
