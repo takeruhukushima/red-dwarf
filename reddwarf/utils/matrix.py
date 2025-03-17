@@ -7,8 +7,6 @@ from reddwarf.exceptions import RedDwarfError
 
 VoteMatrix: TypeAlias = pd.DataFrame
 
-# TODO: Extract utils methods into individual modules.
-
 def impute_missing_votes(vote_matrix: VoteMatrix) -> VoteMatrix:
     """
     Imputes missing votes in a voting matrix using column-wise mean. All columns must have at least one vote.
@@ -79,8 +77,6 @@ def filter_votes(
             raise RedDwarfError("The `modified` key is missing from a vote object that must be sorted") from e
 
     return votes
-
-
 
 def generate_raw_matrix(
         votes: List[Dict],
