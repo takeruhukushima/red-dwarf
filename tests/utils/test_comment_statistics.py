@@ -34,7 +34,7 @@ def test_calculate_representativeness_real_data(small_convo_math_data):
     # Generate stats all groups and all statements.
     grouped_stats_df = utils.calculate_comment_statistics_by_group(
         vote_matrix=vote_matrix,
-        cluster_labels=np.array(cluster_labels),
+        cluster_labels=cluster_labels,
     )
 
     polis_repness = utils.select_representative_statements(grouped_stats_df=grouped_stats_df)

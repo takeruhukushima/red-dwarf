@@ -34,7 +34,7 @@ def run_pca(
 
     # Project participant vote data onto 2D using eigenvectors.
     projected_data = pca.transform(imputed_matrix)
-    projected_data = pd.DataFrame(projected_data, index=imputed_matrix.index, columns=["x", "y"])
+    projected_data = pd.DataFrame(projected_data, index=imputed_matrix.index, columns=np.asarray(["x", "y"]))
     projected_data.index.name = "participant_id"
 
     return projected_data, eigenvectors, eigenvalues

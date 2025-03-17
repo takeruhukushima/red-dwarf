@@ -1,5 +1,4 @@
-import numpy as np
-from typing import Any
+from typing import Any, Tuple
 from reddwarf.types.polis import (
     PolisBaseClusters,
     PolisGroupCluster,
@@ -59,7 +58,7 @@ def expand_group_clusters_with_participants(
 
 def generate_cluster_labels(
     group_clusters_with_pids: list[PolisGroupClusterExpanded],
-) -> np.ndarray[GroupId]:
+) -> list[GroupId]:
     """
     Transform group_clusters_with_pid into an ordered list of cluster IDs
     sorted by participant ID, suitable for cluster labels.
@@ -84,7 +83,7 @@ def generate_cluster_labels(
     # Extract just the cluster IDs in order
     cluster_ids_in_order = [pair[1] for pair in sorted_pairs]
 
-    return np.asarray(cluster_ids_in_order)
+    return cluster_ids_in_order
 
 def get_all_participant_ids(
     group_clusters_with_pids: list[PolisGroupClusterExpanded],
@@ -109,7 +108,7 @@ def get_all_participant_ids(
 
     return unique_participant_ids
 
-def extract_data_from_polismath(math_data: Any):
+def extract_data_from_polismath(math_data: Any) -> Tuple[list[ParticipantId], list[GroupId]]:
     """
     A helper to extract specific types of data from polismath data, to avoid having to recalculate it.
 
@@ -120,7 +119,7 @@ def extract_data_from_polismath(math_data: Any):
 
     Returns:
         list[ParticipantId]: A sorted list of all clustered/grouped Polis participant IDs
-        np.ndarray[GroupId]: A list of all cluster labels (aka group IDs), sorted by participant ID
+        list[GroupId]: A list of all cluster labels (aka group IDs), sorted by participant ID
     """
     group_clusters_with_pids = expand_group_clusters_with_participants(
         group_clusters=math_data["group-clusters"],

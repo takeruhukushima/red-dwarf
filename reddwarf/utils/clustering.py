@@ -13,7 +13,7 @@ def run_kmeans(
         # TODO: Improve this type. 3d?
         init_centers: Optional[List] = None,
         random_state: Optional[int] = None,
-) -> Tuple[np.ndarray, np.ndarray]:
+) -> Tuple[np.ndarray | None, np.ndarray]:
     """
     Runs K-Means clustering on a 2D DataFrame of xy points, for a specific K,
     and returns labels for each row and cluster centers. Optionally accepts
@@ -26,7 +26,7 @@ def run_kmeans(
         random_state (int): Determines random number generation for centroid initialization. Use an int to make the randomness deterministic.
 
     Returns:
-        cluster_labels (np.ndarray): A list of zero-indexed labels for each row in the dataframe
+        cluster_labels (np.ndarray | None): A list of zero-indexed labels for each row in the dataframe
         cluster_centers (np.ndarray): A list of center coords for clusters.
     """
     if init_centers:
@@ -39,7 +39,7 @@ def run_kmeans(
     kmeans = KMeans(
         n_clusters=n_clusters,
         random_state=random_state,
-        init=init_arg,
+        init = init_arg, # type:ignore (because sklearn things it's just a string)
         n_init="auto"
     ).fit(dataframe)
 
@@ -50,7 +50,7 @@ def find_optimal_k(
         max_group_count: int = 5,
         random_state: Optional[int] = None,
         debug: bool = False,
-) -> Tuple[int, float, np.ndarray]:
+) -> Tuple[int, float, np.ndarray | None]:
     """
     Use silhouette scores to find the best number of clusters k to assume to fit the data.
 
@@ -63,11 +63,12 @@ def find_optimal_k(
     Returns:
         optimal_k (int): Ideal number of clusters.
         optimal_silhouette_score (float): Silhouette score for this K value.
-        optimal_cluster_labels (np.ndarray): A list of index labels assigned a group to each row in projected_date.
+        optimal_cluster_labels (np.ndarray | None): A list of index labels assigned a group to each row in projected_date.
     """
     K_RANGE = range(2, max_group_count+1)
     k_best = 0 # Best K so far.
     best_silhouette_score = -np.inf
+    best_cluster_labels = None
 
     for k_test in K_RANGE:
         cluster_labels, _ = run_kmeans(
