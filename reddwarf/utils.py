@@ -18,6 +18,7 @@ from reddwarf.types.polis import (
     GroupId,
     ParticipantId,
     PolisRepness,
+    PolisRepnessStatement,
 )
 
 VoteMatrix: TypeAlias = pd.DataFrame
@@ -495,6 +496,32 @@ def calculate_comment_statistics(
     cluster_labels: list[int],
     pseudo_count: int = 1,
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    """
+    Calculates comparative statement statistics across all votes and groups, using only efficient numpy operations.
+
+    The representativeness metric is defined as:
+    R_v(g,c) = P_v(g,c) / P_v(~g,c)
+
+    Where:
+    - P_v(g,c) is probability of vote v on comment c in group g
+    - P_v(~g,c) is probability of vote v on comment c in all groups except g
+
+    And:
+    - N(g,c) is the total number of non-missing votes on comment c in group g
+    - N_v(g,c) is the total number of vote v on comment c in group g
+
+    Args:
+        vote_matrix (VoteMatrix): ...
+        cluster_labels (list[int]): ...
+
+    Returns:
+        N_g_c (np.ndarray[int]): numpy matrix with counts of non-missing votes on comments/groups
+        N_v_g_c (np.ndarray[int]): numpy matrix with counts of vote types on comments/groups
+        P_v_g_c (np.ndarray[float]): numpy matrix with probabilities of vote types on comments/groups
+        R_v_g_c (np.ndarray[float]): numpy matrix with representativeness of vote types on comments/groups
+        P_v_g_c_test (np.ndarray[float]): test z-scores for probability of votes/comments/groups
+        R_v_g_c_test (np.ndarray[float]): test z-scores for representativeness of votes/comments/groups
+    """
     cluster_labels = np.asarray(cluster_labels)
     # Get the vote matrix values
     X = vote_matrix.values
@@ -525,8 +552,8 @@ def calculate_comment_statistics(
         n_votes_in_group    = N_g_c[gid, :] = count_all_votes(X_in_group)           # ns
 
         # Calculate probabilities
-        p_agree_in_group    = P_v_g_c[votes.A, gid, :] = probability(n_agree_in_group, n_votes_in_group)    # pa
-        p_disagree_in_group = P_v_g_c[votes.D, gid, :] = probability(n_disagree_in_group, n_votes_in_group) # pd
+        p_agree_in_group    = P_v_g_c[votes.A, gid, :] = probability(n_agree_in_group, n_votes_in_group, pseudo_count)    # pa
+        p_disagree_in_group = P_v_g_c[votes.D, gid, :] = probability(n_disagree_in_group, n_votes_in_group, pseudo_count) # pd
 
         # Calculate probability test z-scores
         P_v_g_c_test[votes.A, gid, :] = one_prop_test(n_agree_in_group, n_votes_in_group)    # pat
@@ -543,8 +570,8 @@ def calculate_comment_statistics(
         n_votes_out_group = count_all_votes(X_out_group)
 
         # Calculate out-group probabilities
-        p_agree_out_group    = probability(n_agree_out_group, n_votes_out_group)
-        p_disagree_out_group = probability(n_disagree_out_group, n_votes_out_group)
+        p_agree_out_group    = probability(n_agree_out_group, n_votes_out_group, pseudo_count)
+        p_disagree_out_group = probability(n_disagree_out_group, n_votes_out_group, pseudo_count)
 
         # Calculate representativeness
         R_v_g_c[votes.A, gid, :] = p_agree_in_group / p_agree_out_group       # ra
@@ -563,14 +590,25 @@ def calculate_comment_statistics(
         R_v_g_c_test, # rat / rdt
     )
 
-def finalize_cmt_stats(cmt: pd.Series) -> dict:
-    if cmt["rat"] > cmt["rdt"]:
-        vals = [cmt[k] for k in ["na", "ns", "pa", "pat", "ra", "rat"]] + ["agree"]
+def finalize_cmt_stats(statement: pd.Series) -> PolisRepnessStatement:
+    """
+    Convert verbose internal statistics into more concise agree/disagree format.
+
+    The most representative of agree/disagree is used.
+
+    Args:
+        statement (pd.Series): A dataframe row with statement stats in verbose format.
+
+    Returns:
+        PolisRepnessStatement: A dict with keys matching expected Polis format.
+    """
+    if statement["rat"] > statement["rdt"]:
+        vals = [statement[k] for k in ["na", "ns", "pa", "pat", "ra", "rat"]] + ["agree"]
     else:
-        vals = [cmt[k] for k in ["nd", "ns", "pd", "pdt", "rd", "rdt"]] + ["disagree"]
+        vals = [statement[k] for k in ["nd", "ns", "pd", "pdt", "rd", "rdt"]] + ["disagree"]
 
     return {
-        "tid":          int(cmt["statement_id"]),
+        "tid":          int(statement["statement_id"]),
         "n-success":    int(vals[0]),
         "n-trials":     int(vals[1]),
         "p-success":    float(vals[2]),
@@ -586,27 +624,17 @@ def calculate_comment_statistics_by_group(
     pseudo_count: int = 1,
 ) -> list[pd.DataFrame]:
     """
-    Calculate the Polis representativeness metric for every statement for a specific group.
-
-    The representativeness metric is defined as:
-    R_v(g,c) = P_v(g,c) / P_v(~g,c)
-
-    Where:
-    - P_v(g,c) is probability of vote v on comment c in group g
-    - P_v(~g,c) is probability of vote v on comment c in all groups except g
+    Calculates comparative statement statistics across all votes and groups, generating dataframes.
 
     Args:
         vote_matrix (VoteMatrix): The vote matrix where rows are voters, columns are statements,
                                   and values are votes (1 for agree, -1 for disagree, 0 for pass).
-        cluster_labels (np.ndarray): Array of cluster labels for each participant in the vote matrix.
-        group_id (int): The ID of the group/cluster to calculate representativeness for.
+        cluster_labels (np.ndarray): Array of cluster labels for each participant row in the vote matrix.
         pseudo_count (int): Smoothing parameter to avoid division by zero. Default is 1.
 
     Returns:
-        representativeness (pd.DataFrame): DataFrame containing representativeness scores for each comment,
-                                          with columns for agree_repr, disagree_repr, and n_votes.
+        pd.DataFrame: DataFrame containing verbose statistics for each statement.
     """
-    cluster_labels = np.asarray(cluster_labels)
     N_g_c, N_v_g_c, P_v_g_c, R_v_g_c, P_v_g_c_test, R_v_g_c_test = calculate_comment_statistics(
         vote_matrix=vote_matrix,
         cluster_labels=cluster_labels,
@@ -617,17 +645,17 @@ def calculate_comment_statistics_by_group(
     group_stats = [None] * group_count
     for group_id in range(group_count):
         group_stats[group_id] = pd.DataFrame({
-            'na':  N_v_g_c[votes.A, group_id, :],
-            'nd':  N_v_g_c[votes.D, group_id, :],
-            'ns':  N_g_c[group_id, :],
-            'pa':  P_v_g_c[votes.A, group_id, :],
-            'pd':  P_v_g_c[votes.D, group_id, :],
-            'pat': P_v_g_c_test[votes.A, group_id, :],
-            'pdt': P_v_g_c_test[votes.D, group_id, :],
-            'ra':  R_v_g_c[votes.A, group_id, :],
-            'rd':  R_v_g_c[votes.D, group_id, :],
-            'rat': R_v_g_c_test[votes.A, group_id, :],
-            'rdt': R_v_g_c_test[votes.D, group_id, :],
+            'na':  N_v_g_c[votes.A, group_id, :],      # number agree votes
+            'nd':  N_v_g_c[votes.D, group_id, :],      # number disagree votes
+            'ns':  N_g_c[group_id, :],                 # number seen/total/non-missing votes
+            'pa':  P_v_g_c[votes.A, group_id, :],      # probability agree
+            'pd':  P_v_g_c[votes.D, group_id, :],      # probability disagree
+            'pat': P_v_g_c_test[votes.A, group_id, :], # probability agree test z-score
+            'pdt': P_v_g_c_test[votes.D, group_id, :], # probability disagree test z-score
+            'ra':  R_v_g_c[votes.A, group_id, :],      # repness of agree (representativeness)
+            'rd':  R_v_g_c[votes.D, group_id, :],      # repness of disagree (representativeness)
+            'rat': R_v_g_c_test[votes.A, group_id, :], # repress of agree test z-score
+            'rdt': R_v_g_c_test[votes.D, group_id, :], # repress of disagree test z-score
         }, index=vote_matrix.columns)
 
     return group_stats
@@ -639,7 +667,7 @@ def repness_metric(df: pd.DataFrame) -> pd.Series:
 # Figuring out select-rep-comments flow
 # See: https://github.com/compdemocracy/polis/blob/7bf9eccc287586e51d96fdf519ae6da98e0f4a70/math/src/polismath/math/repness.clj#L209C7-L209C26
 # TODO: omg please clean this up.
-def select_group_statements(
+def select_representative_statements(
     grouped_stats_df: list[pd.DataFrame],
     pick_max: int = 5,
     confidence: float = 0.90,

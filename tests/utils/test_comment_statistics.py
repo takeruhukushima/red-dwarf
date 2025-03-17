@@ -39,12 +39,12 @@ def test_calculate_representativeness_real_data(small_convo_math_data):
     cluster_labels = utils.generate_cluster_labels(group_clusters_with_pids)
 
     # Generate stats all groups and all statements.
-    stats_by_group = utils.calculate_comment_statistics_by_group(
+    grouped_stats_df = utils.calculate_comment_statistics_by_group(
         vote_matrix=vote_matrix,
         cluster_labels=np.array(cluster_labels),
     )
 
-    polis_repness = utils.select_rep_comments(stats_by_group=stats_by_group)
+    polis_repness = utils.select_representative_statements(grouped_stats_df=grouped_stats_df)
     actual_repness: PolisRepness = polis_repness # type:ignore
     expected_repness: PolisRepness = math_data["repness"] # type:ignore
     assert get_grouped_statement_ids(actual_repness) == get_grouped_statement_ids(expected_repness)
@@ -66,7 +66,7 @@ def test_calculate_representativeness_real_data(small_convo_math_data):
                 key_map = dict(zip(keys, ["pd", "pdt", "rd", "rdt"]))
 
             actual = {
-                k: stats_by_group[group_id].loc[st["tid"], v]
+                k: grouped_stats_df[group_id].loc[st["tid"], v]
                 for k,v in key_map.items()
             }
 
