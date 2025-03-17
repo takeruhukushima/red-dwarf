@@ -3,9 +3,10 @@ from collections import defaultdict
 from reddwarf.data_loader import Loader
 from reddwarf.models import ModeratedEnum
 from reddwarf import utils
+from typing import Optional
 
 class PolisClient():
-    def __init__(self, is_strict_moderation=None) -> None:
+    def __init__(self, is_strict_moderation: Optional[bool] = None) -> None:
         self.data_loader = None
         self.n_components = 2
         # Ref: https://hyp.is/8zUyWM5fEe-uIO-J34vbkg/gwern.net/doc/sociology/2021-small.pdf
