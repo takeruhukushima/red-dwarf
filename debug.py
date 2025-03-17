@@ -65,11 +65,11 @@ if True:
         client.find_optimal_k()  # Find optimal number of clusters
         cluster_labels = client.optimal_cluster_labels
 
-    stats_by_group = utils.calculate_comment_statistics_by_group(
+    grouped_stats_df = utils.calculate_comment_statistics_by_group(
         vote_matrix=vote_matrix,
         cluster_labels=cluster_labels, # type:ignore
     )
-    polis_repness = utils.select_rep_comments(stats_by_group=stats_by_group)
+    polis_repness = utils.select_representative_statements(grouped_stats_df=grouped_stats_df)
 
     print(json.dumps(polis_repness, indent=2))
 
