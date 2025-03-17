@@ -7,6 +7,11 @@
 ### Changes
 - Implement `utils.calculate_representativeness()` function. ([#22](https://github.com/polis-community/red-dwarf/issues/22))
 - Add color legend for labels in `data_presenter.generate_figure()`. [`d55f535`](https://github.com/polis-community/red-dwarf/pull/24/commits/d55f53588de72620abb984d7c1ac27f8a31d5478) ([#22](https://github.com/polis-community/red-dwarf/issues/22))
+- Implement calculations of all comment statistics. ([#25](https://github.com/polis-community/red-dwarf/pull/25))
+- Implement `utils.select_representative_statements()` to reproduce polismath output. ([#25](https://github.com/polis-community/red-dwarf/pull/25))
+
+### Chores
+- Restructure `utils.py` into separate files. ([#26](https://github.com/polis-community/red-dwarf/pull/26))
 
 ## [0.1.1][] (2025-03-04)
 ### Bugfixes
