@@ -5,6 +5,7 @@ import pandas as pd
 
 from reddwarf import utils
 import json
+import numpy as np
 
 
 CONVOS = {
@@ -60,7 +61,7 @@ if True:
 
     if USE_POLISMATH_CLUSTERING:
         # Fake optimal labels from polismath data.
-        client.optimal_cluster_labels = cluster_labels #type:ignore
+        client.optimal_cluster_labels = cluster_labels
     else:
         client.find_optimal_k()  # Find optimal number of clusters
         cluster_labels = client.optimal_cluster_labels

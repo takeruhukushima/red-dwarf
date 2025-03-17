@@ -1,6 +1,5 @@
 from reddwarf import utils
 from tests.fixtures import small_convo_math_data
-import numpy as np
 import pytest
 
 from reddwarf.polis import PolisClient

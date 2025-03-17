@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-from numpy.typing import ArrayLike
+from numpy.typing import ArrayLike, NDArray
 from typing import Tuple, Optional
 from types import SimpleNamespace
 from scipy.stats import norm
@@ -14,7 +14,7 @@ from reddwarf.types.polis import (
 def one_prop_test(
     succ: ArrayLike,
     n: ArrayLike,
-) -> np.float64 | np.ndarray[np.float64]:
+) -> np.float64 | NDArray[np.float64]:
     # Convert inputs to numpy arrays (if they aren't already)
     succ = np.asarray(succ) + 1
     n = np.asarray(n) + 1
@@ -28,7 +28,7 @@ def two_prop_test(
     succ_out: ArrayLike,
     n_in: ArrayLike,
     n_out: ArrayLike,
-) -> np.float64 | np.ndarray[np.float64]:
+) -> np.float64 | NDArray[np.float64]:
     """Two-prop test ported from Polis. Accepts numpy arrays for bulk processing."""
     # Ported with adaptation from Polis
     # See: https://github.com/compdemocracy/polis/blob/90bcb43e67dad660629e0888fedc0d32379f375d/math/src/polismath/math/stats.clj#L18-L33
@@ -121,7 +121,7 @@ votes = SimpleNamespace(A=0, D=1)
 def count_votes(
     values: ArrayLike,
     vote_value: Optional[int] = None,
-) -> np.int64 | np.ndarray[np.int64]:
+) -> np.int64 | NDArray[np.int64]:
     values = np.asarray(values)
     if vote_value:
         # Count votes that match value.
@@ -130,13 +130,13 @@ def count_votes(
         # Count any non-missing values.
         return np.sum(np.isfinite(values), axis=0)
 
-def count_disagree(values: ArrayLike) -> np.int64 | np.ndarray[np.int64]:
+def count_disagree(values: ArrayLike) -> np.int64 | NDArray[np.int64]:
     return count_votes(values, -1)
 
-def count_agree(values: ArrayLike) -> np.int64 | np.ndarray[np.int64]:
+def count_agree(values: ArrayLike) -> np.int64 | NDArray[np.int64]:
     return count_votes(values, 1)
 
-def count_all_votes(values: ArrayLike) -> np.int64 | np.ndarray[np.int64]:
+def count_all_votes(values: ArrayLike) -> np.int64 | NDArray[np.int64]:
     return count_votes(values)
 
 def probability(count, total, pseudo_count=1):
@@ -145,7 +145,7 @@ def probability(count, total, pseudo_count=1):
 
 def calculate_comment_statistics(
     vote_matrix: VoteMatrix,
-    cluster_labels: list[int],
+    cluster_labels: list[int] | NDArray[np.integer],
     pseudo_count: int = 1,
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """
@@ -174,11 +174,10 @@ def calculate_comment_statistics(
         P_v_g_c_test (np.ndarray[float]): test z-scores for probability of votes/comments/groups
         R_v_g_c_test (np.ndarray[float]): test z-scores for representativeness of votes/comments/groups
     """
-    cluster_labels = np.asarray(cluster_labels)
     # Get the vote matrix values
     X = vote_matrix.values
 
-    group_count = cluster_labels.max()+1
+    group_count = len(set(cluster_labels))
     statement_ids = vote_matrix.columns
 
     # Set up all the variables to be populated.
@@ -191,7 +190,7 @@ def calculate_comment_statistics(
 
     for gid in range(group_count):
         # Create mask for the participants in target group
-        in_group_mask = (cluster_labels == gid)
+        in_group_mask = (np.asarray(cluster_labels) == gid)
         X_in_group = X[in_group_mask]
 
         # Count any votes [-1, 0, 1] for all statements/features at once
@@ -267,12 +266,12 @@ def finalize_cmt_stats(statement: pd.Series) -> PolisRepnessStatement:
         "p-test":       float(vals[3]),
         "repness":      float(vals[4]),
         "repness-test": float(vals[5]),
-        "repful-for":   vals[6],
+        "repful-for":   vals[6], # type:ignore
     }
 
 def calculate_comment_statistics_by_group(
     vote_matrix: VoteMatrix,
-    cluster_labels: list[int],
+    cluster_labels: list[int] | NDArray[np.integer],
     pseudo_count: int = 1,
 ) -> list[pd.DataFrame]:
     """
@@ -293,8 +292,8 @@ def calculate_comment_statistics_by_group(
         pseudo_count=pseudo_count,
     )
 
-    group_count = cluster_labels.max()+1
-    group_stats = [None] * group_count
+    group_count = len(set(cluster_labels))
+    group_stats = [pd.DataFrame()] * group_count
     for group_id in range(group_count):
         group_stats[group_id] = pd.DataFrame({
             'na':  N_v_g_c[votes.A, group_id, :],      # number agree votes
