@@ -236,7 +236,8 @@ def calculate_comment_statistics(
         R_v_g_c_test[votes.D, gid, :] = two_prop_test(n_disagree_in_group, n_disagree_out_group, n_votes_in_group, n_votes_out_group) # rdt
 
     # Calculate group-aware consensus
-    # Multiply across axis 0 (aka groups)
+    # For each statement, multiply probabilities across groups (aka the first axis=0)
+    # Reference: https://github.com/compdemocracy/polis/blob/edge/math/src/polismath/math/conversation.clj#L615-L636
     C_v_c[votes.A, :] = P_v_g_c[votes.A, :, :].prod(axis=0)
     C_v_c[votes.D, :] = P_v_g_c[votes.D, :, :].prod(axis=0)
 
@@ -328,6 +329,58 @@ def calculate_comment_statistics_dataframes(
 def repness_metric(df: pd.DataFrame) -> pd.Series:
     metric = df["repness"] * df["repness-test"] * df["p-success"] * df["p-test"]
     return metric
+
+# Reference: https://github.com/compdemocracy/polis/blob/fd440c3e3ca302d08ce3cca870fc39b834c96b86/math/src/polismath/math/conversation.clj#L308C1-L312C28
+def importance_metric(
+    n_agree: ArrayLike,
+    n_disagree: ArrayLike,
+    n_total: ArrayLike,
+    extremity: ArrayLike,
+    pseudo_count: int = 1,
+) -> np.ndarray:
+    n_agree, n_disagree, n_total, extremity = map(np.asarray, (n_agree, n_disagree, n_total, extremity))  # Ensure inputs are NumPy arrays
+    n_pass = n_total - (n_agree + n_disagree)
+    prob_agree = probability(n_agree, n_total, pseudo_count)
+    prob_pass = probability(n_pass, n_total, pseudo_count)
+    # Form in the academic paper:
+    # importance = prob_agree * (1 - prob_pass) * (1 + extremity)
+    prob_engagement = 1 - prob_pass
+    # This is what happens:
+    #   - total agreement scales by 1 (disagreement down-scales)
+    #   - total engagement (agree or disagree) scales by 1 (passing down-scales)
+    #   - if a virtual participant who only votes agree on this statement
+    #     does not move from the center, this statement scales by 1.
+    #     The more they would travel from the center, the more the statement up-scales.
+    #     (The more a statement contributes to principal components, the more upscaling.)
+    importance = prob_agree * prob_engagement * (1 + extremity)
+    return importance
+
+# Reference: https://github.com/compdemocracy/polis/blob/fd440c3e3ca302d08ce3cca870fc39b834c96b86/math/src/polismath/math/conversation.clj#L318-L327
+def priority_metric(
+    is_meta: bool,
+    n_agree: ArrayLike,
+    n_disagree: ArrayLike,
+    n_total: ArrayLike,
+    extremity: ArrayLike,
+    # This might need tuning.
+    meta_priority: int = 7,
+) -> np.ndarray:
+    if is_meta:
+        priority = meta_priority
+    else:
+        # Ensure inputs are NumPy arrays
+        n_agree, n_disagree, n_total, extremity = map(np.asarray, (n_agree, n_disagree, n_total, extremity))
+        importance = importance_metric(n_agree, n_disagree, n_total, extremity)
+        # Form in the academic paper: (transformed)
+        # newness_scale_factor = 1 + 2**(3 - (n_total/5)))
+        # newness_scale_factor = 1 + 2**3 * (2**(-(n_total/5)))
+        # newness_scale_factor = 1 + 8    * (2**(-(n_total/5)))
+        NO_VOTES_SCALE_FACTOR = 9
+        newness_scale_factor = 1 + (NO_VOTES_SCALE_FACTOR - 1) * np.power(2, -(n_total/5))
+        priority = importance * newness_scale_factor
+
+    boosted_bias_priority = np.power(priority, 2)
+    return boosted_bias_priority
 
 # Figuring out select-rep-comments flow
 # See: https://github.com/compdemocracy/polis/blob/7bf9eccc287586e51d96fdf519ae6da98e0f4a70/math/src/polismath/math/repness.clj#L209C7-L209C26
