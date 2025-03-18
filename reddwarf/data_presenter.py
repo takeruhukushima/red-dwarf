@@ -2,14 +2,14 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 from collections import defaultdict
 from concave_hull import concave_hull_indexes
-from typing import List
+from typing import List, Optional
 import numpy as np
 import seaborn as sns
 import pandas as pd
 
 def generate_figure(
         coord_dataframe: pd.DataFrame,
-        labels: List[int] = None,
+        labels: Optional[List[int]] = None,
 ) -> None:
     """
     Generates a matplotlib scatterplot with optional bounded clusters.
@@ -31,8 +31,8 @@ def generate_figure(
 
     # Label points with participant_id if no labels set.
     for participant_id, row in coord_dataframe.iterrows():
-        plt.annotate(participant_id,
-            (row["x"], row["y"]),
+        plt.annotate(str(participant_id),
+            (float(row["x"]), float(row["y"])),
             xytext=(2, 2),
             color="gray",
             textcoords='offset points')
@@ -50,14 +50,14 @@ def generate_figure(
         print("Calculating convex hulls around clusters...")
         unique_labels = set(labels)
         for label in unique_labels:
-            points = coord_dataframe[labels == label]
-            print(f"Hull {str(label)}, bounding {len(points)} points")
-            if len(points) < 3:
+            points_df = coord_dataframe[labels == label]
+            print(f"Hull {str(label)}, bounding {len(points_df)} points")
+            if len(points_df) < 3:
                 # TODO: Accomodate 2 points like Polis platform does.
                 print("Cannot create concave hull for less than 3 points. Skipping...")
                 continue
-            vertex_indices = concave_hull_indexes(points, concavity=4.0)
-            hull_points = points.iloc[vertex_indices, :]
+            vertex_indices = concave_hull_indexes(np.asarray(points_df), concavity=4.0)
+            hull_points = points_df.iloc[vertex_indices, :]
             polygon = patches.Polygon(
                 hull_points,
                 fill=True,
@@ -77,7 +77,7 @@ def generate_figure(
     return None
 
 class DataPresenter():
-    def __init__(self, client=None):
+    def __init__(self, client):
         self.client = client
 
     def render_optimal_cluster_figure(self):

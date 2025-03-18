@@ -1,3 +1,4 @@
+from numpy import integer as npInt
 from typing import TypeAlias, Literal
 from typing_extensions import NotRequired, TypedDict
 

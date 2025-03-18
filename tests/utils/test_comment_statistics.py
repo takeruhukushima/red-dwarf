@@ -1,12 +1,12 @@
 from reddwarf import utils
 from tests.fixtures import small_convo_math_data
-import numpy as np
 import pytest
 
 from reddwarf.polis import PolisClient
 from reddwarf.types.polis import PolisRepness
 
 def get_grouped_statement_ids(repness: PolisRepness) -> dict[str, list[dict[str, list[int]]]]:
+    """A helper to compare only tid in groups, rather than full repness object."""
     groups = []
 
     for key, statements in repness.items():
@@ -23,25 +23,17 @@ def test_calculate_representativeness_real_data(small_convo_math_data):
         f'{path}/comments.json',
     ])
 
-    # Get group-clusters, but with members as participant ids rather than base cluster ids
-    group_clusters_with_pids = utils.expand_group_clusters_with_participants(
-        group_clusters=math_data["group-clusters"],
-        base_clusters=math_data["base-clusters"],
-    )
+    all_clustered_participant_ids, cluster_labels = utils.extract_data_from_polismath(math_data)
 
-    # Get list of all active participant ids, since Polis has some edge-cases
+   # Get list of all active participant ids, since Polis has some edge-cases
     # that keep specific participants, and we need to keep them from being filtered out.
-    all_participant_ids = utils.get_all_participant_ids(group_clusters_with_pids)
-    client.keep_participant_ids = all_participant_ids
+    client.keep_participant_ids = all_clustered_participant_ids
     vote_matrix = client.get_matrix(is_filtered=True)
-
-    # Get sorted list of cluster labels from
-    cluster_labels = utils.generate_cluster_labels(group_clusters_with_pids)
 
     # Generate stats all groups and all statements.
     grouped_stats_df = utils.calculate_comment_statistics_by_group(
         vote_matrix=vote_matrix,
-        cluster_labels=np.array(cluster_labels),
+        cluster_labels=cluster_labels,
     )
 
     polis_repness = utils.select_representative_statements(grouped_stats_df=grouped_stats_df)
