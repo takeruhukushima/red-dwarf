@@ -3,7 +3,7 @@ import pytest
 from tests.fixtures import small_convo_math_data
 from reddwarf.utils import stats
 
-def test_priority_metric(small_convo_math_data):
+def test_priority_metric_real_data(small_convo_math_data):
     math_data, _, _ = small_convo_math_data
     votes_base = math_data["votes-base"]
     for statement_id, votes in votes_base.items():
@@ -142,3 +142,15 @@ def test_priority_metric_limits_high_extremity_all_disagree():
         extremity=comment_extremity,
     )
     assert calculated_priority == pytest.approx(expected_priority, abs=0.001)
+
+def test_priority_metric_array():
+    expected_priorities = [0, 7**2]
+
+    calculated_priority = stats.priority_metric(
+        is_meta=   [False,  True],
+        n_agree=   [    0,     0],
+        n_disagree=[10000, 10000],
+        n_total=   [10000, 10000],
+        extremity= [  4.0,   4.0],
+    )
+    assert calculated_priority == pytest.approx(expected_priorities, abs=0.001)

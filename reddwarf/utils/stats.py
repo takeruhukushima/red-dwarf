@@ -357,7 +357,7 @@ def importance_metric(
 
 # Reference: https://github.com/compdemocracy/polis/blob/fd440c3e3ca302d08ce3cca870fc39b834c96b86/math/src/polismath/math/conversation.clj#L318-L327
 def priority_metric(
-    is_meta: bool,
+    is_meta: ArrayLike,
     n_agree: ArrayLike,
     n_disagree: ArrayLike,
     n_total: ArrayLike,
@@ -365,19 +365,32 @@ def priority_metric(
     # This might need tuning.
     meta_priority: int = 7,
 ) -> np.ndarray:
-    if is_meta:
-        priority = meta_priority
-    else:
-        # Ensure inputs are NumPy arrays
-        n_agree, n_disagree, n_total, extremity = map(np.asarray, (n_agree, n_disagree, n_total, extremity))
-        importance = importance_metric(n_agree, n_disagree, n_total, extremity)
-        # Form in the academic paper: (transformed)
-        # newness_scale_factor = 1 + 2**(3 - (n_total/5)))
-        # newness_scale_factor = 1 + 2**3 * (2**(-(n_total/5)))
-        # newness_scale_factor = 1 + 8    * (2**(-(n_total/5)))
-        NO_VOTES_SCALE_FACTOR = 9
-        newness_scale_factor = 1 + (NO_VOTES_SCALE_FACTOR - 1) * np.power(2, -(n_total/5))
-        priority = importance * newness_scale_factor
+    """
+    Calculate comment priority metric for any single statement of lists of statements.
+
+    Args:
+        is_meta (bool | list[bool]): Whether statement is marked as metadata
+        n_agree (int | list[int]): Number of agree votes
+        n_disagree (int | list[int]): Number of disagree votes
+        n_total (int | list[int]): Number of total votes (agree/disagree/pass)
+        extremity (float | list[float]): Euclidean distance of a single-voting participant from origin
+        meta_priority (int): Unbiased (pre-squared) priority metric used for meta statements
+    Returns:
+        float | np.ndarray[float]: A priority metric score between 0 and infinity.
+    """
+    # Ensure inputs are NumPy arrays
+    n_agree, n_disagree, n_total, extremity = map(np.asarray, (n_agree, n_disagree, n_total, extremity))
+    importance = importance_metric(n_agree, n_disagree, n_total, extremity)
+    # Form in the academic paper: (transformed)
+    # newness_scale_factor = 1 + 2**(3 - (n_total/5)))
+    # newness_scale_factor = 1 + 2**3 * (2**(-(n_total/5)))
+    # newness_scale_factor = 1 + 8    * (2**(-(n_total/5)))
+    NO_VOTES_SCALE_FACTOR = 9
+    newness_scale_factor = 1 + (NO_VOTES_SCALE_FACTOR - 1) * np.power(2, -(n_total/5))
+    priority = importance * newness_scale_factor
+
+    # Assign meta priority where is_meta is True
+    priority = np.where(is_meta, meta_priority, priority)
 
     boosted_bias_priority = np.power(priority, 2)
     return boosted_bias_priority
