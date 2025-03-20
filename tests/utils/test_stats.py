@@ -1,6 +1,6 @@
 import numpy as np
 import pytest
-from tests.fixtures import small_convo_math_data
+from tests.fixtures import polis_convo_data
 from reddwarf.utils import stats
 
 def test_importance_metric_limits_no_extremity_all_agree():
@@ -116,8 +116,9 @@ def test_importance_metric_smaller_full_agree_pseudo_count():
     )
     assert calculated_priority == pytest.approx(expected_importances, abs=0.001)
 
-def test_priority_metric_real_data(small_convo_math_data):
-    math_data, _, _ = small_convo_math_data
+@pytest.mark.parametrize("polis_convo_data", ["small"], indirect=True)
+def test_priority_metric_real_data(polis_convo_data):
+    math_data, _, _ = polis_convo_data
     votes_base = math_data["votes-base"]
     for statement_id, votes in votes_base.items():
         expected_priority = math_data["comment-priorities"][statement_id]

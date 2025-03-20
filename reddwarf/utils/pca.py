@@ -70,3 +70,64 @@ def scale_projected_data(
     participant_scaling_coeffs = np.reshape(participant_scaling_coeffs, (-1, 1))
 
     return projected_data * participant_scaling_coeffs
+
+# TODO: Clean up variables and docs.
+def sparsity_aware_project_ptpt(votes, pca):
+    """
+    Projects a sparse vote vector into PCA space while adjusting for sparsity.
+    """
+    comps = np.array(pca["comps"])  # Shape: (2, n_features)
+    center = np.array(pca["center"])  # Shape: (n_features,)
+
+    n_cmnts = len(votes)
+
+    votes = np.array(votes)
+    mask = ~np.isnan(votes)  # Only consider non-null values
+
+    # Extract relevant values
+    x_vals = votes[mask] - center[mask]  # Centered values
+    pc1_vals, pc2_vals = comps[:, mask]  # Select only used components
+
+    # Compute dot product projection
+    p1 = np.dot(x_vals, pc1_vals)
+    p2 = np.dot(x_vals, pc2_vals)
+
+    n_votes = np.count_nonzero(mask)  # Non-null votes count
+    scale = np.sqrt(n_cmnts / max(n_votes, 1))
+
+    return scale * np.array([p1, p2])
+
+# TODO: Clean up variables and docs.
+def sparsity_aware_project_ptpts(data, pca):
+    """
+    Apply sparsity-aware projection to multiple vote vectors.
+    """
+    return np.array([sparsity_aware_project_ptpt(votes, pca) for votes in data])
+
+# TODO: Clean up variables and docs.
+def pca_project_cmnts(pca):
+    """
+    Projects unit vectors for each feature into PCA space to understand their placement.
+    """
+    n_cols = len(pca["comps"][0])
+    identity_vectors = [np.full(n_cols, np.nan) for _ in range(n_cols)]
+    for i in range(n_cols):
+        # TODO: Why does Polis use -1 here? is it the same? BUG?
+        identity_vectors[i][i] = -1  # Create unit vector representation
+
+    return sparsity_aware_project_ptpts(identity_vectors, pca)
+
+# TODO: Clean up variables and docs.
+def with_proj_and_extremity(pca):
+    """
+    Compute projection and extremity, then merge into PCA results.
+    """
+    cmnt_proj = pca_project_cmnts(pca)
+    # Compute extremity as vector magnitude
+    cmnt_extremity = np.linalg.norm(cmnt_proj, axis=1)
+
+    # Note the transpose (flip the axes)
+    pca["comment-projection"] = cmnt_proj.T.tolist()
+    pca["comment-extremity"] = cmnt_extremity.tolist()
+
+    return pca
