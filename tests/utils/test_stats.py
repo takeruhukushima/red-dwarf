@@ -3,6 +3,119 @@ import pytest
 from tests.fixtures import small_convo_math_data
 from reddwarf.utils import stats
 
+def test_importance_metric_limits_no_extremity_all_agree():
+    comment_extremity = 0
+    expected_importance = 1
+
+    calculated_importance = stats.importance_metric(
+        n_agree=10000,
+        n_disagree=0,
+        n_total=10000,
+        extremity=comment_extremity,
+    )
+    assert expected_importance == pytest.approx(calculated_importance, abs=0.001)
+
+def test_importance_metric_limits_no_extremity_all_disagree():
+    comment_extremity = 0
+    expected_importance = 0
+
+    calculated_importance = stats.importance_metric(
+        n_agree=0,
+        n_disagree=10000,
+        n_total=10000,
+        extremity=comment_extremity,
+    )
+    assert expected_importance == pytest.approx(calculated_importance, abs=0.001)
+
+def test_importance_metric_limits_no_extremity_split_full_engagement():
+    comment_extremity = 0
+    expected_importance = 1/4
+
+    calculated_priority = stats.priority_metric(
+        is_meta=False,
+        n_agree=5000,
+        n_disagree=5000,
+        n_total=10000,
+        extremity=comment_extremity,
+    )
+    assert calculated_priority == pytest.approx(expected_importance, abs=0.001)
+
+def test_importance_metric_limits_no_extremity_all_pass():
+    comment_extremity = 0
+    expected_importance = 0
+
+    calculated_importance = stats.importance_metric(
+        n_agree=0,
+        n_disagree=0,
+        n_total=10000,
+        extremity=comment_extremity,
+    )
+    assert expected_importance == pytest.approx(calculated_importance, abs=0.001)
+
+def test_importance_metric_limits_high_extremity_all_agree():
+    comment_extremity = 4.0
+    expected_importance = comment_extremity+1
+
+    calculated_importance = stats.importance_metric(
+        n_agree=10000,
+        n_disagree=0,
+        n_total=10000,
+        extremity=comment_extremity,
+    )
+    assert expected_importance == pytest.approx(calculated_importance, abs=0.001)
+
+def test_importance_metric_limits_high_extremity_all_disagree():
+    comment_extremity = 4.0
+    expected_importance = 0
+
+    calculated_importance = stats.importance_metric(
+        n_agree=0,
+        n_disagree=10000,
+        n_total=10000,
+        extremity=comment_extremity,
+    )
+    assert expected_importance == pytest.approx(calculated_importance, abs=0.001)
+
+def test_importance_metric_limits_high_extremity_all_pass():
+    comment_extremity = 4.0
+    expected_importance = 0
+
+    calculated_importance = stats.importance_metric(
+        n_agree=0,
+        n_disagree=0,
+        n_total=10000,
+        extremity=comment_extremity,
+    )
+    assert expected_importance == pytest.approx(calculated_importance, abs=0.001)
+
+# TODO: Use this test to more fully show trends and effects.
+@pytest.mark.skip()
+def test_importance_metric_array():
+    expected_importances = [0, 7**2]
+
+    calculated_priority = stats.importance_metric(
+        n_agree=   [    0,     0],
+        n_disagree=[10000, 10000],
+        n_total=   [10000, 10000],
+        extremity= [  4.0,   4.0],
+    )
+    assert calculated_priority == pytest.approx(expected_importances, abs=0.001)
+
+def test_importance_metric_smaller_full_agree_pseudo_count():
+    # Should approach 1 at higher volume of votes
+    pseudo_counts =        [1,     10]
+    # Approaches slower with higher pseudo-count.
+    expected_importances = [0.9804, 0.84027778]
+
+    calculated_priority = stats.importance_metric(
+        n_agree=   [100, 100],
+        n_disagree=[  0,   0],
+        n_total=   [100, 100],
+        extremity= [  0,   0],
+        pseudo_count=pseudo_counts,
+    )
+    assert calculated_priority == pytest.approx(expected_importances, abs=0.001)
+
 def test_priority_metric_real_data(small_convo_math_data):
     math_data, _, _ = small_convo_math_data
     votes_base = math_data["votes-base"]
@@ -143,6 +256,7 @@ def test_priority_metric_limits_high_extremity_all_disagree():
     )
     assert calculated_priority == pytest.approx(expected_priority, abs=0.001)
 
+# TODO: Use this test to more fully show trends and effects.
 def test_priority_metric_array():
     expected_priorities = [0, 7**2]
 
