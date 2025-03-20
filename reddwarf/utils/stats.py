@@ -34,27 +34,35 @@ def two_prop_test(
     # Ported with adaptation from Polis
     # See: https://github.com/compdemocracy/polis/blob/90bcb43e67dad660629e0888fedc0d32379f375d/math/src/polismath/math/stats.clj#L18-L33
 
+    succ_in, succ_out, n_in, n_out = map(np.asarray, (succ_in, succ_out, n_in, n_out))
     # Laplace smoothing (add 1 to each count)
-    succ_in = np.asarray(succ_in) + 1
-    succ_out = np.asarray(succ_out) +  1
-    n_in = np.asarray(n_in) +  1
-    n_out = np.asarray(n_out) +  1
+    succ_in += 1
+    succ_out += 1
+    # BUG: Why can't these be switched to += operator and still match polismath output?
+    n_in = n_in + 1
+    n_out = n_out + 1
 
     # Compute proportions
     pi1 = succ_in / n_in
     pi2 = succ_out / n_out
     pi_hat = (succ_in + succ_out) / (n_in + n_out)
 
-    # Handle edge case when pi_hat == 1
-    # TODO: Handle when divide by zero.
-    if np.any(pi_hat == 1):
-        # XXX: Not technically correct; limit-based solution needed.
-        return np.where(pi_hat == 1, 0, (pi1 - pi2) / np.sqrt(pi_hat * (1 - pi_hat) * (1 / n_in + 1 / n_out)))
-
-    # Compute the test statistic
     denominator = np.sqrt(pi_hat * (1 - pi_hat) * (1 / n_in + 1 / n_out))
 
-    return (pi1 - pi2) / denominator
+    # Compute the test statistic.
+    # Suppress divide-by-zero errors, because we correct them below.
+    with np.errstate(divide='ignore', invalid='ignore'):
+        result = (pi1 - pi2) / denominator
+
+
+    return np.where(
+        # Handle edge-case when pi_hat == 1 (would be divide-by-zero error)
+        pi_hat == 1,
+        # If calculate derivative, the limit is approaching zero here.
+        0,
+        # Handle everything else.
+        result,
+    )
 
 def is_significant(z_val: float, confidence: float = 0.90) -> bool:
     """Test whether z-statistic is significant at 90% confidence (one-tailed, right-side)."""
