@@ -72,20 +72,20 @@ def scale_projected_data(
     return projected_data * participant_scaling_coeffs
 
 # TODO: Clean up variables and docs.
-def sparsity_aware_project_ptpt(votes, pca):
+def sparsity_aware_project_ptpt(participant_votes, pca):
     """
     Projects a sparse vote vector into PCA space while adjusting for sparsity.
     """
     comps = np.array(pca["comps"])  # Shape: (2, n_features)
     center = np.array(pca["center"])  # Shape: (n_features,)
 
-    n_cmnts = len(votes)
+    n_cmnts = len(participant_votes)
 
-    votes = np.array(votes)
-    mask = ~np.isnan(votes)  # Only consider non-null values
+    participant_votes = np.array(participant_votes)
+    mask = ~np.isnan(participant_votes)  # Only consider non-null values
 
     # Extract relevant values
-    x_vals = votes[mask] - center[mask]  # Centered values
+    x_vals = participant_votes[mask] - center[mask]  # Centered values
     pc1_vals, pc2_vals = comps[:, mask]  # Select only used components
 
     # Compute dot product projection
@@ -98,24 +98,25 @@ def sparsity_aware_project_ptpt(votes, pca):
     return scale * np.array([p1, p2])
 
 # TODO: Clean up variables and docs.
-def sparsity_aware_project_ptpts(data, pca):
+def sparsity_aware_project_ptpts(vote_matrix, pca):
     """
     Apply sparsity-aware projection to multiple vote vectors.
     """
-    return np.array([sparsity_aware_project_ptpt(votes, pca) for votes in data])
+    return np.array([sparsity_aware_project_ptpt(votes, pca) for votes in vote_matrix])
 
 # TODO: Clean up variables and docs.
 def pca_project_cmnts(pca):
     """
     Projects unit vectors for each feature into PCA space to understand their placement.
     """
-    n_cols = len(pca["comps"][0])
-    identity_vectors = [np.full(n_cols, np.nan) for _ in range(n_cols)]
-    for i in range(n_cols):
-        # TODO: Why does Polis use -1 here? is it the same? BUG?
-        identity_vectors[i][i] = -1  # Create unit vector representation
+    n_statements = len(pca["comps"][0])
+    # Create a matrix of virtual participants that each vote once on a single statement.
+    virtual_vote_matrix = np.full(shape=[n_statements, n_statements], fill_value=np.nan)
+    for i in range(n_statements):
+        # TODO: Why does Polis use -1 (disagree) here? is it the same? BUG?
+        virtual_vote_matrix[i][i] = -1  # Create unit vector representation
 
-    return sparsity_aware_project_ptpts(identity_vectors, pca)
+    return sparsity_aware_project_ptpts(virtual_vote_matrix, pca)
 
 # TODO: Clean up variables and docs.
 def with_proj_and_extremity(pca):
