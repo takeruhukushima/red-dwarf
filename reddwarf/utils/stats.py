@@ -140,9 +140,9 @@ def count_agree(values: ArrayLike) -> np.int64 | NDArray[np.int64]:
 def count_all_votes(values: ArrayLike) -> np.int64 | NDArray[np.int64]:
     return count_votes(values)
 
-def probability(count, total, pseudo_count=1):
+def probability(count, total, pseudo_count: ArrayLike = 1):
     """Probability with Laplace smoothing"""
-    return (pseudo_count + count ) / (2*pseudo_count + total)
+    return (pseudo_count + count ) / (np.multiply(pseudo_count, 2) + total)
 
 def calculate_comment_statistics(
     vote_matrix: VoteMatrix,
@@ -336,7 +336,7 @@ def importance_metric(
     n_disagree: ArrayLike,
     n_total: ArrayLike,
     extremity: ArrayLike,
-    pseudo_count: int = 1,
+    pseudo_count: ArrayLike = 1,
 ) -> np.ndarray:
     n_agree, n_disagree, n_total, extremity = map(np.asarray, (n_agree, n_disagree, n_total, extremity))  # Ensure inputs are NumPy arrays
     n_pass = n_total - (n_agree + n_disagree)
