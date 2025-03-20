@@ -364,6 +364,7 @@ def priority_metric(
     extremity: ArrayLike,
     # This might need tuning.
     meta_priority: int = 7,
+    pseudo_count: ArrayLike = 1,
 ) -> np.ndarray:
     """
     Calculate comment priority metric for any single statement of lists of statements.
@@ -375,12 +376,13 @@ def priority_metric(
         n_total (int | list[int]): Number of total votes (agree/disagree/pass)
         extremity (float | list[float]): Euclidean distance of a single-voting participant from origin
         meta_priority (int): Unbiased (pre-squared) priority metric used for meta statements
+        pseudo_count (int | list[int]): pseudo-count value for Laplace smoothing
     Returns:
         float | np.ndarray[float]: A priority metric score between 0 and infinity.
     """
     # Ensure inputs are NumPy arrays
     n_agree, n_disagree, n_total, extremity = map(np.asarray, (n_agree, n_disagree, n_total, extremity))
-    importance = importance_metric(n_agree, n_disagree, n_total, extremity)
+    importance = importance_metric(n_agree, n_disagree, n_total, extremity, pseudo_count)
     # Form in the academic paper: (transformed)
     # newness_scale_factor = 1 + 2**(3 - (n_total/5)))
     # newness_scale_factor = 1 + 2**3 * (2**(-(n_total/5)))
