@@ -8,7 +8,7 @@ from typing import Tuple
 def run_pca(
         vote_matrix: VoteMatrix,
         n_components: int = 2,
-) -> Tuple[ pd.DataFrame, np.ndarray, np.ndarray ]:
+) -> Tuple[ pd.DataFrame, np.ndarray, np.ndarray, np.ndarray ]:
     """
     Process a prepared vote matrix to be imputed and return projected participant data,
     as well as eigenvectors and eigenvalues.
@@ -20,9 +20,10 @@ def run_pca(
         n_components (int): Number n of principal components to decompose the `vote_matrix` into.
 
     Returns:
-        projected_data (pd.DataFrame): A dataframe of projected xy coordinates for each `vote_matrix` row.
-        eigenvectors (List[List[float]]): Principal `n` components, one per row.
-        eigenvalues (List[float]): Explained variance,  one per row.
+        projected_data (pd.DataFrame): A dataframe of projected xy coordinates for each `vote_matrix` row/participant.
+        eigenvectors (List[List[float]]): Principal `n` components, one per column/statement/feature.
+        eigenvalues (List[float]): Explained variance, one per column/statements/feature.
+        means (list[float]): Means/centers of column/statements/features.
     """
     imputed_matrix = impute_missing_votes(vote_matrix)
 
@@ -31,13 +32,18 @@ def run_pca(
 
     eigenvectors = pca.components_
     eigenvalues = pca.explained_variance_
+    # TODO: Why does this need to be inverted to match polismath output? BUG?
+    # TODO: Investigate why some numbers are a bit off here.
+    #       ANSWER: Because centers are calculated on unfiltered raw matrix for some reason.
+    #       means = -raw_vote_matrix.mean(axis="rows")
+    means = -pca.mean_
 
     # Project participant vote data onto 2D using eigenvectors.
     projected_data = pca.transform(imputed_matrix)
     projected_data = pd.DataFrame(projected_data, index=imputed_matrix.index, columns=np.asarray(["x", "y"]))
     projected_data.index.name = "participant_id"
 
-    return projected_data, eigenvectors, eigenvalues
+    return projected_data, eigenvectors, eigenvalues, means
 
 def scale_projected_data(
         projected_data: pd.DataFrame,

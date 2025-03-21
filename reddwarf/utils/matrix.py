@@ -139,6 +139,20 @@ def get_unvoted_statement_ids(vote_matrix: VoteMatrix) -> List[int]:
 
     return null_column_ids
 
+def simple_filter_matrix(
+        vote_matrix: VoteMatrix,
+        statement_ids_mod_out: list[int] = [],
+) -> VoteMatrix:
+    """
+    The simple filter on the vote_matrix that is used by Polis prior to running PCA.
+    """
+    for tid in statement_ids_mod_out:
+        # Zero out column only if already exists (ie. has votes)
+        if tid in vote_matrix.columns:
+            vote_matrix.loc[:, tid] = 0
+
+    return vote_matrix
+
 def filter_matrix(
         vote_matrix: VoteMatrix,
         min_user_vote_threshold: int = 7,
