@@ -199,7 +199,8 @@ class Loader():
         # This is the best place to check though, as `voters`
         # in summary.csv omits some participants.
         participant_count = self.math_data["n"]
-        self.load_api_data_votes(last_participant_id=participant_count-1)
+        # DANGER: This is potentially an issue that throws everything off by missing some participants.
+        self.load_api_data_votes(last_participant_id=participant_count)
 
     def load_api_data_report(self):
         params = {

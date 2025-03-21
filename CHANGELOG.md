@@ -3,6 +3,7 @@
 ## [Unreleased][] (YYYY-MM-DD)
 ### Fixed
 - Relax seaborn version constraint to be compatible with TabPFN. ([#16](https://github.com/polis-community/red-dwarf/issues/16))
+- Data loader was not downloading last participant's votes, so most PCA results slightly off. ([#29](https://github.com/polis-community/red-dwarf/issues/29))
 
 ### Changes
 - Implement `utils.calculate_representativeness()` function. ([#22](https://github.com/polis-community/red-dwarf/issues/22))
