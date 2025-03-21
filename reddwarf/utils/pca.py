@@ -130,7 +130,14 @@ def pca_project_cmnts(statement_components, statement_means):
         # TODO: Why does Polis use -1 (disagree) here? is it the same? BUG?
         virtual_vote_matrix[i][i] = -1  # Create unit vector representation
 
-    return sparsity_aware_project_ptpts(virtual_vote_matrix, statement_components, statement_means)
+    # 40 xy pairs. shape (40, 2)
+    statement_projections = sparsity_aware_project_ptpts(
+        virtual_vote_matrix,
+        statement_components,
+        statement_means,
+    )
+
+    return statement_projections
 
 def calculate_extremity(projections: ArrayLike):
     # Compute extremity as vector magnitude on rows.
@@ -142,11 +149,13 @@ def with_proj_and_extremity(pca):
     """
     Compute projection and extremity, then merge into PCA results.
     """
-    # Flip the axes to get statement IDs in rows.
     statement_projections = pca_project_cmnts(
         statement_components=pca["comps"],
         statement_means=pca["center"],
-    ).transpose()
+    )
+    # Flip the axes to get all x together and y together.
+    # 2 sets of 40. shape (2, 40)
+    statement_projections = statement_projections.transpose()
 
     statement_extremities = calculate_extremity(statement_projections)
 
