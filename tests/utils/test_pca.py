@@ -6,7 +6,6 @@ from tests.fixtures import small_convo_math_data, medium_convo_math_data
 from reddwarf.utils import pca as PcaUtils
 from reddwarf.utils import matrix as MatrixUtils
 from reddwarf.polis import PolisClient
-from reddwarf import utils
 
 
 def test_run_pca_toy():
@@ -48,9 +47,9 @@ def test_run_pca_real_data_below_100_participants(small_convo_math_data):
 
     client = PolisClient()
     client.load_data(filepaths=[f"{data_path}/votes.json"])
-    real_vote_matrix = utils.generate_raw_matrix(votes=client.data_loader.votes_data)
+    real_vote_matrix = MatrixUtils.generate_raw_matrix(votes=client.data_loader.votes_data)
 
-    real_vote_matrix = utils.simple_filter_matrix(
+    real_vote_matrix = MatrixUtils.simple_filter_matrix(
         vote_matrix=real_vote_matrix,
         statement_ids_mod_out=statement_ids_mod_out,
     )
@@ -72,9 +71,9 @@ def test_run_pca_real_data_above_100_participants(medium_convo_math_data):
 
     client = PolisClient()
     client.load_data(filepaths=[f"{data_path}/votes.json"])
-    real_vote_matrix = utils.generate_raw_matrix(votes=client.data_loader.votes_data)
+    real_vote_matrix = MatrixUtils.generate_raw_matrix(votes=client.data_loader.votes_data)
 
-    real_vote_matrix = utils.simple_filter_matrix(
+    real_vote_matrix = MatrixUtils.simple_filter_matrix(
         vote_matrix=real_vote_matrix,
         statement_ids_mod_out=statement_ids_mod_out,
     )
@@ -107,11 +106,11 @@ def test_run_pca_real_data_testing():
     # client.load_data(report_id="r4zdxrdscmukmkakmbz3k") # 145 voters, 0/117 meta WORKS
     client.load_data(report_id="r45ru4zfmutun54ttskne") # 336 voters, 15/148 meta NOPE 76/148 mismatch
     # client.load_data(report_id="") # x voters, x/x meta ...
-    real_vote_matrix = utils.generate_raw_matrix(votes=client.data_loader.votes_data)
+    real_vote_matrix = MatrixUtils.generate_raw_matrix(votes=client.data_loader.votes_data)
     math_data = client.data_loader.math_data
     expected_pca = math_data["pca"]
 
-    real_vote_matrix = utils.simple_filter_matrix(
+    real_vote_matrix = MatrixUtils.simple_filter_matrix(
         vote_matrix=real_vote_matrix,
         statement_ids_mod_out=math_data["mod-out"],
     )
