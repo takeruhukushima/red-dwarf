@@ -42,7 +42,7 @@ def run_clustering_v1(
         min_user_vote_threshold=options.get("min_user_vote_threshold", DEFAULT_MIN_USER_VOTE_THRESHOLD),
         active_statement_ids=all_statement_ids,
     )
-    projected_data, _, _ = utils.run_pca(vote_matrix=vote_matrix)
+    projected_data, *_ = utils.run_pca(vote_matrix=vote_matrix)
     projected_data = utils.scale_projected_data(
         projected_data=projected_data,
         vote_matrix=vote_matrix,

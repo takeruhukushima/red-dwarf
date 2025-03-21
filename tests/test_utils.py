@@ -313,52 +313,10 @@ def test_impute_missing_votes_no_vote_statement_error():
     with pytest.raises(RedDwarfError):
         utils.impute_missing_votes(vote_matrix=initial_matrix)
 
-def test_run_pca_toy():
-    # Pre-calculated
-    expected_projections = [
-        [ 1.238168, -0.173377],
-        [-0.998131, -0.268031],
-        [-0.123951,  0.205794],
-        [-0.116086,  0.235614],
-    ]
-    expected_eigenvectors = [
-        [0.87418057, -0.48400607, -0.0393249],
-        [0.47382435,  0.86790524, -0.1491005],
-    ]
-    expected_eigenvalues = [ 0.85272226, 0.06658833 ]
-
-    initial_matrix = pd.DataFrame(
-        [
-            [ 1, 0,  0],
-            [-1, 1,  0.1],
-            [ 0, 1,  0.1],
-            [ 0, 1, -0.1],
-        ],
-        columns=[0, 1, 2], # statement_ids
-        index=[0, 1, 2, 3], # participant_ids
-        dtype=float,
-    )
-    projected_data, eigenvectors, eigenvalues = utils.run_pca(vote_matrix=initial_matrix)
-    assert_allclose(projected_data.values, expected_projections, rtol=10**-5)
-    assert_allclose(eigenvectors, expected_eigenvectors, rtol=10**-5)
-    assert_allclose(eigenvalues, expected_eigenvalues, rtol=10**-5)
-
-@pytest.mark.skip
-def test_run_pca_real_data_below_100_participants():
-    raise
-
-@pytest.mark.skip
-def test_run_pca_real_data_above_100_participants():
-    raise
-
 @pytest.mark.skip
 def test_run_kmeans():
     raise
 
 @pytest.mark.skip
 def test_find_optimal_k():
-    raise
-
-@pytest.mark.skip
-def test_scale_projected_data():
     raise

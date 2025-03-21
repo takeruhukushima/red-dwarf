@@ -153,7 +153,7 @@ class PolisClient():
         return participants_df
 
     def run_pca(self):
-        projected_data, components, explained_variance = utils.run_pca(
+        projected_data, components, explained_variance, means, *_ = utils.run_pca(
             vote_matrix=self.matrix,
             n_components=self.n_components,
         )
@@ -161,6 +161,7 @@ class PolisClient():
         self.eigenvectors = components
         self.eigenvalues = explained_variance
         self.projected_data = projected_data
+        self.means = means
 
     def scale_projected_data(self):
         scaled_data = utils.scale_projected_data(
