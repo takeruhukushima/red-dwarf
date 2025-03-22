@@ -38,7 +38,6 @@ def test_run_pca_toy():
     assert_allclose(eigenvectors, expected_eigenvectors, rtol=10**-5)
     assert_allclose(eigenvalues, expected_eigenvalues, rtol=10**-5)
 
-# TODO: Investigate why "small-no-meta" doesn't work.
 @pytest.mark.parametrize("polis_convo_data", ["small", "small-with-meta", "medium"], indirect=True)
 def test_run_pca_real_data(polis_convo_data):
     math_data, data_path, *_ = polis_convo_data
