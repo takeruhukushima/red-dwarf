@@ -15,7 +15,8 @@ def get_grouped_statement_ids(repness: PolisRepness) -> dict[str, list[dict[str,
 
     return {"groups": groups}
 
-@pytest.mark.parametrize("polis_convo_data", ["small"], indirect=True)
+# TODO: Investigate why "small-with-meta" and "medium" won't pass.
+@pytest.mark.parametrize("polis_convo_data", ["small", "small-no-meta"], indirect=True)
 def test_calculate_representativeness_real_data(polis_convo_data):
     math_data, path, _ = polis_convo_data
     client = PolisClient(is_strict_moderation=False)

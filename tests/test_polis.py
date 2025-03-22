@@ -5,7 +5,8 @@ import pytest
 
 from tests.fixtures import polis_convo_data
 
-@pytest.mark.parametrize("polis_convo_data", ["small", "medium"], indirect=True)
+# TODO: Investigate with "small-no-meta" doesn't pass.
+@pytest.mark.parametrize("polis_convo_data", ["small", "medium", "small-with-meta"], indirect=True)
 def test_user_vote_counts(polis_convo_data):
     data, path, _ = polis_convo_data
     expected_data = data['user-vote-counts']
@@ -18,7 +19,7 @@ def test_user_vote_counts(polis_convo_data):
     # Call the method and assert the result matches the expected data
     assert client.get_user_vote_counts() == expected_data
 
-@pytest.mark.parametrize("polis_convo_data", ["small", "medium"], indirect=True)
+@pytest.mark.parametrize("polis_convo_data", ["small", "medium", "small-no-meta", "small-with-meta"], indirect=True)
 def test_meta_tids(polis_convo_data):
     data, path, _ = polis_convo_data
     expected_data = data['meta-tids']
@@ -28,7 +29,7 @@ def test_meta_tids(polis_convo_data):
 
     assert client.get_meta_tids() == sorted(expected_data)
 
-@pytest.mark.parametrize("polis_convo_data", ["small", "medium"], indirect=True)
+@pytest.mark.parametrize("polis_convo_data", ["small", "medium", "small-no-meta", "small-with-meta"], indirect=True)
 def test_mod_in(polis_convo_data):
     data, path, _ = polis_convo_data
     expected_data = data['mod-in']
@@ -38,7 +39,7 @@ def test_mod_in(polis_convo_data):
 
     assert client.get_mod_in() == sorted(expected_data)
 
-@pytest.mark.parametrize("polis_convo_data", ["small", "medium"], indirect=True)
+@pytest.mark.parametrize("polis_convo_data", ["small", "medium", "small-no-meta", "small-with-meta"], indirect=True)
 def test_mod_out(polis_convo_data):
     data, path, _ = polis_convo_data
     expected_data = data['mod-out']
@@ -48,7 +49,7 @@ def test_mod_out(polis_convo_data):
 
     assert sorted(client.get_mod_out()) == sorted(expected_data)
 
-@pytest.mark.parametrize("polis_convo_data", ["small", "medium"], indirect=True)
+@pytest.mark.parametrize("polis_convo_data", ["small", "medium", "small-no-meta", "small-with-meta"], indirect=True)
 def test_last_vote_timestamp(polis_convo_data):
     data, path, _ = polis_convo_data
     expected_data = data['lastVoteTimestamp']
@@ -60,7 +61,8 @@ def test_last_vote_timestamp(polis_convo_data):
 
 SHAPE_AXIS = { 'row': 0, 'column': 1 }
 
-@pytest.mark.parametrize("polis_convo_data", ["small", "medium"], indirect=True)
+# TODO: Investigate with "small-no-meta" doesn't pass.
+@pytest.mark.parametrize("polis_convo_data", ["small", "medium", "small-with-meta"], indirect=True)
 def test_participant_count(polis_convo_data):
     data, path, _ = polis_convo_data
     expected_data = data['n']
@@ -71,7 +73,7 @@ def test_participant_count(polis_convo_data):
 
     assert client.participant_count == expected_data
 
-@pytest.mark.parametrize("polis_convo_data", ["small", "medium"], indirect=True)
+@pytest.mark.parametrize("polis_convo_data", ["small", "medium", "small-no-meta", "small-with-meta"], indirect=True)
 def test_statement_count(polis_convo_data):
     data, path, _ = polis_convo_data
     expected_data = data['n-cmts']
@@ -82,7 +84,7 @@ def test_statement_count(polis_convo_data):
 
     assert client.statement_count == expected_data
 
-@pytest.mark.parametrize("polis_convo_data", ["small", "medium"], indirect=True)
+@pytest.mark.parametrize("polis_convo_data", ["small", "medium", "small-no-meta", "small-with-meta"], indirect=True)
 def test_impute_missing_values(polis_convo_data):
     _, path, _ = polis_convo_data
     client = PolisClient(is_strict_moderation=False)
@@ -159,7 +161,7 @@ class Test_Client:
         assert len(caplog.records) == 0
 
 @pytest.mark.skip
-@pytest.mark.parametrize("polis_convo_data", ["small", "medium"], indirect=True)
+@pytest.mark.parametrize("polis_convo_data", ["small", "medium", "small-no-meta", "small-with-meta"], indirect=True)
 def test_group_cluster_count(polis_convo_data):
     data, path, _ = polis_convo_data
     expected_data = data['group-clusters']
@@ -170,7 +172,7 @@ def test_group_cluster_count(polis_convo_data):
     assert len(client.get_group_clusters()) == len(expected_data)
 
 @pytest.mark.skip
-@pytest.mark.parametrize("polis_convo_data", ["small", "medium"], indirect=True)
+@pytest.mark.parametrize("polis_convo_data", ["small", "medium", "small-no-meta", "small-with-meta"], indirect=True)
 def test_pca_base_cluster_count(polis_convo_data):
     data, path, _ = polis_convo_data
     expected_data = data['base-clusters']
