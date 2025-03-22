@@ -5,7 +5,7 @@ from reddwarf.utils import matrix as MatrixUtils
 from reddwarf.polis import PolisClient
 
 # TODO: Figure out if in-conv is always equivalent. If so, remove this test.
-@pytest.mark.parametrize("polis_convo_data", ["small", "small-no-meta", "small-with-meta", "medium"], indirect=True)
+@pytest.mark.parametrize("polis_convo_data", ["small-no-meta", "small-with-meta", "medium-with-meta", "medium-no-meta"], indirect=True)
 def test_extract_data_from_polismath(polis_convo_data):
     math_data, _, _ = polis_convo_data
     expected = math_data["in-conv"]
@@ -32,7 +32,7 @@ def test_extract_data_from_polismath(polis_convo_data):
 #
 # TODO: Investigate what causes conversations to have missing votes.
 #       For now, leaning on other conversations or CSV export mitigates the issue.
-@pytest.mark.parametrize("polis_convo_data", ["small", "small-with-meta", "medium", "medium-no-meta"], indirect=True)
+@pytest.mark.parametrize("polis_convo_data", ["small-no-meta", "small-with-meta", "medium-with-meta", "medium-no-meta"], indirect=True)
 def test_user_vote_count_sanity_check(polis_convo_data):
     math_data, data_path, *_ = polis_convo_data
     expected_user_vote_counts = math_data["user-vote-counts"]

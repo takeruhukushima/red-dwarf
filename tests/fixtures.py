@@ -3,12 +3,12 @@ import json
 
 @pytest.fixture
 def polis_convo_data(request):
-    if request.param in ["small", "small-no-meta-2"]:
+    if request.param in ["small", "small-no-meta"]:
         # See: https://pol.is/4cvkai2ctw
         # See: https://pol.is/report/r6bpmcmizi2kyvhzkhfr7
         # 23 ptpts, 2 groups, 0/9 meta, strict=yes
         path = "tests/fixtures/below-100-ptpts"
-    elif request.param == "small-no-meta":
+    elif request.param == "small-no-meta-bad":
         # BUG: DATA INTEGRITY ISSUES.
         # Missing votes via API and so doesn't match user_vote_count
         # See: https://pol.is/6ukkcvfbre

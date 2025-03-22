@@ -116,7 +116,8 @@ def test_importance_metric_smaller_full_agree_pseudo_count():
     )
     assert calculated_priority == pytest.approx(expected_importances, abs=0.001)
 
-@pytest.mark.parametrize("polis_convo_data", ["small"], indirect=True)
+# TODO: Investigate why "medium-with-meta" and "medium-no-meta" don't pass.
+@pytest.mark.parametrize("polis_convo_data", ["small-no-meta", "small-with-meta"], indirect=True)
 def test_priority_metric_real_data(polis_convo_data):
     math_data, _, _ = polis_convo_data
     votes_base = math_data["votes-base"]
