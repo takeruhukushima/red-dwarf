@@ -38,33 +38,9 @@ def test_run_pca_toy():
     assert_allclose(eigenvectors, expected_eigenvectors, rtol=10**-5)
     assert_allclose(eigenvalues, expected_eigenvalues, rtol=10**-5)
 
-@pytest.mark.parametrize("polis_convo_data", ["small"], indirect=True)
-def test_run_pca_real_data_below_100_participants(polis_convo_data):
-    math_data, data_path, *_ = polis_convo_data
-    expected_pca = math_data["pca"]
-
-    # Just fetch the moderated out statements from polismath (no need to recalculate here)
-    statement_ids_mod_out = math_data["mod-out"]
-
-    client = PolisClient()
-    client.load_data(filepaths=[f"{data_path}/votes.json"])
-    real_vote_matrix = MatrixUtils.generate_raw_matrix(votes=client.data_loader.votes_data)
-
-    real_vote_matrix = MatrixUtils.simple_filter_matrix(
-        vote_matrix=real_vote_matrix,
-        statement_ids_mod_out=statement_ids_mod_out,
-    )
-
-    _, actual_components, _, actual_means = PcaUtils.run_pca(vote_matrix=real_vote_matrix)
-
-    # We test absolute because PCA methods don't always give the same sign, and can flip.
-    assert np.absolute(actual_components[0]) == pytest.approx(np.absolute(expected_pca["comps"][0]))
-    assert np.absolute(actual_components[1]) == pytest.approx(np.absolute(expected_pca["comps"][1]))
-
-    assert np.absolute(actual_means) == pytest.approx(np.absolute(expected_pca["center"]))
-
-@pytest.mark.parametrize("polis_convo_data", ["medium"], indirect=True)
-def test_run_pca_real_data_above_100_participants(polis_convo_data):
+# TODO: Investigate why "small-no-meta" doesn't work.
+@pytest.mark.parametrize("polis_convo_data", ["small", "small-with-meta", "medium"], indirect=True)
+def test_run_pca_real_data(polis_convo_data):
     math_data, data_path, *_ = polis_convo_data
     expected_pca = math_data["pca"]
 
