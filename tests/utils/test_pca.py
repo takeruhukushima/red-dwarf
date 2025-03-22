@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 from numpy.testing import assert_allclose
 import pytest
-from tests.fixtures import small_convo_math_data, medium_convo_math_data
+from tests.fixtures import polis_convo_data
 from reddwarf.utils import pca as PcaUtils
 from reddwarf.utils import matrix as MatrixUtils
 from reddwarf.polis import PolisClient
@@ -38,8 +38,9 @@ def test_run_pca_toy():
     assert_allclose(eigenvectors, expected_eigenvectors, rtol=10**-5)
     assert_allclose(eigenvalues, expected_eigenvalues, rtol=10**-5)
 
-def test_run_pca_real_data_below_100_participants(small_convo_math_data):
-    math_data, data_path, *_ = small_convo_math_data
+@pytest.mark.parametrize("polis_convo_data", ["small"], indirect=True)
+def test_run_pca_real_data_below_100_participants(polis_convo_data):
+    math_data, data_path, *_ = polis_convo_data
     expected_pca = math_data["pca"]
 
     # Just fetch the moderated out statements from polismath (no need to recalculate here)
@@ -62,8 +63,9 @@ def test_run_pca_real_data_below_100_participants(small_convo_math_data):
 
     assert np.absolute(actual_means) == pytest.approx(np.absolute(expected_pca["center"]))
 
-def test_run_pca_real_data_above_100_participants(medium_convo_math_data):
-    math_data, data_path, *_ = medium_convo_math_data
+@pytest.mark.parametrize("polis_convo_data", ["medium"], indirect=True)
+def test_run_pca_real_data_above_100_participants(polis_convo_data):
+    math_data, data_path, *_ = polis_convo_data
     expected_pca = math_data["pca"]
 
     # Just fetch the moderated out statements from polismath (no need to recalculate here)
