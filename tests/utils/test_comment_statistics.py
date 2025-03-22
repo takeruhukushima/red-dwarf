@@ -1,5 +1,5 @@
 from reddwarf import utils
-from tests.fixtures import small_convo_math_data
+from tests.fixtures import polis_convo_data
 import pytest
 
 from reddwarf.polis import PolisClient
@@ -10,13 +10,15 @@ def get_grouped_statement_ids(repness: PolisRepness) -> dict[str, list[dict[str,
     groups = []
 
     for key, statements in repness.items():
-        group = {"id": str(key), "members": [stmt["tid"] for stmt in statements]} # type:ignore
+        group = {"id": str(key), "members": sorted([stmt["tid"] for stmt in statements])} # type:ignore
         groups.append(group)
 
     return {"groups": groups}
 
-def test_calculate_representativeness_real_data(small_convo_math_data):
-    math_data, path, _ = small_convo_math_data
+# TODO: Investigate why "small-with-meta" and "medium" won't pass.
+@pytest.mark.parametrize("polis_convo_data", ["small", "small-no-meta"], indirect=True)
+def test_calculate_representativeness_real_data(polis_convo_data):
+    math_data, path, _ = polis_convo_data
     client = PolisClient(is_strict_moderation=False)
     client.load_data(filepaths=[
         f'{path}/votes.json',

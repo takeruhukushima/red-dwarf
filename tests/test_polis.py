@@ -3,10 +3,12 @@ from reddwarf import utils
 import math
 import pytest
 
-from tests.fixtures import small_convo_math_data
+from tests.fixtures import polis_convo_data
 
-def test_user_vote_counts(small_convo_math_data):
-    data, path, _ = small_convo_math_data
+# TODO: Investigate with "small-no-meta" doesn't pass.
+@pytest.mark.parametrize("polis_convo_data", ["small", "medium", "small-with-meta"], indirect=True)
+def test_user_vote_counts(polis_convo_data):
+    data, path, _ = polis_convo_data
     expected_data = data['user-vote-counts']
     expected_data = {int(k): v for k,v in expected_data.items()}
 
@@ -17,8 +19,9 @@ def test_user_vote_counts(small_convo_math_data):
     # Call the method and assert the result matches the expected data
     assert client.get_user_vote_counts() == expected_data
 
-def test_meta_tids(small_convo_math_data):
-    data, path, _ = small_convo_math_data
+@pytest.mark.parametrize("polis_convo_data", ["small", "medium", "small-no-meta", "small-with-meta"], indirect=True)
+def test_meta_tids(polis_convo_data):
+    data, path, _ = polis_convo_data
     expected_data = data['meta-tids']
 
     client = PolisClient(is_strict_moderation=True)
@@ -26,8 +29,9 @@ def test_meta_tids(small_convo_math_data):
 
     assert client.get_meta_tids() == sorted(expected_data)
 
-def test_mod_in(small_convo_math_data):
-    data, path, _ = small_convo_math_data
+@pytest.mark.parametrize("polis_convo_data", ["small", "medium", "small-no-meta", "small-with-meta"], indirect=True)
+def test_mod_in(polis_convo_data):
+    data, path, _ = polis_convo_data
     expected_data = data['mod-in']
 
     client = PolisClient(is_strict_moderation=True)
@@ -35,8 +39,9 @@ def test_mod_in(small_convo_math_data):
 
     assert client.get_mod_in() == sorted(expected_data)
 
-def test_mod_out(small_convo_math_data):
-    data, path, _ = small_convo_math_data
+@pytest.mark.parametrize("polis_convo_data", ["small", "medium", "small-no-meta", "small-with-meta"], indirect=True)
+def test_mod_out(polis_convo_data):
+    data, path, _ = polis_convo_data
     expected_data = data['mod-out']
 
     client = PolisClient(is_strict_moderation=True)
@@ -44,8 +49,9 @@ def test_mod_out(small_convo_math_data):
 
     assert sorted(client.get_mod_out()) == sorted(expected_data)
 
-def test_last_vote_timestamp(small_convo_math_data):
-    data, path, _ = small_convo_math_data
+@pytest.mark.parametrize("polis_convo_data", ["small", "medium", "small-no-meta", "small-with-meta"], indirect=True)
+def test_last_vote_timestamp(polis_convo_data):
+    data, path, _ = polis_convo_data
     expected_data = data['lastVoteTimestamp']
 
     client = PolisClient()
@@ -55,8 +61,10 @@ def test_last_vote_timestamp(small_convo_math_data):
 
 SHAPE_AXIS = { 'row': 0, 'column': 1 }
 
-def test_participant_count(small_convo_math_data):
-    data, path, _ = small_convo_math_data
+# TODO: Investigate with "small-no-meta" doesn't pass.
+@pytest.mark.parametrize("polis_convo_data", ["small", "medium", "small-with-meta"], indirect=True)
+def test_participant_count(polis_convo_data):
+    data, path, _ = polis_convo_data
     expected_data = data['n']
 
     client = PolisClient()
@@ -65,8 +73,9 @@ def test_participant_count(small_convo_math_data):
 
     assert client.participant_count == expected_data
 
-def test_statement_count(small_convo_math_data):
-    data, path, _ = small_convo_math_data
+@pytest.mark.parametrize("polis_convo_data", ["small", "medium", "small-no-meta", "small-with-meta"], indirect=True)
+def test_statement_count(polis_convo_data):
+    data, path, _ = polis_convo_data
     expected_data = data['n-cmts']
 
     client = PolisClient()
@@ -75,8 +84,9 @@ def test_statement_count(small_convo_math_data):
 
     assert client.statement_count == expected_data
 
-def test_impute_missing_values(small_convo_math_data):
-    _, path, _ = small_convo_math_data
+@pytest.mark.parametrize("polis_convo_data", ["small", "medium", "small-no-meta", "small-with-meta"], indirect=True)
+def test_impute_missing_values(polis_convo_data):
+    _, path, _ = polis_convo_data
     client = PolisClient(is_strict_moderation=False)
     client.load_data(filepaths=[
         f'{path}/votes.json',
@@ -89,8 +99,10 @@ def test_impute_missing_values(small_convo_math_data):
     assert matrix_without_missing.isnull().values.sum() == 0
     assert matrix_with_missing.shape == matrix_without_missing.shape
 
-def test_filtered_participants_grouped(small_convo_math_data):
-    data, path, _ = small_convo_math_data
+# This test can't be paramtrized without changes.
+@pytest.mark.parametrize("polis_convo_data", ["small"], indirect=True)
+def test_filtered_participants_grouped(polis_convo_data):
+    data, path, _ = polis_convo_data
     expected_data = data['in-conv']
 
     client = PolisClient(is_strict_moderation=False)
@@ -149,8 +161,9 @@ class Test_Client:
         assert len(caplog.records) == 0
 
 @pytest.mark.skip
-def test_group_cluster_count(small_convo_math_data):
-    data, path, _ = small_convo_math_data
+@pytest.mark.parametrize("polis_convo_data", ["small", "medium", "small-no-meta", "small-with-meta"], indirect=True)
+def test_group_cluster_count(polis_convo_data):
+    data, path, _ = polis_convo_data
     expected_data = data['group-clusters']
 
     client = PolisClient()
@@ -159,8 +172,9 @@ def test_group_cluster_count(small_convo_math_data):
     assert len(client.get_group_clusters()) == len(expected_data)
 
 @pytest.mark.skip
-def test_pca_base_cluster_count(small_convo_math_data):
-    data, path, _ = small_convo_math_data
+@pytest.mark.parametrize("polis_convo_data", ["small", "medium", "small-no-meta", "small-with-meta"], indirect=True)
+def test_pca_base_cluster_count(polis_convo_data):
+    data, path, _ = polis_convo_data
     expected_data = data['base-clusters']
 
     client = PolisClient()
