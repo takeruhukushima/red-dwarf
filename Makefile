@@ -17,7 +17,7 @@ test: ## Run tests via pytest
 	uv run pytest -p no:nbmake
 
 test-nb: install ## Test all notebooks, or optionally specific file (Ex: `make test-nb NB_FILE=map-xids`)
-	uv run pytest --nbmake docs/$(NB_FILE)*.ipynb
+	uv run pytest -p no:cov --nbmake docs/$(NB_FILE)*.ipynb
 
 test-cov: ## Run tests via pytest (with coverage report)
 	uv run pytest --cov=reddwarf --cov-report term-missing:skip-covered
