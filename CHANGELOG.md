@@ -16,6 +16,7 @@
 - Add unit tests for `utils.run_pca()` to test against real polismath data.
 - Add unit tests for `agora.run_clustering()`.
 - Parametrize unit tests for real polis convo data.
+- Add testing for notebook examples. ([#34](https://github.com/polis-community/red-dwarf/pull/34))
 
 ## [0.1.1][] (2025-03-04)
 ### Bugfixes
