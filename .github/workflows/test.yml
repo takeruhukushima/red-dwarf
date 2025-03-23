@@ -40,6 +40,4 @@ jobs:
         run: make test
 
       - name: Test notebooks
-        run: |
-          make install
-          make test-nb
+        run: make test-nb
