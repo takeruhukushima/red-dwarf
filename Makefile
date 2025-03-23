@@ -14,7 +14,10 @@ debug: ## Run the debug.py script
 	uv run python debug.py
 
 test: ## Run tests via pytest
-	uv run pytest
+	uv run pytest -p no:nbmake
+
+test-nb: install ## Test all notebooks, or optionally specific file (Ex: `make test-nb NB_FILE=map-xids`)
+	uv run pytest -p no:cov --nbmake docs/notebooks/$(NB_FILE)*.ipynb
 
 test-cov: ## Run tests via pytest (with coverage report)
 	uv run pytest --cov=reddwarf --cov-report term-missing:skip-covered
@@ -26,12 +29,12 @@ cov-report-html: ## Build and open html coverage report
 test-debug: ## Run test via pytest (with verbose debugging)
 	# Make sure stdout is rendered to screen.
 	# Show full diffs on failure.
-	uv run pytest --capture=no -vv
+	uv run pytest -p no:nbmake --capture=no -vv
 
 clear-test-cache: ## Cleak the SQLite database of cached HTTP requests
 	rm -f test_cache.sqlite
 
-download: install ## Download Polis data into fixtures dir (Ex: make download CONVO_ID=7vampckwrh DIR=example)
+download: install ## Download Polis data into fixtures dir (Ex: `make download CONVO_ID=7vampckwrh DIR=example`)
 	uv run scripts/download_sample_data.py $(CONVO_ID) $(DIR)
 
 release: ## Print no-op documentation to guide the release process

@@ -41,7 +41,7 @@ Are you or your organization eager to see more platforms and community built aro
 
 ## Usage
 
-See [`docs/example-usage.ipynb`][notebook]
+See [`docs/notebooks/example-usage.ipynb`][notebook]
 
 [![screen of the sample jupyter notebook](docs/notebook-screenshot.png)][notebook]
 
@@ -122,7 +122,7 @@ See [`CHANGELOG.md`][changelog].
 
 <!-- Links -->
    [stellarpunk]: https://www.youtube.com/watch?v=opnkQVZrhAw
-   [notebook]: https://github.com/polis-community/red-dwarf/blob/main/docs/example-usage.ipynb
+   [notebook]: https://github.com/polis-community/red-dwarf/blob/main/docs/notebooks/example-usage.ipynb
    [ZKorum]: https://github.com/zkorum
    [agora]: https://agoracitizen.network/
    [ngi-funding]: https://trustchain.ngi.eu/zkorum/

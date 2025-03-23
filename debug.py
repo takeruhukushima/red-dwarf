@@ -100,37 +100,6 @@ if False:
     pprint(results)
 
 if False:
-    # Render a figure with best hulls.
-    report_id = CONVOS["tech-politics-2018"]["report_id"]
-    print(f"Loading data from report: https://pol.is/report/{report_id}")
-
-    client = PolisClient()
-    client.load_data(report_id=report_id)
-    # To see the consequences of not having pass/neutral/zero votes
-    DO_STRIP_PASS=False
-    if DO_STRIP_PASS:
-        client.votes = []
-        client.load_votes_data(data=[v for v in client.data_loader.votes_data if v["vote"] != 0])
-    client.get_matrix(is_filtered=True)
-    client.run_pca()
-    client.scale_projected_data()
-    client.find_optimal_k()
-
-    presenter = DataPresenter(client=client)
-    presenter.render_optimal_cluster_figure()
-    # client.generate_figure(coord_dataframe=client.projected_data)
-
-if False:
-    # Show convo with duplicate votes.
-    # Shareable demo: https://gist.github.com/patcon/9c1a39291cd75b23722a5379d7cfc3cc
-    report_id = CONVOS["tech-politics-2018"]["report_id"]
-    print(f"Loading data from report: https://pol.is/report/{report_id}")
-
-    client = PolisClient(is_strict_moderation=False)
-    client.load_data(report_id=report_id, data_source="csv_export")
-    client.get_matrix(is_filtered=True)
-
-if False:
     client = PolisClient()
     client.load_data(conversation_id="9xxwa9jpkm")
     # Reproducing this output: https://github.com/compdemocracy/openData/blob/master/london.youth.policing
@@ -179,27 +148,3 @@ if False:
     print(participants_votes_downloaded.shape)
     print(participants_votes_generated.shape)
     print(participants_votes_downloaded.compare(participants_votes_generated))
-
-if False:
-    client = PolisClient()
-    # client.load_data(report_id=CONVOS["rideshare-toronto"]["report_id"])
-    client.load_data(report_id=CONVOS["tech-politics-2018"]["report_id"])
-    # client.load_data(conversation_id=CONVOS["anthropic-ccai"]["convo_id"])
-    matrix_raw = client.get_matrix(is_filtered=False)
-    client.matrix = None # Flush matrix
-    matrix_filtered = client.get_matrix(is_filtered=True)
-    matrix_filtered_imputed = client.impute_missing_votes()
-
-    presenter = DataPresenter()
-    # presenter.generate_vote_heatmap(matrix_raw)
-    presenter.generate_vote_heatmap(matrix_filtered)
-    # presenter.generate_vote_heatmap(matrix_filtered_imputed)
-
-
-if False:
-    client = PolisClient()
-    client.load_data(conversation_id=CONVOS["xid-testing"]["convo_id"])
-    xids = [12334552, 12334553, 12334554, "foobar"]
-    mappings = client.data_loader.fetch_xid_to_pid_mappings(xids)
-    for xid, pid in mappings.items():
-        print(f"{pid=} => {xid=}")
