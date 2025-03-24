@@ -1,6 +1,6 @@
 import pytest
 from tests.fixtures import polis_convo_data
-from reddwarf import agora
+from reddwarf.implementations import agora
 from reddwarf.polis import PolisClient
 
 # A helper to generate votes list.
