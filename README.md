@@ -1,5 +1,6 @@
 # Red Dwarf
 
+[![PyPI - Version](https://img.shields.io/pypi/v/red-dwarf)][pypi]
 [![Run Tests](https://github.com/polis-community/red-dwarf-democracy/actions/workflows/test.yml/badge.svg)](https://github.com/polis-community/red-dwarf-democracy/actions/workflows/test.yml)
 
 A <em>DIM</em>ensional <em>RED</em>uction library for [stellarpunk][] democracy into the long haul.
@@ -121,6 +122,7 @@ See [`CHANGELOG.md`][changelog].
 [MPL 2.0: Mozilla Public License 2.0][mplv2] (See [`LICENSE`][license])
 
 <!-- Links -->
+   [pypi]: https://pypi.org/project/red-dwarf/
    [stellarpunk]: https://www.youtube.com/watch?v=opnkQVZrhAw
    [notebook]: https://github.com/polis-community/red-dwarf/blob/main/docs/notebooks/example-usage.ipynb
    [ZKorum]: https://github.com/zkorum
