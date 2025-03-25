@@ -2,6 +2,12 @@
 
 ## [Unreleased][] (YYYY-MM-DD)
 
+### Breaking
+- Changes in participant projections change `implementations.agora.run_clustering_v1()` output.
+
+### Changes
+- Fixed participant projections to map more closely to Polis with `utils.pca.sparsity_aware_project_ptpt()`.
+
 ## [0.2.0][] (2025-03-24)
 ### Fixed
 - Relax seaborn version constraint to be compatible with TabPFN. ([#16](https://github.com/polis-community/red-dwarf/issues/16))
