@@ -13,5 +13,8 @@ def run_clustering(
         vote_matrix=vote_matrix,
         statement_ids_mod_out=mod_out,
     )
-    results = run_pca(vote_matrix=vote_matrix)
-    return results
+    projected_data, comps, eigenvalues, center = run_pca(vote_matrix=vote_matrix)
+
+    # To match Polis output, we need to reverse signs for centers and projections
+    # TODO: Investigate why this is. Perhaps related to signs being flipped on agree/disagree back in the day.
+    return -projected_data, comps, eigenvalues, -center
