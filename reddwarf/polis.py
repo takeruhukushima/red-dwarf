@@ -6,6 +6,12 @@ from reddwarf import utils
 from typing import Optional
 
 class PolisClient():
+    """
+    This is a heavy class-based implementation of Polis.
+
+    This will likely be deprecated in favour of using small pure, stateless
+    functions, as exemplified in `reddwarf.implementations.polis`.
+    """
     def __init__(self, is_strict_moderation: Optional[bool] = None) -> None:
         self.data_loader = None
         self.n_components = 2
