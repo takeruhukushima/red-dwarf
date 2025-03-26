@@ -12,15 +12,19 @@ from reddwarf.utils import polismath
 def test_run_clustering(polis_convo_data):
     math_data, data_path, _ = polis_convo_data
     client = PolisClient()
-    client.load_data(filepaths=[f"{data_path}/votes.json"])
+    client.load_data(filepaths=[
+        f"{data_path}/votes.json",
+        f"{data_path}/comments.json",
+        f"{data_path}/conversation.json",
+    ])
 
-    # TODO: Derive these ourselves without math_data.
-    statement_ids_moderated_out = math_data["mod-out"]
+    # TODO: Use a pure function, rather than heavy client class.
+    statement_ids_moderated_out = client.get_mod_out()
+    # TODO: Derive this ourselves without math_data.
     participant_ids_active = math_data["in-conv"]
 
     projected_ptpts, comps, _, center = run_clustering(
         votes=client.data_loader.votes_data,
-        # TODO: Make this ourselves.
         mod_out=statement_ids_moderated_out,
     )
 
