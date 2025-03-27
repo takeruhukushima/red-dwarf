@@ -38,6 +38,9 @@ def transform_base_clusters_to_participant_coords(base_clusters):
 # we'll need to implement base clustering.
 @pytest.mark.parametrize("polis_convo_data", ["small"], indirect=True)
 def test_run_clustering(polis_convo_data):
+    # We hardcode this because Polis has some bespoke rules that keep these IDs in for clustering.
+    # TODO: Try to determine why each pid is kept. Can maybe determine by incrementing through vote history.
+    keep_participant_ids = [ 5, 10, 11, 14 ]
     math_data, data_path, _ = polis_convo_data
     # Transpose base cluster coords into participant_ids
     expected_projected_ptpts = transform_base_clusters_to_participant_coords(math_data["base-clusters"])
@@ -45,20 +48,18 @@ def test_run_clustering(polis_convo_data):
     client = PolisClient()
     client.load_data(filepaths=[
         f"{data_path}/votes.json",
-        # Loading these helps generate statement_ids_moderated_out
+        # Loading these helps generate mod_out_statement_ids
         f"{data_path}/comments.json",
         f"{data_path}/conversation.json",
     ])
 
     # TODO: Use a pure function, rather than heavy client class.
-    statement_ids_moderated_out = client.get_mod_out()
-    # TODO: Derive this ourselves without math_data.
-    participant_ids_active = math_data["in-conv"]
+    mod_out_statement_ids = client.get_mod_out()
 
     projected_ptpts, comps, _, center = run_clustering(
         votes=client.data_loader.votes_data,
-        mod_out=statement_ids_moderated_out,
-        keep_participant_ids=participant_ids_active,
+        mod_out_statement_ids=mod_out_statement_ids,
+        keep_participant_ids=keep_participant_ids,
     )
 
     assert comps[0] == pytest.approx(math_data["pca"]["comps"][0])

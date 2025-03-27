@@ -44,7 +44,7 @@ def test_run_pca_real_data_below_100_participants(polis_convo_data):
     expected_pca = math_data["pca"]
 
     # Just fetch the moderated out statements from polismath (no need to recalculate here)
-    statement_ids_mod_out = math_data["mod-out"]
+    mod_out_statement_ids = math_data["mod-out"]
 
     client = PolisClient()
     client.load_data(filepaths=[f"{data_path}/votes.json"])
@@ -52,7 +52,7 @@ def test_run_pca_real_data_below_100_participants(polis_convo_data):
 
     real_vote_matrix = MatrixUtils.simple_filter_matrix(
         vote_matrix=real_vote_matrix,
-        statement_ids_mod_out=statement_ids_mod_out,
+        mod_out_statement_ids=mod_out_statement_ids,
     )
 
     _, actual_components, _, actual_means = PcaUtils.run_pca(vote_matrix=real_vote_matrix)
@@ -69,7 +69,7 @@ def test_run_pca_real_data_above_100_participants(polis_convo_data):
     expected_pca = math_data["pca"]
 
     # Just fetch the moderated out statements from polismath (no need to recalculate here)
-    statement_ids_mod_out = math_data["mod-out"]
+    mod_out_statement_ids = math_data["mod-out"]
 
     client = PolisClient()
     client.load_data(filepaths=[f"{data_path}/votes.json"])
@@ -77,7 +77,7 @@ def test_run_pca_real_data_above_100_participants(polis_convo_data):
 
     real_vote_matrix = MatrixUtils.simple_filter_matrix(
         vote_matrix=real_vote_matrix,
-        statement_ids_mod_out=statement_ids_mod_out,
+        mod_out_statement_ids=mod_out_statement_ids,
     )
 
     _, actual_components, _, actual_means = PcaUtils.run_pca(vote_matrix=real_vote_matrix)
