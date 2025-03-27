@@ -2,7 +2,6 @@ import pytest
 from tests.fixtures import polis_convo_data
 from reddwarf.implementations.polis import run_clustering
 from reddwarf.polis import PolisClient
-from reddwarf.utils import polismath
 
 
 def transform_base_clusters_to_participant_coords(base_clusters):
@@ -46,6 +45,7 @@ def test_run_clustering(polis_convo_data):
     client = PolisClient()
     client.load_data(filepaths=[
         f"{data_path}/votes.json",
+        # Loading these helps generate statement_ids_moderated_out
         f"{data_path}/comments.json",
         f"{data_path}/conversation.json",
     ])
@@ -58,14 +58,12 @@ def test_run_clustering(polis_convo_data):
     projected_ptpts, comps, _, center = run_clustering(
         votes=client.data_loader.votes_data,
         mod_out=statement_ids_moderated_out,
+        keep_participant_ids=participant_ids_active,
     )
 
     assert comps[0] == pytest.approx(math_data["pca"]["comps"][0])
     assert comps[1] == pytest.approx(math_data["pca"]["comps"][1])
     assert center == pytest.approx(math_data["pca"]["center"])
-
-    # Filter out for active users.
-    projected_ptpts = projected_ptpts.loc[participant_ids_active, :]
 
     # Ensure we have as many expected coords as calculated coords.
     assert len(projected_ptpts.index) == len(expected_projected_ptpts)
