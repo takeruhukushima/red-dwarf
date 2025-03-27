@@ -41,6 +41,10 @@ def transform_base_clusters_to_participant_coords(base_clusters):
 def test_run_clustering(polis_convo_data):
     # We hardcode this because Polis has some bespoke rules that keep these IDs in for clustering.
     # TODO: Try to determine why each pid is kept. Can maybe determine by incrementing through vote history.
+    #  5 -> 1 vote @ statement #26 (participant #2's)
+    # 10 -> 2 vote @ statements #21 (participant #1's) & #29 (their own, moderated in).
+    # 11 -> 1 vote @ statement #29 (participant #10's)
+    # 14 -> 1 vote @ statement #27 (participant #6's)
     keep_participant_ids = [ 5, 10, 11, 14 ]
     math_data, data_path, _ = polis_convo_data
     # Transpose base cluster coords into participant_ids
