@@ -50,6 +50,11 @@ def test_run_clustering(polis_convo_data):
     # Transpose base cluster coords into participant_ids
     expected_projected_ptpts = transform_base_clusters_to_participant_coords(math_data["base-clusters"])
 
+    max_group_count = 5
+    init_centers = [group["center"] for group in math_data["group-clusters"]]
+    pad_to_size = lambda lst, size: lst + [[0., 0.]]*(size - len(lst))
+    init_centers = pad_to_size(init_centers, max_group_count)
+
     client = PolisClient()
     client.load_data(filepaths=[
         f"{data_path}/votes.json",
@@ -64,6 +69,8 @@ def test_run_clustering(polis_convo_data):
         votes=client.data_loader.votes_data,
         mod_out_statement_ids=mod_out_statement_ids,
         keep_participant_ids=keep_participant_ids,
+        max_group_count=max_group_count,
+        init_centers=init_centers,
     )
 
     assert comps[0] == pytest.approx(math_data["pca"]["comps"][0])
@@ -78,3 +85,11 @@ def test_run_clustering(polis_convo_data):
         calculated_xy = projected_ptpts.loc[projection["participant_id"], ["x", "y"]].values
 
         assert calculated_xy == pytest.approx(expected_xy)
+
+    return
+    from reddwarf.data_presenter import generate_figure
+    print(projected_ptpts)
+    # Flip these to render figure properly.
+    projected_ptpts[["x", "y"]] = -projected_ptpts[["x", "y"]]
+    labels = projected_ptpts["cluster_id"].values
+    generate_figure(projected_ptpts, labels)
