@@ -93,6 +93,7 @@ def sparsity_aware_project_ptpt(votes, comps, center):
     comps = np.array(comps)  # Shape: (2, n_features)
     center = np.array(center)  # Shape: (n_features,)
 
+    # TODO: This included zerod out (moderated) statements. Should it?
     n_cmnts = len(votes)
 
     ptpt_votes = np.array(votes)
