@@ -3,6 +3,8 @@ from tests.fixtures import polis_convo_data
 from reddwarf.implementations.polis import run_clustering
 from reddwarf.polis import PolisClient
 from reddwarf.utils.statements import process_statements
+from reddwarf.utils.polismath import extract_data_from_polismath
+from numpy.testing import assert_array_equal
 
 
 def transform_base_clusters_to_participant_coords(base_clusters):
@@ -39,6 +41,8 @@ def transform_base_clusters_to_participant_coords(base_clusters):
 # we'll need to implement base clustering.
 @pytest.mark.parametrize("polis_convo_data", ["small"], indirect=True)
 def test_run_clustering(polis_convo_data):
+    math_data, data_path, _ = polis_convo_data
+
     # We hardcode this because Polis has some bespoke rules that keep these IDs in for clustering.
     # TODO: Try to determine why each pid is kept. Can maybe determine by incrementing through vote history.
     #  5 -> 1 vote @ statement #26 (participant #2's)
@@ -46,7 +50,10 @@ def test_run_clustering(polis_convo_data):
     # 11 -> 1 vote @ statement #29 (participant #10's)
     # 14 -> 1 vote @ statement #27 (participant #6's)
     keep_participant_ids = [ 5, 10, 11, 14 ]
-    math_data, data_path, _ = polis_convo_data
+    # We force kmeans to find a specific value because Polis does this for something they call k-smoothing.
+    # TODO: Get k-smoothing working, and simulate how k is held back.
+    force_group_count = len(math_data["group-clusters"])
+
     # Transpose base cluster coords into participant_ids
     expected_projected_ptpts = transform_base_clusters_to_participant_coords(math_data["base-clusters"])
 
@@ -71,6 +78,7 @@ def test_run_clustering(polis_convo_data):
         keep_participant_ids=keep_participant_ids,
         max_group_count=max_group_count,
         init_centers=init_centers,
+        force_group_count=force_group_count,
     )
 
     assert comps[0] == pytest.approx(math_data["pca"]["comps"][0])
@@ -86,10 +94,14 @@ def test_run_clustering(polis_convo_data):
 
         assert calculated_xy == pytest.approx(expected_xy)
 
-    return
-    from reddwarf.data_presenter import generate_figure
-    print(projected_ptpts)
-    # Flip these to render figure properly.
-    projected_ptpts[["x", "y"]] = -projected_ptpts[["x", "y"]]
-    labels = projected_ptpts["cluster_id"].values
-    generate_figure(projected_ptpts, labels)
+    # Check that the cluster labels all match when K is forced to match.
+    _, expected_cluster_labels = extract_data_from_polismath(math_data)
+    calculated_cluster_labels = projected_ptpts["cluster_id"].values
+    assert_array_equal(calculated_cluster_labels, expected_cluster_labels)
+
+    # from reddwarf.data_presenter import generate_figure
+    # print(projected_ptpts)
+    # # Flip these to render figure properly.
+    # projected_ptpts[["x", "y"]] = -projected_ptpts[["x", "y"]]
+    # labels = projected_ptpts["cluster_id"].values
+    # generate_figure(projected_ptpts, labels)
