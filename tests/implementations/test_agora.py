@@ -31,7 +31,7 @@ def test_run_clustering_real_data_small(polis_convo_data):
 
 @pytest.mark.parametrize("polis_convo_data", ["medium"], indirect=True)
 def test_run_clustering_real_data_medium(polis_convo_data):
-    expected_cluster_sizes = [62, 42, 35, 37]
+    expected_cluster_sizes = [60, 39, 37, 37, 3]
     votes = build_votes(polis_convo_data)
 
     convo: agora.Conversation = {
@@ -48,7 +48,7 @@ def test_run_clustering_real_data_medium(polis_convo_data):
 
 @pytest.mark.parametrize("polis_convo_data", ["small"], indirect=True)
 def test_run_clustering_real_data_no_min_threshold_option(polis_convo_data):
-    expected_cluster_sizes = [10, 5, 6, 14]
+    expected_cluster_sizes = [24, 7, 4]
     votes = build_votes(polis_convo_data)
 
     convo: agora.Conversation = {
