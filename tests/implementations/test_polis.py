@@ -2,6 +2,7 @@ import pytest
 from tests.fixtures import polis_convo_data
 from reddwarf.implementations.polis import run_clustering
 from reddwarf.polis import PolisClient
+from reddwarf.utils.statements import process_statements
 
 
 def transform_base_clusters_to_participant_coords(base_clusters):
@@ -53,8 +54,7 @@ def test_run_clustering(polis_convo_data):
         f"{data_path}/conversation.json",
     ])
 
-    # TODO: Use a pure function, rather than heavy client class.
-    mod_out_statement_ids = client.get_mod_out()
+    _, _, mod_out_statement_ids, _ = process_statements(statement_data=client.data_loader.comments_data)
 
     projected_ptpts, comps, _, center = run_clustering(
         votes=client.data_loader.votes_data,

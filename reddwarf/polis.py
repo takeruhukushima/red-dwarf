@@ -1,4 +1,4 @@
-import pandas as pd # For sake of clean diffs
+import pandas as pd
 from collections import defaultdict
 from reddwarf.data_loader import Loader
 from reddwarf.models import ModeratedEnum
@@ -229,11 +229,6 @@ class PolisClient():
         self.add_votes_batch(votes_df)
 
     def load_comments_data(self, data=None):
-        statements_df = (pd.DataFrame
-            .from_records(data)
-            .set_index('statement_id')
-            .sort_index()
-        )
 
         def is_shown(statement):
             if self.get_is_strict_moderation():
@@ -243,20 +238,7 @@ class PolisClient():
             is_shown = statement["moderated"] in active_mod_states
             return is_shown
 
+        statements_df, self.mod_in, self.mod_out, self.meta_tids = utils.process_statements(data)
         statements_df["is_shown"] = statements_df.apply(is_shown, axis="columns")
-        for i, row in statements_df.iterrows():
-            # TODO: Why does is_meta make this mod-in.
-            # Maybe I don't understand what mod-in does...
-            # Note: mod-in/mod-out doesn't seem to be actually used in the front-end, so a bug here wouldn't matter.
-            # Ref: https://github.com/compdemocracy/polis/blob/6d04f4d144adf9640fe49b8fbaac38943dc11b9a/math/src/polismath/math/conversation.clj#L825-L842
-            if row['is_meta'] or row['moderated'] == 1:
-                self.mod_in.append(i)
-
-            if row['is_meta'] or row['moderated'] == -1:
-                self.mod_out.append(i)
-
-            # Ref: https://github.com/compdemocracy/polis/blob/6d04f4d144adf9640fe49b8fbaac38943dc11b9a/math/src/polismath/math/conversation.clj#L843-L850
-            if row['is_meta']:
-                self.meta_tids.append(i)
 
         self.statements_df = statements_df
