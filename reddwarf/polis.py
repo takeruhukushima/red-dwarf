@@ -202,7 +202,7 @@ class PolisClient():
         self.base_clusters = self.data_loader.math_data["base-clusters"]
 
     def find_optimal_k(self):
-        best_k, silhouette_score, cluster_labels = utils.find_optimal_k(
+        best_k, silhouette_score, cluster_labels, _ = utils.find_optimal_k(
             projected_data=self.projected_data,
             max_group_count=self.max_group_count,
             debug=True,
