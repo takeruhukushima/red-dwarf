@@ -5,6 +5,7 @@ from reddwarf.polis import PolisClient
 from reddwarf.utils.statements import process_statements
 from reddwarf.utils.polismath import extract_data_from_polismath
 from numpy.testing import assert_array_equal
+from pandas.testing import assert_frame_equal
 
 
 def transform_base_clusters_to_participant_coords(base_clusters):
@@ -36,11 +37,14 @@ def transform_base_clusters_to_participant_coords(base_clusters):
         )
     ]
 
+def pad_to_size(lst, size):
+    return list(lst) + [[0., 0.]]*(size - len(lst))
+
 # This test will only match polismath for sub-100 participant convos.
 # For testing our code agaisnt real data with against larger conversations,
 # we'll need to implement base clustering.
 @pytest.mark.parametrize("polis_convo_data", ["small"], indirect=True)
-def test_run_clustering(polis_convo_data):
+def test_run_clustering_real_data(polis_convo_data):
     math_data, data_path, _ = polis_convo_data
 
     # We hardcode this because Polis has some bespoke rules that keep these IDs in for clustering.
@@ -59,7 +63,6 @@ def test_run_clustering(polis_convo_data):
 
     max_group_count = 5
     init_centers = [group["center"] for group in math_data["group-clusters"]]
-    pad_to_size = lambda lst, size: lst + [[0., 0.]]*(size - len(lst))
     init_centers = pad_to_size(init_centers, max_group_count)
 
     client = PolisClient()
@@ -72,7 +75,7 @@ def test_run_clustering(polis_convo_data):
 
     _, _, mod_out_statement_ids, _ = process_statements(statement_data=client.data_loader.comments_data)
 
-    projected_ptpts, comps, _, center = run_clustering(
+    projected_ptpts, comps, _, center, _ = run_clustering(
         votes=client.data_loader.votes_data,
         mod_out_statement_ids=mod_out_statement_ids,
         keep_participant_ids=keep_participant_ids,
@@ -105,3 +108,68 @@ def test_run_clustering(polis_convo_data):
     # projected_ptpts[["x", "y"]] = -projected_ptpts[["x", "y"]]
     # labels = projected_ptpts["cluster_id"].values
     # generate_figure(projected_ptpts, labels)
+
+# Not used right now. Maybe later.
+def groupsort_pids_by_cluster(df):
+    """
+    Helper function to gather statement IDS in clusters and sort them for easy
+    comparison.
+
+    This make comparison easy, even when kmeans gives different numeric labels.
+
+    Args:
+        df (pd.DataFrame): A dataframe with projected participants, columns "x",
+        "y", "cluster_id"
+    Returns:
+        (list[list[int]]): A list of lists, each containing statement IDs in a
+        cluster.
+    """
+    # Group by cluster_id and collect indices
+    grouped = df.groupby('cluster_id').apply(lambda x: list(x.index))
+
+    # Sort the groups by their length (number of members) in descending order
+    sorted_groups = sorted(grouped, key=len, reverse=True)
+
+    # Convert each inner list to integers
+    return [list(map(int, group)) for group in sorted_groups]
+
+@pytest.mark.parametrize("polis_convo_data", ["small"], indirect=True)
+def test_run_clustering_is_reproducible(polis_convo_data):
+    math_data, data_path, _ = polis_convo_data
+
+    # Transpose base cluster coords into participant_ids
+    expected_projected_ptpts = transform_base_clusters_to_participant_coords(math_data["base-clusters"])
+
+    client = PolisClient()
+    client.load_data(filepaths=[
+        f"{data_path}/votes.json",
+        # Loading these helps generate mod_out_statement_ids
+        f"{data_path}/comments.json",
+        f"{data_path}/conversation.json",
+    ])
+
+    _, _, mod_out_statement_ids, _ = process_statements(statement_data=client.data_loader.comments_data)
+
+    cluster_run_1 = run_clustering(
+        votes=client.data_loader.votes_data,
+        mod_out_statement_ids=mod_out_statement_ids,
+    )
+    proj, comps, eigenvals, means, cluster_centers = cluster_run_1 # just to document
+
+    max_group_count = 5
+    padded_cluster_centers = pad_to_size(cluster_centers, max_group_count)
+
+    cluster_run_2 = run_clustering(
+        votes=client.data_loader.votes_data,
+        mod_out_statement_ids=mod_out_statement_ids,
+        init_centers=padded_cluster_centers,
+    )
+    proj, comps, eigenvals, means, cluster_centers = cluster_run_2 # just to document
+
+    # same number of clusters
+    assert len(cluster_run_1[4]) == len(cluster_run_2[4])
+
+    assert_frame_equal(cluster_run_1[0], cluster_run_2[0]) # projected statements and cluster IDs
+    assert cluster_run_1[1].tolist() == cluster_run_2[1].tolist() # components/eigenvectors
+    assert cluster_run_1[3].tolist() == cluster_run_2[3].tolist() # statement centers/means
+    assert cluster_run_1[4].tolist() == cluster_run_2[4].tolist() # cluster centers

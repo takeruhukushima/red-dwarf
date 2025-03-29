@@ -33,14 +33,14 @@ def run_clustering(
     projected_data, center = -projected_data, -center
 
     if force_group_count:
-        cluster_labels, _ = run_kmeans(
+        cluster_labels, cluster_centers = run_kmeans(
             dataframe=projected_data,
             n_clusters=force_group_count,
             init_centers=init_centers,
             random_state=random_state,
         )
     else:
-        _, _, cluster_labels = find_optimal_k(
+        _, _, cluster_labels, cluster_centers = find_optimal_k(
             projected_data=projected_data,
             max_group_count=max_group_count,
             init_centers=init_centers,
@@ -48,4 +48,4 @@ def run_clustering(
         )
     projected_data = projected_data.assign(cluster_id=cluster_labels)
 
-    return projected_data, comps, eigenvalues, center
+    return projected_data, comps, eigenvalues, center, cluster_centers

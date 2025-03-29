@@ -51,7 +51,7 @@ def find_optimal_k(
         init_centers: Optional[List] = None,
         random_state: Optional[int] = None,
         debug: bool = False,
-) -> Tuple[int, float, np.ndarray | None]:
+) -> Tuple[int, float, np.ndarray | None, np.ndarray | None]:
     """
     Use silhouette scores to find the best number of clusters k to assume to fit the data.
 
@@ -65,14 +65,16 @@ def find_optimal_k(
         optimal_k (int): Ideal number of clusters.
         optimal_silhouette_score (float): Silhouette score for this K value.
         optimal_cluster_labels (np.ndarray | None): A list of index labels assigned a group to each row in projected_date.
+        optimal_cluster_centers (np.ndarray | None): A list of xy centers for the optimal clusters.
     """
     K_RANGE = range(2, max_group_count+1)
     k_best = 0 # Best K so far.
     best_silhouette_score = -np.inf
     best_cluster_labels = None
+    best_cluster_centers = None
 
     for k_test in K_RANGE:
-        cluster_labels, _ = run_kmeans(
+        cluster_labels, cluster_centers = run_kmeans(
             dataframe=projected_data,
             n_clusters=k_test,
             init_centers=init_centers,
@@ -85,9 +87,11 @@ def find_optimal_k(
             k_best = k_test
             best_silhouette_score = this_silhouette_score
             best_cluster_labels = cluster_labels
+            best_cluster_centers = cluster_centers
 
     optimal_k = k_best
     optimal_silhouette = best_silhouette_score
     optimal_cluster_labels = best_cluster_labels
+    optimal_cluster_centers = best_cluster_centers
 
-    return optimal_k, optimal_silhouette, optimal_cluster_labels
+    return optimal_k, optimal_silhouette, optimal_cluster_labels, optimal_cluster_centers
