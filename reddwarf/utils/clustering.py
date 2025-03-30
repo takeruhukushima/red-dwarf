@@ -58,6 +58,7 @@ def find_optimal_k(
     Args:
         projected_data (pd.DataFrame): A dataframe with two columns (assumed `x` and `y`).
         max_group_count (int): The max K number of groups to test for. (Default: 5)
+        init_centers (List): A list of xy coordinates to use as initial center guesses.
         random_state (int): Determines random number generation for centroid initialization. Use an int to make the randomness deterministic.
         debug (bool): Whether to print debug output. (Default: False)
 
