@@ -1,5 +1,6 @@
-
-
+from typing import Optional
+from numpy.typing import NDArray
+from pandas._typing import DataFrame
 from reddwarf.utils.matrix import generate_raw_matrix, simple_filter_matrix, get_participant_ids
 from reddwarf.utils.pca import run_pca
 from reddwarf.utils.clustering import find_optimal_k, run_kmeans
@@ -7,14 +8,34 @@ from reddwarf.utils.clustering import find_optimal_k, run_kmeans
 
 def run_clustering(
     votes: list[dict],
-    mod_out_statement_ids: list[int],
-    min_user_vote_threshold = 7,
+    mod_out_statement_ids: list[int] = [],
+    min_user_vote_threshold: int = 7,
     keep_participant_ids: list[int] = [],
-    init_centers = None,
-    max_group_count = 5,
-    force_group_count = None,
-    random_state = None,
-):
+    init_centers: Optional[list[list[float]]] = None,
+    max_group_count: int = 5,
+    force_group_count: Optional[int] = None,
+    random_state: Optional[int] = None,
+) -> tuple[DataFrame, NDArray, NDArray, NDArray, NDArray | None]:
+    """
+    An essentially feature-complete implementation of the Polis clustering algorithm.
+
+    Args:
+        votes (list[dict]): Raw list of vote dicts, with keys for "participant_id", "statement_id", "vote" and "modified"
+        mod_out_statement_ids (list[int]): List of statement IDs to moderate/zero out
+        min_user_vote_threshold (int): Minimum number of votes a participant must make to be included in clustering
+        keep_participant_ids (list[int]): List of participant IDs to keep in clustering algorithm, regardless of normal filters.
+        max_group_count (): Max number of group (k-values) to test using k-means and silhouette scores
+        init_centers (list[list[float]]): Initial guesses of [x,y] coordinates for k-means (Length of list must match max_group_count)
+        force_group_count (int): Instead of using silhouette scores, force a specific number of groups (k value)
+        random_state (int): If set, will force determinism during k-means clustering
+
+    Returns:
+        projected_data (DataFrame): Dataframe of projected participants, with columns "x", "y", "cluster_id"
+        comps (list[list[float]]): List of principal components for each statement
+        eigenvalues (list[float]): List of eigenvalues for each principal component
+        center (list[float]): List of centers/means for each statement
+        cluster_centers (list[list[float]]): List of center xy coordinates for each cluster
+    """
     vote_matrix = generate_raw_matrix(votes=votes)
     participant_ids_in = get_participant_ids(vote_matrix, vote_threshold=min_user_vote_threshold)
     if keep_participant_ids:

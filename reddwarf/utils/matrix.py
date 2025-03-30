@@ -153,7 +153,7 @@ def simple_filter_matrix(
 
     return vote_matrix
 
-def get_participant_ids(vote_matrix, vote_threshold):
+def get_participant_ids(vote_matrix: pd.DataFrame, vote_threshold: int) -> list:
     return vote_matrix[vote_matrix.count(axis="columns") >= vote_threshold].index.to_list()
 
 
