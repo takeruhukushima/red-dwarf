@@ -145,6 +145,13 @@ def simple_filter_matrix(
 ) -> VoteMatrix:
     """
     The simple filter on the vote_matrix that is used by Polis prior to running PCA.
+
+    Args:
+        vote_matrix (VoteMatrix): A raw vote_matrix (with missing values)
+        mod_out_statement_ids (list): A list of moderated-out participant IDs to zero out.
+
+    Returns:
+        VoteMatrix: Another vote_matrix with statements zero'd out
     """
     for tid in mod_out_statement_ids:
         # Zero out column only if already exists (ie. has votes)
@@ -153,7 +160,17 @@ def simple_filter_matrix(
 
     return vote_matrix
 
-def get_participant_ids(vote_matrix: pd.DataFrame, vote_threshold: int) -> list:
+def get_participant_ids(vote_matrix: VoteMatrix, vote_threshold: int) -> list:
+    """
+    Find participant IDs that meet a vote threshold in a vote_matrix.
+
+    Args:
+        vote_matrix (VoteMatrix): A raw vote_matrix (with missing values)
+        vote_threshold (int): Vote threshold that each participant must meet
+
+    Returns:
+        participation_ids (list): A list of participant IDs that meet the threshold
+    """
     return vote_matrix[vote_matrix.count(axis="columns") >= vote_threshold].index.to_list()
 
 

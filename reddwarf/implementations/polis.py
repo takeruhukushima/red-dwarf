@@ -1,6 +1,6 @@
 from typing import Optional
 from numpy.typing import NDArray
-from pandas._typing import DataFrame
+from pandas import DataFrame
 from reddwarf.utils.matrix import generate_raw_matrix, simple_filter_matrix, get_participant_ids
 from reddwarf.utils.pca import run_pca
 from reddwarf.utils.clustering import find_optimal_k, run_kmeans
