@@ -19,6 +19,11 @@ def run_clustering(
     """
     An essentially feature-complete implementation of the Polis clustering algorithm.
 
+    Still missing:
+        - base-cluster calculations (so can't match output of conversations larger than 100 participants),
+        - k-smoothing, which holds back k-value (group count) until re-calculated 3 consecutive times,
+        - some advanced participant filtering that involves past state (you can use keep_participant_ids to mimic manually).
+
     Args:
         votes (list[dict]): Raw list of vote dicts, with keys for "participant_id", "statement_id", "vote" and "modified"
         mod_out_statement_ids (list[int]): List of statement IDs to moderate/zero out
