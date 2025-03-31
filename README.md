@@ -1,5 +1,6 @@
 # Red Dwarf
 
+[![PyPI - Version](https://img.shields.io/pypi/v/red-dwarf)][pypi]
 [![Run Tests](https://github.com/polis-community/red-dwarf-democracy/actions/workflows/test.yml/badge.svg)](https://github.com/polis-community/red-dwarf-democracy/actions/workflows/test.yml)
 
 A <em>DIM</em>ensional <em>RED</em>uction library for [stellarpunk][] democracy into the long haul.
@@ -41,7 +42,7 @@ Are you or your organization eager to see more platforms and community built aro
 
 ## Usage
 
-See [`docs/notebooks/example-usage.ipynb`][notebook]
+See [`docs/notebooks/example-usage.ipynb`][notebook] or [`docs/notebooks/`][notebooks] for other examples.
 
 [![screen of the sample jupyter notebook](docs/notebook-screenshot.png)][notebook]
 
@@ -121,8 +122,10 @@ See [`CHANGELOG.md`][changelog].
 [MPL 2.0: Mozilla Public License 2.0][mplv2] (See [`LICENSE`][license])
 
 <!-- Links -->
+   [pypi]: https://pypi.org/project/red-dwarf/
    [stellarpunk]: https://www.youtube.com/watch?v=opnkQVZrhAw
    [notebook]: https://github.com/polis-community/red-dwarf/blob/main/docs/notebooks/example-usage.ipynb
+   [notebooks]: https://github.com/polis-community/red-dwarf/tree/main/docs/notebooks/
    [ZKorum]: https://github.com/zkorum
    [agora]: https://agoracitizen.network/
    [ngi-funding]: https://trustchain.ngi.eu/zkorum/

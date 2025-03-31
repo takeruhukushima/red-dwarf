@@ -1,18 +1,53 @@
 # API Reference
 
-## `reddwarf.agora`
 
-### ::: reddwarf.agora.run_clustering_v1
+## `reddwarf.implementations.polis`
+
+### ::: reddwarf.implementations.polis.run_clustering
+    options:
+        show_root_heading: true
+
+## `reddwarf.implementations.agora`
+
+### ::: reddwarf.implementations.agora.run_clustering_v1
+    options:
+        show_root_heading: true
+
+## `reddwarf.utils.matrix`
+
+### ::: reddwarf.utils.matrix.generate_raw_matrix
+    options:
+        show_root_heading: true
+
+### ::: reddwarf.utils.matrix.simple_filter_matrix
+    options:
+        show_root_heading: true
+
+### ::: reddwarf.utils.matrix.get_participant_ids
+    options:
+        show_root_heading: true
+
+## `reddwarf.utils.pca`
+
+### ::: reddwarf.utils.pca.run_pca
+    options:
+        show_root_heading: true
+
+## `reddwarf.utils.clustering`
+
+### ::: reddwarf.utils.clustering.find_optimal_k
+    options:
+        show_root_heading: true
+
+### ::: reddwarf.utils.clustering.run_kmeans
     options:
         show_root_heading: true
 
 ## `reddwarf.utils`
 
-### ::: reddwarf.utils.filter_votes
-    options:
-        show_root_heading: true
+(These are in the process of being either moved or deprecated.)
 
-### ::: reddwarf.utils.generate_raw_matrix
+### ::: reddwarf.utils.filter_votes
     options:
         show_root_heading: true
 
@@ -24,19 +59,7 @@
     options:
         show_root_heading: true
 
-### ::: reddwarf.utils.run_pca
-    options:
-        show_root_heading: true
-
 ### ::: reddwarf.utils.scale_projected_data
-    options:
-        show_root_heading: true
-
-### ::: reddwarf.utils.run_kmeans
-    options:
-        show_root_heading: true
-
-### ::: reddwarf.utils.find_optimal_k
     options:
         show_root_heading: true
 
