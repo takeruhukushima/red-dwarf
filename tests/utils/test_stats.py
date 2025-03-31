@@ -3,6 +3,20 @@ import pytest
 from tests.fixtures import polis_convo_data
 from reddwarf.utils import stats
 
+def test_importance_metric_no_votes():
+    expected_importance = [ 1/4,   2/4,   1,     2,      4   ]
+    comment_extremity =   [(1-1), (2-1), (4-1), (8-1), (16-1)]
+    # extremity values    [ 0,     1,     3,     7,     15   ]
+
+    calculated_importance = stats.importance_metric(
+        n_agree=0,
+        n_disagree=0,
+        n_total=0,
+        extremity=comment_extremity,
+    )
+
+    assert expected_importance == calculated_importance.tolist()
+
 def test_importance_metric_limits_no_extremity_all_agree():
     comment_extremity = 0
     expected_importance = 1
@@ -115,6 +129,23 @@ def test_importance_metric_smaller_full_agree_pseudo_count():
         pseudo_count=pseudo_counts,
     )
     assert calculated_priority == pytest.approx(expected_importances, abs=0.001)
+
+def test_priority_metric_no_votes():
+    prio = lambda n: (81/16)*(4**n)
+    # expected_values = [ 5.0625,  20.25,   81,      324,     1296   ]
+    expected_priority = [ prio(0), prio(1), prio(2), prio(3), prio(4)]
+    comment_extremity = [ 0,       1,       (4-1),   (8-1),   (16-1) ]
+    # extremity values  [ 0,       1,        3,       7,       15    ]
+
+    calculated_priority = stats.priority_metric(
+        is_meta=False,
+        n_agree=0,
+        n_disagree=0,
+        n_total=0,
+        extremity=comment_extremity,
+    )
+
+    assert expected_priority == calculated_priority.tolist()
 
 # TODO: Investigate why "medium-with-meta" and "medium-no-meta" don't pass.
 @pytest.mark.parametrize("polis_convo_data", ["small-no-meta", "small-with-meta"], indirect=True)

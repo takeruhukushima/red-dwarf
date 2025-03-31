@@ -350,7 +350,7 @@ def importance_metric(
     n_pass = n_total - (n_agree + n_disagree)
     prob_agree = probability(n_agree, n_total, pseudo_count)
     prob_pass = probability(n_pass, n_total, pseudo_count)
-    # Form in the academic paper:
+    # From in the academic paper:
     # importance = prob_agree * (1 - prob_pass) * (1 + extremity)
     prob_engagement = 1 - prob_pass
     # This is what happens:
