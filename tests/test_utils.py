@@ -312,11 +312,3 @@ def test_impute_missing_votes_no_vote_statement_error():
     )
     with pytest.raises(RedDwarfError):
         utils.impute_missing_votes(vote_matrix=initial_matrix)
-
-@pytest.mark.skip
-def test_run_kmeans():
-    raise
-
-@pytest.mark.skip
-def test_find_optimal_k():
-    raise
