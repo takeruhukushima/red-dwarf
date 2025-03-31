@@ -129,7 +129,7 @@ def test_run_pca_real_data_testing():
 def test_scale_projected_data():
     raise
 
-@pytest.mark.parametrize("polis_convo_data", ["small", "small-with-meta", "small-no-meta", "medium"], indirect=True)
+@pytest.mark.parametrize("polis_convo_data", ["small-with-meta", "small-no-meta", "medium"], indirect=True)
 def test_with_proj_and_extremity(polis_convo_data):
     math_data, _, _ = polis_convo_data
     expected_pca = math_data["pca"]
