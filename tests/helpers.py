@@ -1,3 +1,15 @@
+from reddwarf.types.polis import PolisRepness
+
+def get_grouped_statement_ids(repness: PolisRepness) -> dict[str, list[dict[str, list[int]]]]:
+    """A helper to compare only tid in groups, rather than full repness object."""
+    groups = []
+
+    for key, statements in repness.items():
+        group = {"id": str(key), "members": sorted([stmt["tid"] for stmt in statements])} # type:ignore
+        groups.append(group)
+
+    return {"groups": groups}
+
 def pad_to_size(lst, size):
     return list(lst) + [[0., 0.]]*(size - len(lst))
 

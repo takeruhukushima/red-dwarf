@@ -1,19 +1,11 @@
-from reddwarf import utils
-from tests.fixtures import polis_convo_data
 import pytest
+from tests.fixtures import polis_convo_data
+from tests.helpers import get_grouped_statement_ids
 
+from reddwarf.utils import stats, polismath
 from reddwarf.polis import PolisClient
 from reddwarf.types.polis import PolisRepness
 
-def get_grouped_statement_ids(repness: PolisRepness) -> dict[str, list[dict[str, list[int]]]]:
-    """A helper to compare only tid in groups, rather than full repness object."""
-    groups = []
-
-    for key, statements in repness.items():
-        group = {"id": str(key), "members": sorted([stmt["tid"] for stmt in statements])} # type:ignore
-        groups.append(group)
-
-    return {"groups": groups}
 
 # TODO: Investigate why "small-with-meta" and "medium" won't pass.
 @pytest.mark.parametrize("polis_convo_data", ["small", "small-no-meta"], indirect=True)
@@ -25,7 +17,7 @@ def test_calculate_representativeness_real_data(polis_convo_data):
         f'{path}/comments.json',
     ])
 
-    all_clustered_participant_ids, cluster_labels = utils.extract_data_from_polismath(math_data)
+    all_clustered_participant_ids, cluster_labels = polismath.extract_data_from_polismath(math_data)
 
    # Get list of all active participant ids, since Polis has some edge-cases
     # that keep specific participants, and we need to keep them from being filtered out.
@@ -33,12 +25,12 @@ def test_calculate_representativeness_real_data(polis_convo_data):
     vote_matrix = client.get_matrix(is_filtered=True)
 
     # Generate stats all groups and all statements.
-    grouped_stats_df, gac_df = utils.calculate_comment_statistics_dataframes(
+    grouped_stats_df, gac_df = stats.calculate_comment_statistics_dataframes(
         vote_matrix=vote_matrix,
         cluster_labels=cluster_labels,
     )
 
-    polis_repness = utils.select_representative_statements(grouped_stats_df=grouped_stats_df)
+    polis_repness = stats.select_representative_statements(grouped_stats_df=grouped_stats_df)
 
     actual_repness: PolisRepness = polis_repness # type:ignore
     expected_repness: PolisRepness = math_data["repness"] # type:ignore
