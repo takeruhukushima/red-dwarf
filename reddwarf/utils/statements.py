@@ -1,12 +1,28 @@
 import pandas as pd
 from reddwarf.models import ModeratedEnum
 
-def process_statements(statement_data=[]):
+def process_statements(
+    statement_data: list[dict] = [],
+) -> tuple[pd.DataFrame, list, list, list]:
+    """
+    Process raw statement data into a dataframe, and various lists of participant IDs.
+
+    Args:
+        statement_data (list[dict]): raw list of statement data dicts
+
+    Returns:
+        statements_df (pd.DataFrame): Dataframe of statements
+        mod_in_statement_ids (list): List of statement IDs to moderate in
+        mod_out_statement_ids (list): List of statement IDs to moderate out
+        meta_statement_ids (list): List of meta statement IDs
+
+    """
     mod_in_statement_ids = []
     mod_out_statement_ids = []
     meta_statement_ids = []
 
     statements_df = (pd.DataFrame
+        # TODO: See if both "moderated" and "mod" can end up in here. BUG?
         .from_records(statement_data)
         .set_index('statement_id')
         .sort_index()
