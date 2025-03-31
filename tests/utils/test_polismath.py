@@ -26,7 +26,7 @@ def test_extract_data_from_polismath(polis_convo_data):
 #   https://pol.is/api/v3/votes?conversation_id=6ukkcvfbre&pid=50
 #
 # These conversations also have data integrity issues:
-#   - https://pol.is/report/r64ajcsmp9butzxhzj44c ("small-no-meta", see above)
+#   - https://pol.is/report/r64ajcsmp9butzxhzj44c ("small-no-meta-bad", see above)
 #   - https://pol.is/report/r5ackfcj5dmawnt2de7x7
 #   - https://pol.is/report/r45ru4zfmutun54ttskne
 #

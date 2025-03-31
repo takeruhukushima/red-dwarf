@@ -111,6 +111,7 @@ def sparsity_aware_project_ptpt(participant_votes, statement_components, stateme
 
     # Extract relevant values
     x_vals = participant_votes[mask] - statement_means[mask]  # Centered values
+    # TODO: Extend this to work in 3D
     pc1_vals, pc2_vals = statement_components[:, mask]  # Select only used components
 
     # Compute dot product projection
