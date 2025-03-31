@@ -3,6 +3,9 @@ import pytest
 from tests.fixtures import polis_convo_data
 from reddwarf.utils import stats
 
+from reddwarf.utils import stats, polismath, matrix
+from reddwarf.polis import PolisClient
+
 def test_importance_metric_no_votes():
     expected_importance = [ 1/4,   2/4,   1,     2,      4   ]
     comment_extremity =   [(1-1), (2-1), (4-1), (8-1), (16-1)]
@@ -301,3 +304,44 @@ def test_priority_metric_array():
         extremity= [  4.0,   4.0],
     )
     assert calculated_priority == pytest.approx(expected_priorities, abs=0.001)
+
+# TODO: Investigate why "medium-with-meta" doesn't work. (59/60 mismatched)
+@pytest.mark.parametrize("polis_convo_data", ["small-no-meta", "small-with-meta", "medium-no-meta"], indirect=True)
+def test_group_aware_consensus_real_data(polis_convo_data):
+    math_data, path, _ = polis_convo_data
+    client = PolisClient()
+    client.load_data(filepaths=[
+        f'{path}/votes.json',
+        f'{path}/comments.json',
+        f'{path}/conversation.json',
+    ])
+    VOTES = client.data_loader.votes_data
+    # STATEMENTS = client.data_loader.comments_data
+
+    # _, _, mod_out, _ = stmnts.process_statements(statement_data=STATEMENTS)
+    # print(mod_out)
+
+    vote_matrix = matrix.generate_raw_matrix(votes=VOTES)
+    # TODO: Why do moderated out statements not plug into comment stats? BUG?
+    # vote_matrix = matrix.simple_filter_matrix(
+    #     vote_matrix=vote_matrix,
+    #     mod_out_statement_ids=mod_out,
+    # )
+
+    # Get list of all active participant ids, since Polis has some edge-cases
+    # that keep specific participants, and we need to keep them from being filtered out.
+    all_clustered_participant_ids, cluster_labels = polismath.extract_data_from_polismath(math_data)
+    vote_matrix = vote_matrix.loc[all_clustered_participant_ids, :]
+
+    # Generate stats all groups and all statements.
+    _, gac_df = stats.calculate_comment_statistics_dataframes(
+        vote_matrix=vote_matrix,
+        cluster_labels=cluster_labels,
+    )
+
+    calculated_gac = {
+        str(pid): float(row[0])
+        for pid, row in gac_df.iterrows()
+    }
+
+    assert calculated_gac == pytest.approx(math_data["group-aware-consensus"])
