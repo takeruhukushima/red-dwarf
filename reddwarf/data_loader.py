@@ -11,8 +11,9 @@ from reddwarf.helpers import CachedLimiterSession, CloudflareBypassHTTPAdapter
 ua = UserAgent()
 
 class Loader():
-    def __init__(self, filepaths=[], conversation_id=None, report_id=None, is_cache_enabled=True, output_dir=None, data_source="api", directory_url=None):
+    def __init__(self, filepaths=[], polis_id=None, conversation_id=None, report_id=None, is_cache_enabled=True, output_dir=None, data_source="api", directory_url=None):
         self.polis_instance_url = "https://pol.is"
+        self.polis_id = report_id or conversation_id or polis_id
         self.conversation_id = conversation_id
         self.report_id = report_id
         self.is_cache_enabled = is_cache_enabled
@@ -28,7 +29,8 @@ class Loader():
 
         if self.filepaths:
             self.load_file_data()
-        elif self.conversation_id or self.report_id or self.directory_url:
+        elif self.conversation_id or self.report_id or self.polis_id or self.directory_url:
+            self.populate_polis_ids()
             self.init_http_client()
             if self.directory_url:
                 self.data_source = "csv_export"
@@ -42,6 +44,17 @@ class Loader():
 
         if self.output_dir:
             self.dump_data(self.output_dir)
+
+    def populate_polis_ids(self):
+        if self.polis_id:
+            # If polis_id set, set report or conversation ID.
+            if self.polis_id[0] == "r":
+                self.report_id = self.polis_id
+            elif self.polis_id[0].isdigit():
+                self.conversation_id = self.polis_id
+        else:
+            # If not set, write it from what's provided.
+            self.polis_id = self.report_id or self.conversation_id
 
     def dump_data(self, output_dir):
         if not os.path.exists(output_dir):

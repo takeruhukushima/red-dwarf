@@ -77,6 +77,26 @@ def test_load_data_from_api_and_dump_files(tmp_path):
     assert comments_path.exists() == True
     assert math_path.exists() == True
 
+def test_load_data_via_polis_id_report_id():
+    report_id = SMALL_CONVO_REPORT_ID
+    loader = Loader(polis_id=report_id)
+
+    assert loader.polis_id == report_id
+    # Auto-populated from report_id API call.
+    assert loader.conversation_id != None
+    assert loader.report_id == report_id
+    assert len(loader.report_data) > 0
+
+def test_load_data_via_polis_id_convo_id():
+    convo_id = SMALL_CONVO_ID
+    loader = Loader(polis_id=convo_id)
+
+    assert loader.polis_id == convo_id
+    assert loader.conversation_id == convo_id
+    # Can't get report_id from convo_id
+    assert loader.report_id == None
+    assert len(loader.votes_data) > 0
+
 def test_load_data_from_api_report():
     loader = Loader(report_id=SMALL_CONVO_REPORT_ID)
     assert len(loader.report_data) > 0
