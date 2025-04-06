@@ -8,6 +8,7 @@
 ### Changes
 - Fixed participant projections to map more closely to Polis with `utils.pca.sparsity_aware_project_ptpt()`.
 - Add simple Polis implementation in `reddwarf.implementations.polis`.
+- Add singular `polis_id` arg as recommended way to download (auto-detect `report_id` vs `converation_id`).
 
 ### Chores
 - Moved agora implementation from `reddwarf.agora` to `reddwarf.implementations.agora` (deprecation warning).

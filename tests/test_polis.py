@@ -135,7 +135,24 @@ def test_infer_moderation_type_from_file(polis_convo_data):
 
 def test_load_data_from_report_id():
     client = PolisClient()
+
+    assert client.data_loader == None
     client.load_data(report_id="r5hr48j8y8mpcffk7crmk")
+    assert client.data_loader != None
+
+def test_load_data_from_convo_id():
+    client = PolisClient()
+
+    assert client.data_loader == None
+    client.load_data(conversation_id="9knpdktubt")
+    assert client.data_loader != None
+
+def test_load_data_from_polis_id():
+    client = PolisClient()
+
+    assert client.data_loader == None
+    client.load_data(polis_id="9knpdktubt")
+    assert client.data_loader != None
 
 def test_matrix_cutoff_timestamp():
     client = PolisClient()
