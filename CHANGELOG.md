@@ -4,16 +4,20 @@
 
 ### Fixes
 - Allow `is_strict_moderation` to be inferred from not just API data, but file data.
+- Better handle numpy divide-by-zero edge-cases in two-property test. ([#28](https://github.com/polis-community/red-dwarf/pull/28))
 
 ### Changes
 - Fixed participant projections to map more closely to Polis with `utils.pca.sparsity_aware_project_ptpt()`.
 - Add simple Polis implementation in `reddwarf.implementations.polis`.
 - Add singular `polis_id` arg as recommended way to download (auto-detect `report_id` vs `converation_id`).
+- Calculate group-aware consensus stats. ([#28](https://github.com/polis-community/red-dwarf/pull/28))
 
 ### Chores
 - Moved agora implementation from `reddwarf.agora` to `reddwarf.implementations.agora` (deprecation warning).
 - Add missing `conversation.json` fixture file.
 - Extract statement processing from polis class-based client to pure util function.
+- Add types to fully describe polismath object. ([#28](https://github.com/polis-community/red-dwarf/pull/28))
+- Add new fixture for large convo without meta statements. ([#28](https://github.com/polis-community/red-dwarf/pull/28))
 
 ## [0.2.0][] (2025-03-24)
 ### Fixed
