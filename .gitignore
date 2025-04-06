@@ -3,6 +3,9 @@ uv.lock
 
 test_cache.sqlite
 
+# Python notebook testins
+/docs/notebooks/polis-demo-export/
+
 # MkDocs build directory
 site/
 

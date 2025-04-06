@@ -1,44 +1,45 @@
-from reddwarf import utils
-from tests.fixtures import polis_convo_data
 import pytest
+from tests.fixtures import polis_convo_data
+from tests.helpers import get_grouped_statement_ids
 
+from reddwarf.utils import stats, polismath, matrix, statements as stmnts
 from reddwarf.polis import PolisClient
 from reddwarf.types.polis import PolisRepness
 
-def get_grouped_statement_ids(repness: PolisRepness) -> dict[str, list[dict[str, list[int]]]]:
-    """A helper to compare only tid in groups, rather than full repness object."""
-    groups = []
 
-    for key, statements in repness.items():
-        group = {"id": str(key), "members": sorted([stmt["tid"] for stmt in statements])} # type:ignore
-        groups.append(group)
-
-    return {"groups": groups}
-
-# TODO: Investigate why "small-with-meta" and "medium" won't pass.
-@pytest.mark.parametrize("polis_convo_data", ["small", "small-no-meta"], indirect=True)
+# TODO: Investigate why "medium-with-meta" won't pass.
+@pytest.mark.parametrize("polis_convo_data", ["small-no-meta", "small-with-meta", "medium-no-meta"], indirect=True)
 def test_calculate_representativeness_real_data(polis_convo_data):
     math_data, path, _ = polis_convo_data
-    client = PolisClient(is_strict_moderation=False)
+    client = PolisClient()
     client.load_data(filepaths=[
         f'{path}/votes.json',
         f'{path}/comments.json',
+        f'{path}/conversation.json',
     ])
+    VOTES = client.data_loader.votes_data
+    STATEMENTS = client.data_loader.comments_data
 
-    all_clustered_participant_ids, cluster_labels = utils.extract_data_from_polismath(math_data)
+    _, _, mod_out, _ = stmnts.process_statements(statement_data=STATEMENTS)
 
-   # Get list of all active participant ids, since Polis has some edge-cases
+    vote_matrix = matrix.generate_raw_matrix(votes=VOTES)
+    vote_matrix = matrix.simple_filter_matrix(
+        vote_matrix=vote_matrix,
+        mod_out_statement_ids=mod_out,
+    )
+
+    # Get list of all active participant ids, since Polis has some edge-cases
     # that keep specific participants, and we need to keep them from being filtered out.
-    client.keep_participant_ids = all_clustered_participant_ids
-    vote_matrix = client.get_matrix(is_filtered=True)
+    all_clustered_participant_ids, cluster_labels = polismath.extract_data_from_polismath(math_data)
+    vote_matrix = vote_matrix.loc[all_clustered_participant_ids, :]
 
     # Generate stats all groups and all statements.
-    grouped_stats_df = utils.calculate_comment_statistics_by_group(
+    grouped_stats_df, gac_df = stats.calculate_comment_statistics_dataframes(
         vote_matrix=vote_matrix,
         cluster_labels=cluster_labels,
     )
 
-    polis_repness = utils.select_representative_statements(grouped_stats_df=grouped_stats_df)
+    polis_repness = stats.select_representative_statements(grouped_stats_df=grouped_stats_df)
 
     actual_repness: PolisRepness = polis_repness # type:ignore
     expected_repness: PolisRepness = math_data["repness"] # type:ignore

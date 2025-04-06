@@ -38,8 +38,8 @@ def test_run_pca_toy():
     assert_allclose(eigenvectors, expected_eigenvectors, rtol=10**-5)
     assert_allclose(eigenvalues, expected_eigenvalues, rtol=10**-5)
 
-@pytest.mark.parametrize("polis_convo_data", ["small"], indirect=True)
-def test_run_pca_real_data_below_100_participants(polis_convo_data):
+@pytest.mark.parametrize("polis_convo_data", ["small", "small-with-meta"], indirect=True)
+def test_run_pca_real_data_below_100(polis_convo_data):
     math_data, data_path, *_ = polis_convo_data
     expected_pca = math_data["pca"]
 
@@ -57,14 +57,12 @@ def test_run_pca_real_data_below_100_participants(polis_convo_data):
 
     _, actual_components, _, actual_means = PcaUtils.run_pca(vote_matrix=real_vote_matrix)
 
-    # Some signs are flipped for the "small" fixture data, because signs are arbitrary in PCA.
-    # If we initialize differently later on, it should flip and match.
     assert actual_components[0] == pytest.approx(expected_pca["comps"][0])
     assert actual_components[1] == pytest.approx(expected_pca["comps"][1])
     assert -actual_means == pytest.approx(expected_pca["center"])
 
 @pytest.mark.parametrize("polis_convo_data", ["medium"], indirect=True)
-def test_run_pca_real_data_above_100_participants(polis_convo_data):
+def test_run_pca_real_data_above_100(polis_convo_data):
     math_data, data_path, *_ = polis_convo_data
     expected_pca = math_data["pca"]
 
@@ -130,3 +128,18 @@ def test_run_pca_real_data_testing():
 @pytest.mark.skip
 def test_scale_projected_data():
     raise
+
+@pytest.mark.parametrize("polis_convo_data", ["small-with-meta", "small-no-meta", "medium"], indirect=True)
+def test_with_proj_and_extremity(polis_convo_data):
+    math_data, _, _ = polis_convo_data
+    expected_pca = math_data["pca"]
+
+    pca = {
+        "center": math_data["pca"]["center"],
+        "comps": math_data["pca"]["comps"],
+    }
+
+    calculated_pca = PcaUtils.with_proj_and_extremity(pca)
+
+    assert expected_pca["comment-projection"] == calculated_pca["comment-projection"]
+    assert expected_pca["comment-extremity"] == calculated_pca["comment-extremity"]
