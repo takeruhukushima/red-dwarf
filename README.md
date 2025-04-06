@@ -62,10 +62,12 @@ from reddwarf.polis import PolisClient
 # If you only know the conversation ID, you can fetch the live data from the Polis APIs.
 # Note that this may be fresher than a static export hosted elsewhere.
 client = PolisClient()
-client.load_data(conversation_id="4yy3sh84js")
-# If you happen to know the report ID, that can be used instead.
+client.load_data(polis_id="4yy3sh84js")
+# If you happen to know the report ID, that can be used instead:
+#
+#     client.load_data(polis_id="r5jsvucnwuuhw7dzjvaim")
 
-# All of these are equivalent:
+# All of these are equivalent to the above-mentioned:
 client.load_data(conversation_id="4yy3sh84js")
 client.load_data(conversation_id="4yy3sh84js", data_source="api")
 client.load_data(report_id="r5jsvucnwuuhw7dzjvaim")
@@ -74,10 +76,10 @@ client.load_data(report_id="r5jsvucnwuuhw7dzjvaim", data_source="api")
 # If you know the report ID, you can also download from the newer and more official CSV export API endpoint:
 # Example: https://pol.is/api/v3/reportExport/r5jsvucnwuuhw7dzjvaim/participant-votes.csv
 client = PolisClient()
-client.load_data(report_id="r5jsvucnwuuhw7dzjvaim", data_source="csv_export")
+client.load_data(polis_id="r5jsvucnwuuhw7dzjvaim", data_source="csv_export")
 
 # All of these are equivalent:
-client.load_data(report_id="r5jsvucnwuuhw7dzjvaim", data_source="csv_export")
+client.load_data(polis_id="r5jsvucnwuuhw7dzjvaim", data_source="csv_export")
 client.load_data(directory_url="https://pol.is/api/v3/reportExport/r5jsvucnwuuhw7dzjvaim/")
 
 
