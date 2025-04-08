@@ -43,11 +43,12 @@ def run_clustering(
         random_state (int): If set, will force determinism during k-means clustering
 
     Returns:
-        projected_data (DataFrame): Dataframe of projected participants, with columns "x", "y", "cluster_id"
-        comps (list[list[float]]): List of principal components for each statement
-        eigenvalues (list[float]): List of eigenvalues for each principal component
-        center (list[float]): List of centers/means for each statement
-        cluster_centers (list[list[float]]): List of center xy coordinates for each cluster
+        PolisClusteringResult: A dataclass containing clustering information with fields:
+            - projected_data (DataFrame): Dataframe of projected participants, with columns "x", "y", "cluster_id"
+            - components (list[list[float]]): List of principal components for each statement
+            - eigenvalues (list[float]): List of eigenvalues for each principal component
+            - means (list[float]): List of centers/means for each statement
+            - cluster_centers (list[list[float]]): List of center xy coordinates for each cluster
     """
     vote_matrix = generate_raw_matrix(votes=votes)
     participant_ids_in = get_participant_ids(vote_matrix, vote_threshold=min_user_vote_threshold)
