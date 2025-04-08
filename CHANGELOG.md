@@ -18,6 +18,7 @@
 - Extract statement processing from polis class-based client to pure util function.
 - Add types to fully describe polismath object. ([#28](https://github.com/polis-community/red-dwarf/pull/28))
 - Add new fixture for large convo without meta statements. ([#28](https://github.com/polis-community/red-dwarf/pull/28))
+- Add ability to filter unit tests and avoid running whole suite. ([#44](https://github.com/polis-community/red-dwarf/pull/44))
 
 ## [0.2.0][] (2025-03-24)
 ### Fixed
