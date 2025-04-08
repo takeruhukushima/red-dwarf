@@ -53,9 +53,9 @@ def test_run_clustering_real_data(polis_convo_data):
         force_group_count=force_group_count,
     )
 
-    assert result.components[0] == pytest.approx(math_data["pca"]["comps"][0])
-    assert result.components[1] == pytest.approx(math_data["pca"]["comps"][1])
-    assert result.means == pytest.approx(math_data["pca"]["center"])
+    assert pytest.approx(result.components[0]) == math_data["pca"]["comps"][0]
+    assert pytest.approx(result.components[1]) == math_data["pca"]["comps"][1]
+    assert pytest.approx(result.means) == math_data["pca"]["center"]
 
     # Ensure we have as many expected coords as calculated coords.
     assert len(result.projected_data.index) == len(expected_projected_ptpts)
@@ -80,10 +80,7 @@ def test_run_clustering_real_data(polis_convo_data):
 
 @pytest.mark.parametrize("polis_convo_data", ["small"], indirect=True)
 def test_run_clustering_is_reproducible(polis_convo_data):
-    math_data, data_path, _ = polis_convo_data
-
-    # Transpose base cluster coords into participant_ids
-    expected_projected_ptpts = transform_base_clusters_to_participant_coords(math_data["base-clusters"])
+    _, data_path, _ = polis_convo_data
 
     client = PolisClient()
     client.load_data(filepaths=[
