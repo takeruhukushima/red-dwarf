@@ -4,7 +4,15 @@ from pandas import DataFrame
 from reddwarf.utils.matrix import generate_raw_matrix, simple_filter_matrix, get_participant_ids
 from reddwarf.utils.pca import run_pca
 from reddwarf.utils.clustering import find_optimal_k, run_kmeans
+from dataclasses import dataclass
 
+@dataclass
+class PolisClusteringResult:
+    projected_data: DataFrame
+    components: NDArray
+    eigenvalues: NDArray
+    means: NDArray
+    cluster_centers: NDArray | None
 
 def run_clustering(
     votes: list[dict],
@@ -15,7 +23,7 @@ def run_clustering(
     max_group_count: int = 5,
     force_group_count: Optional[int] = None,
     random_state: Optional[int] = None,
-) -> tuple[DataFrame, NDArray, NDArray, NDArray, NDArray | None]:
+) -> PolisClusteringResult:
     """
     An essentially feature-complete implementation of the Polis clustering algorithm.
 
@@ -74,4 +82,10 @@ def run_clustering(
         )
     projected_data = projected_data.assign(cluster_id=cluster_labels)
 
-    return projected_data, comps, eigenvalues, center, cluster_centers
+    return PolisClusteringResult(
+        projected_data=projected_data,
+        components=comps,
+        eigenvalues=eigenvalues,
+        means=center,
+        cluster_centers=cluster_centers,
+    )
