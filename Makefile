@@ -1,3 +1,5 @@
+TEST_FILTER ?= .
+
 install: ## Install production dependencies
 	uv pip install --editable .
 
@@ -13,11 +15,11 @@ docs-serve: ## Serve the documentation dev site
 debug: ## Run the debug.py script
 	uv run python debug.py
 
-test: ## Run tests via pytest
-	uv run pytest -p no:nbmake
+test: ## Run tests via pytest, optionally specifying file (Ex.: `make test TEST_FILTER=map-xids`)
+	uv run pytest -p no:nbmake -k '$(TEST_FILTER)'
 
-test-nb: install ## Test all notebooks, or optionally specific file (Ex: `make test-nb NB_FILE=map-xids`)
-	uv run pytest -p no:cov --nbmake docs/notebooks/$(NB_FILE)*.ipynb
+test-nb: install ## Test all notebooks, or optionally specific file (Ex: `make test-nb NB_FILTER=map-xids`)
+	uv run pytest -p no:cov --nbmake docs/notebooks/*$(NB_FILTER)*.ipynb
 
 test-cov: ## Run tests via pytest (with coverage report)
 	uv run pytest --cov=reddwarf --cov-report term-missing:skip-covered
@@ -29,7 +31,7 @@ cov-report-html: ## Build and open html coverage report
 test-debug: ## Run test via pytest (with verbose debugging)
 	# Make sure stdout is rendered to screen.
 	# Show full diffs on failure.
-	uv run pytest -p no:nbmake --capture=no -vv
+	uv run pytest -p no:nbmake --capture=no -vv -k '$(TEST_FILTER)'
 
 clear-test-cache: ## Cleak the SQLite database of cached HTTP requests
 	rm -f test_cache.sqlite
