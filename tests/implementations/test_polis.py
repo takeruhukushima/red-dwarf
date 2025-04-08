@@ -44,7 +44,7 @@ def test_run_clustering_real_data(polis_convo_data):
 
     _, _, mod_out_statement_ids, _ = process_statements(statement_data=client.data_loader.comments_data)
 
-    projected_ptpts, comps, _, center, _ = run_clustering(
+    result = run_clustering(
         votes=client.data_loader.votes_data,
         mod_out_statement_ids=mod_out_statement_ids,
         keep_participant_ids=keep_participant_ids,
@@ -53,22 +53,22 @@ def test_run_clustering_real_data(polis_convo_data):
         force_group_count=force_group_count,
     )
 
-    assert comps[0] == pytest.approx(math_data["pca"]["comps"][0])
-    assert comps[1] == pytest.approx(math_data["pca"]["comps"][1])
-    assert center == pytest.approx(math_data["pca"]["center"])
+    assert result.components[0] == pytest.approx(math_data["pca"]["comps"][0])
+    assert result.components[1] == pytest.approx(math_data["pca"]["comps"][1])
+    assert result.means == pytest.approx(math_data["pca"]["center"])
 
     # Ensure we have as many expected coords as calculated coords.
-    assert len(projected_ptpts.index) == len(expected_projected_ptpts)
+    assert len(result.projected_data.index) == len(expected_projected_ptpts)
 
     for projection in expected_projected_ptpts:
         expected_xy = projection["xy"]
-        calculated_xy = projected_ptpts.loc[projection["participant_id"], ["x", "y"]].values
+        calculated_xy = result.projected_data.loc[projection["participant_id"], ["x", "y"]].values
 
         assert calculated_xy == pytest.approx(expected_xy)
 
     # Check that the cluster labels all match when K is forced to match.
     _, expected_cluster_labels = extract_data_from_polismath(math_data)
-    calculated_cluster_labels = projected_ptpts["cluster_id"].values
+    calculated_cluster_labels = result.projected_data["cluster_id"].values
     assert_array_equal(calculated_cluster_labels, expected_cluster_labels)
 
     # from reddwarf.data_presenter import generate_figure
@@ -99,22 +99,23 @@ def test_run_clustering_is_reproducible(polis_convo_data):
         votes=client.data_loader.votes_data,
         mod_out_statement_ids=mod_out_statement_ids,
     )
-    proj, comps, eigenvals, means, cluster_centers = cluster_run_1 # just to document
 
     max_group_count = 5
-    padded_cluster_centers = pad_to_size(cluster_centers, max_group_count)
+    padded_cluster_centers = pad_to_size(cluster_run_1.cluster_centers, max_group_count)
 
     cluster_run_2 = run_clustering(
         votes=client.data_loader.votes_data,
         mod_out_statement_ids=mod_out_statement_ids,
         init_centers=padded_cluster_centers,
     )
-    proj, comps, eigenvals, means, cluster_centers = cluster_run_2 # just to document
 
     # same number of clusters
-    assert len(cluster_run_1[4]) == len(cluster_run_2[4])
+    assert len(cluster_run_1.cluster_centers) == len(cluster_run_2.cluster_centers)
 
-    assert_frame_equal(cluster_run_1[0], cluster_run_2[0]) # projected statements and cluster IDs
-    assert cluster_run_1[1].tolist() == cluster_run_2[1].tolist() # components/eigenvectors
-    assert cluster_run_1[3].tolist() == cluster_run_2[3].tolist() # statement centers/means
-    assert cluster_run_1[4].tolist() == cluster_run_2[4].tolist() # cluster centers
+    # projected statements and cluster IDs
+    assert_frame_equal(cluster_run_1.projected_data, cluster_run_2.projected_data)
+    # components/eigenvectors
+    assert cluster_run_1.components.tolist() == cluster_run_2.components.tolist()
+    # statement centers/means
+    assert cluster_run_1.means.tolist() == cluster_run_2.means.tolist()
+    assert cluster_run_1.cluster_centers.tolist() == cluster_run_2.cluster_centers.tolist()
