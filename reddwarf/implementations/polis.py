@@ -59,7 +59,10 @@ def run_clustering(
         vote_matrix=vote_matrix,
         mod_out_statement_ids=mod_out_statement_ids,
     )
-    projected_data, comps, eigenvalues, center = run_pca(vote_matrix=vote_matrix)
+    projected_data, pca = run_pca(vote_matrix=vote_matrix)
+    center = pca.mean_
+    comps = pca.components_
+    eigenvalues = pca.explained_variance_
 
     projected_data = projected_data.loc[participant_ids_in, :]
 

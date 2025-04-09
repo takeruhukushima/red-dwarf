@@ -5,11 +5,10 @@ from sklearn.decomposition import PCA
 from reddwarf.utils.matrix import VoteMatrix, impute_missing_votes
 from typing import Tuple
 
-
 def run_pca(
         vote_matrix: VoteMatrix,
         n_components: int = 2,
-) -> Tuple[ pd.DataFrame, np.ndarray, np.ndarray, np.ndarray ]:
+) -> Tuple[ pd.DataFrame, PCA ]:
     """
     Process a prepared vote matrix to be imputed and return projected participant data,
     as well as eigenvectors and eigenvalues.
@@ -22,23 +21,21 @@ def run_pca(
 
     Returns:
         projected_data (pd.DataFrame): A dataframe of projected xy coordinates for each `vote_matrix` row/participant.
-        eigenvectors (List[List[float]]): Principal `n` components, one per column/statement/feature.
-        eigenvalues (List[float]): Explained variance, one per column/statements/feature.
-        means (list[float]): Means/centers of column/statements/features.
+        pca (PCA): PCA object, notably with the following attributes:
+            - components_ (List[List[float]]): Eigenvectors of principal `n` components, one per column/statement/feature.
+            - explained_variance_ (List[float]): Explained variance of each principal component.
+            - mean_ (list[float]): Means/centers of each column/statements/features.
     """
     imputed_matrix = impute_missing_votes(vote_matrix)
 
-    pca = PCA(n_components=n_components) ## pca is apparently different, it wants
-    pca.fit(imputed_matrix) ## .T transposes the matrix (flips it)
+    pca = PCA(n_components=n_components)
+    pca.fit(imputed_matrix)
 
-    eigenvectors = pca.components_
-    eigenvalues = pca.explained_variance_
-    # TODO: Why does this need to be inverted to match polismath output? BUG?
-    # TODO: Investigate why some numbers are a bit off here.
-    #       ANSWER: Because centers are calculated on unfiltered raw matrix for some reason.
-    #       means = -raw_vote_matrix.mean(axis="rows")
-    means = pca.mean_
+    projected_data = project_participants(raw_vote_matrix=vote_matrix, pca=pca)
 
+    return projected_data, pca
+
+def project_participants(raw_vote_matrix: VoteMatrix, pca: PCA) -> pd.DataFrame:
     # Project participant vote data onto 2D using eigenvectors.
     # TODO: Determine what exactly we want to be doing here.
 
@@ -53,12 +50,19 @@ def run_pca(
     # TODO: Figure out why signs are flipped here after custom projection, unlike pca.transform().
     # Not required for regular pca.transform(), so perhaps a polismath BUG?
     # We fix this in implementations.run_clustering().
-    projected_data = [sparsity_aware_project_ptpt(ptpt_votes, pca.components_, pca.mean_) for pid, ptpt_votes in vote_matrix.iterrows()]
+    projected_data = [
+        sparsity_aware_project_ptpt(ptpt_votes, pca.components_, pca.mean_)
+        for _, ptpt_votes in raw_vote_matrix.iterrows()
+    ]
 
-    projected_data = pd.DataFrame(projected_data, index=vote_matrix.index, columns=np.asarray(["x", "y"]))
+    projected_data = pd.DataFrame(
+        projected_data,
+        index=raw_vote_matrix.index,
+        columns=np.asarray(["x", "y"]),
+    )
     projected_data.index.name = "participant_id"
 
-    return projected_data, eigenvectors, eigenvalues, means
+    return projected_data
 
 # This isn't used right now, as we're doing the scaling in the port of `sparcity_aware_project_ptpt()`.
 def scale_projected_data(
