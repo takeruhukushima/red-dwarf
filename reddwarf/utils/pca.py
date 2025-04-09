@@ -31,11 +31,11 @@ def run_pca(
     pca = PCA(n_components=n_components)
     pca.fit(imputed_matrix)
 
-    projected_data = project_participants(raw_vote_matrix=vote_matrix, pca=pca)
+    projected_participants = generate_projections(raw_vote_matrix=vote_matrix, pca=pca)
 
-    return projected_data, pca
+    return projected_participants, pca
 
-def project_participants(raw_vote_matrix: VoteMatrix, pca: PCA) -> pd.DataFrame:
+def generate_projections(raw_vote_matrix: VoteMatrix, pca: PCA) -> pd.DataFrame:
     # Project participant vote data onto 2D using eigenvectors.
     # TODO: Determine what exactly we want to be doing here.
 
@@ -50,10 +50,7 @@ def project_participants(raw_vote_matrix: VoteMatrix, pca: PCA) -> pd.DataFrame:
     # TODO: Figure out why signs are flipped here after custom projection, unlike pca.transform().
     # Not required for regular pca.transform(), so perhaps a polismath BUG?
     # We fix this in implementations.run_clustering().
-    projected_data = [
-        sparsity_aware_project_ptpt(ptpt_votes, pca.components_, pca.mean_)
-        for _, ptpt_votes in raw_vote_matrix.iterrows()
-    ]
+    projected_data = sparsity_aware_project_ptpts(raw_vote_matrix.values, pca.components_, pca.mean_)
 
     projected_data = pd.DataFrame(
         projected_data,
