@@ -136,10 +136,10 @@ def test_run_pca_real_data_testing():
 
     # We test absolute because PCA methods don't always give the same sign, and can flip.
     # TODO: Try to remove this.
-    assert np.absolute(actual_pca.components_[0]) == pytest.approx(np.absolute(expected_pca["comps"][0]))
-    assert np.absolute(actual_pca.components_[1]) == pytest.approx(np.absolute(expected_pca["comps"][1]))
+    assert actual_pca.components_[0] == pytest.approx(expected_pca["comps"][0])
+    assert actual_pca.components_[1] == pytest.approx(expected_pca["comps"][1])
 
-    assert np.absolute(actual_pca.mean_) == pytest.approx(np.absolute(expected_pca["center"]))
+    assert actual_pca.mean_ == pytest.approx(expected_pca["center"])
 
 @pytest.mark.parametrize("polis_convo_data", ["small-no-meta", "small-with-meta", "medium-with-meta"], indirect=True)
 def test_with_proj_and_extremity(polis_convo_data):
