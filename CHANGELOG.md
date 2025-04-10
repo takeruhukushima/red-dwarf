@@ -19,6 +19,7 @@
 - Add types to fully describe polismath object. ([#28](https://github.com/polis-community/red-dwarf/pull/28))
 - Add new fixture for large convo without meta statements. ([#28](https://github.com/polis-community/red-dwarf/pull/28))
 - Add ability to filter unit tests and avoid running whole suite. ([#44](https://github.com/polis-community/red-dwarf/pull/44))
+- Improve test fixture to download remote Polis data.
 
 ## [0.2.0][] (2025-03-24)
 ### Fixed
