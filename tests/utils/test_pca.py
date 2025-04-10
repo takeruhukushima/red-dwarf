@@ -1,5 +1,4 @@
 import pandas as pd
-import numpy as np
 from numpy.testing import assert_allclose, assert_array_almost_equal
 import pytest
 from tests.fixtures import polis_convo_data
@@ -30,8 +29,8 @@ def test_run_pca_toy():
             [ 0, 1,  0.1],
             [ 0, 1, -0.1],
         ],
-        columns=[0, 1, 2], # statement_ids
-        index=[0, 1, 2, 3], # participant_ids
+        columns=pd.Index([0, 1, 2]), # statement_ids
+        index=pd.Index([0, 1, 2, 3]), # participant_ids
         dtype=float,
     )
     actual_projected_participants, _, pca = PcaUtils.run_pca(vote_matrix=initial_matrix)
@@ -129,7 +128,7 @@ def test_run_pca_real_data_testing():
 
     real_vote_matrix = MatrixUtils.simple_filter_matrix(
         vote_matrix=real_vote_matrix,
-        statement_ids_mod_out=math_data["mod-out"],
+        mod_out_statement_ids=math_data["mod-out"],
     )
 
     _, _, actual_pca = PcaUtils.run_pca(vote_matrix=real_vote_matrix)
