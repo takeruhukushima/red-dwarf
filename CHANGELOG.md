@@ -11,6 +11,7 @@
 - Add simple Polis implementation in `reddwarf.implementations.polis`.
 - Add singular `polis_id` arg as recommended way to download (auto-detect `report_id` vs `converation_id`).
 - Calculate group-aware consensus stats. ([#28](https://github.com/polis-community/red-dwarf/pull/28))
+- Removed `scale_projected_data()` in `PolisClient` (now happens in `run_pca()`).
 
 ### Chores
 - Moved agora implementation from `reddwarf.agora` to `reddwarf.implementations.agora` (deprecation warning).

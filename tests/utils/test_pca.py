@@ -143,10 +143,6 @@ def test_run_pca_real_data_testing():
 
     assert np.absolute(actual_pca.mean_) == pytest.approx(np.absolute(expected_pca["center"]))
 
-@pytest.mark.skip
-def test_scale_projected_data():
-    raise
-
 @pytest.mark.parametrize("polis_convo_data", ["small-no-meta", "small-with-meta", "medium-with-meta"], indirect=True)
 def test_with_proj_and_extremity(polis_convo_data):
     math_data, _, _ = polis_convo_data

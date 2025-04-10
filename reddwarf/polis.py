@@ -160,22 +160,15 @@ class PolisClient():
 
     def run_pca(self):
         # projected_data, components, explained_variance, means, *_ = utils.run_pca(
-        projected_data, pca = utils.run_pca(
+        projected_participants, projected_statements, pca = utils.run_pca(
             vote_matrix=self.matrix,
             n_components=self.n_components,
         )
 
         self.eigenvectors = pca.components_
         self.eigenvalues = pca.explained_variance_
-        self.projected_data = projected_data
+        self.projected_data = projected_participants
         self.means = pca.explained_variance_
-
-    def scale_projected_data(self):
-        scaled_data = utils.scale_projected_data(
-            projected_data = self.projected_data,
-            vote_matrix = self.matrix,
-        )
-        self.projected_data = scaled_data
 
     # Not working yet.
     def build_base_clusters(self):
