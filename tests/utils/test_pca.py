@@ -81,7 +81,7 @@ def test_run_pca_real_data_below_100(polis_convo_data):
     # print(PcaUtils.pca_project_cmnts(expected_pca["comps"], np.asarray(expected_pca["center"])).transpose())
     assert_array_almost_equal(actual_projected_statements.values.transpose(), expected_pca["comment-projection"])
 
-@pytest.mark.parametrize("polis_convo_data", ["medium"], indirect=True)
+@pytest.mark.parametrize("polis_convo_data", ["medium-with-meta"], indirect=True)
 def test_run_pca_real_data_above_100(polis_convo_data):
     math_data, data_path, *_ = polis_convo_data
     # Some signs are flipped for the "medium-with-meta" fixture data, because signs are arbitrary in PCA.
@@ -150,7 +150,7 @@ def test_run_pca_real_data_testing():
 def test_scale_projected_data():
     raise
 
-@pytest.mark.parametrize("polis_convo_data", ["small-no-meta", "small-with-meta", "medium"], indirect=True)
+@pytest.mark.parametrize("polis_convo_data", ["small-no-meta", "small-with-meta", "medium-with-meta"], indirect=True)
 def test_with_proj_and_extremity(polis_convo_data):
     math_data, _, _ = polis_convo_data
     # Invert to correct for flipped signs in polismath.
