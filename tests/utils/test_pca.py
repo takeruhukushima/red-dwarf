@@ -46,7 +46,7 @@ def test_run_pca_real_data_below_100(polis_convo_data):
     # Invert to correct for flipped signs in polismath.
     math_data = helpers.flip_signs_by_key(
         nested_dict=math_data,
-        keys=["base-clusters.x", "base-clusters.y", "pca.center", "pca.comment-projection"],
+        keys=["pca.center", "pca.comment-projection", "base-clusters.x", "base-clusters.y", "group-clusters[*].center"],
     )
     expected_pca = math_data["pca"]
 
@@ -147,7 +147,7 @@ def test_with_proj_and_extremity(polis_convo_data):
     # Invert to correct for flipped signs in polismath.
     math_data = helpers.flip_signs_by_key(
         nested_dict=math_data,
-        keys=["pca.center", "pca.comment-projection"],
+        keys=["pca.center", "pca.comment-projection", "base-clusters.x", "base-clusters.y", "group-clusters[*].center"],
     )
     expected_pca = math_data["pca"]
 
