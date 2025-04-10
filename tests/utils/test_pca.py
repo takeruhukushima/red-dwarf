@@ -1,4 +1,3 @@
-from typing import Any
 import pandas as pd
 import numpy as np
 from numpy.testing import assert_allclose, assert_array_almost_equal
@@ -46,7 +45,7 @@ def test_run_pca_toy():
 def test_run_pca_real_data_below_100(polis_convo_data):
     math_data, data_path, *_ = polis_convo_data
     # Invert to correct for flipped signs in polismath.
-    math_data: Any = helpers.flip_signs_by_key(
+    math_data = helpers.flip_signs_by_key(
         nested_dict=math_data,
         keys=["base-clusters.x", "base-clusters.y", "pca.center", "pca.comment-projection"],
     )
@@ -85,7 +84,7 @@ def test_run_pca_real_data_above_100(polis_convo_data):
     math_data, data_path, *_ = polis_convo_data
     # Some signs are flipped for the "medium-with-meta" fixture data, because signs are arbitrary in PCA.
     # If we initialize differently later on, it should flip and match.
-    math_data: Any = helpers.flip_signs_by_key(nested_dict=math_data, keys=["pca.comps[0]"])
+    math_data = helpers.flip_signs_by_key(nested_dict=math_data, keys=["pca.comps[0]"])
     expected_pca = math_data["pca"]
 
     # Just fetch the moderated out statements from polismath (no need to recalculate here)
@@ -147,7 +146,7 @@ def test_run_pca_real_data_testing():
 def test_with_proj_and_extremity(polis_convo_data):
     math_data, _, _ = polis_convo_data
     # Invert to correct for flipped signs in polismath.
-    math_data: Any = helpers.flip_signs_by_key(
+    math_data = helpers.flip_signs_by_key(
         nested_dict=math_data,
         keys=["pca.center", "pca.comment-projection"],
     )

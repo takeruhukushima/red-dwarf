@@ -1,5 +1,5 @@
 from reddwarf.types.polis import PolisRepness
-from typing import Union
+from typing import Any, Union, Literal
 
 def get_grouped_statement_ids(repness: PolisRepness) -> dict[str, list[dict[str, list[int]]]]:
     """A helper to compare only tid in groups, rather than full repness object."""
@@ -71,7 +71,7 @@ def groupsort_pids_by_cluster(df):
 NestedValue = Union[int, float, list["NestedValue"], dict[str, "NestedValue"]]
 NestedDict = dict[str, NestedValue]
 
-def flip_signs_by_key(nested_dict: NestedDict, keys: list[str] = []) -> NestedDict:
+def flip_signs_by_key(nested_dict: NestedDict, keys: list[str] = []) -> Any:
     """
     Flips the signs of numeric values in a nested dict using dot-notation paths.
     Supports nested arrays and array indexing like "foo.bar[0].baz[1]".
