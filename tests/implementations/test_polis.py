@@ -12,7 +12,7 @@ from tests.helpers import pad_to_size, transform_base_clusters_to_participant_co
 # This test will only match polismath for sub-100 participant convos.
 # For testing our code agaisnt real data with against larger conversations,
 # we'll need to implement base clustering.
-@pytest.mark.parametrize("polis_convo_data", ["small"], indirect=True)
+@pytest.mark.parametrize("polis_convo_data", ["small-no-meta"], indirect=True)
 def test_run_clustering_real_data(polis_convo_data):
     math_data, data_path, _ = polis_convo_data
 
@@ -77,7 +77,7 @@ def test_run_clustering_real_data(polis_convo_data):
     # labels = projected_ptpts["cluster_id"].values
     # generate_figure(projected_ptpts, labels)
 
-@pytest.mark.parametrize("polis_convo_data", ["small"], indirect=True)
+@pytest.mark.parametrize("polis_convo_data", ["small-no-meta"], indirect=True)
 def test_run_clustering_is_reproducible(polis_convo_data):
     _, data_path, _ = polis_convo_data
 
