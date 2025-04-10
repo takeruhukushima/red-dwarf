@@ -1,3 +1,4 @@
+from typing import Any
 import pandas as pd
 import numpy as np
 from numpy.testing import assert_allclose, assert_array_almost_equal
@@ -6,7 +7,7 @@ from tests.fixtures import polis_convo_data
 from reddwarf.utils import pca as PcaUtils
 from reddwarf.utils import matrix as MatrixUtils
 from reddwarf.polis import PolisClient
-from tests.helpers import transform_base_clusters_to_participant_coords
+from tests import helpers
 
 
 def test_run_pca_toy():
@@ -45,10 +46,10 @@ def test_run_pca_toy():
 def test_run_pca_real_data_below_100(polis_convo_data):
     math_data, data_path, *_ = polis_convo_data
     # Invert to correct for flipped signs in polismath.
-    math_data["base-clusters"]["x"] = (-np.asarray(math_data["base-clusters"]["x"])).tolist()
-    math_data["base-clusters"]["y"] = (-np.asarray(math_data["base-clusters"]["y"])).tolist()
-    math_data["pca"]["center"] = (-np.asarray(math_data["pca"]["center"])).tolist()
-    math_data["pca"]["comment-projection"] = (-np.asarray(math_data["pca"]["comment-projection"])).tolist()
+    math_data: Any = helpers.flip_signs_by_key(
+        nested_dict=math_data,
+        keys=["base-clusters.x", "base-clusters.y", "pca.center", "pca.comment-projection"],
+    )
     expected_pca = math_data["pca"]
 
     # Just fetch the moderated out statements from polismath (no need to recalculate here)
@@ -69,7 +70,7 @@ def test_run_pca_real_data_below_100(polis_convo_data):
     assert actual_pca.components_[1] == pytest.approx(expected_pca["comps"][1])
     assert actual_pca.mean_ == pytest.approx(expected_pca["center"])
 
-    expected_participant_projections = transform_base_clusters_to_participant_coords(base_clusters=math_data["base-clusters"])
+    expected_participant_projections = helpers.transform_base_clusters_to_participant_coords(base_clusters=math_data["base-clusters"])
     for expected in expected_participant_projections:
         pid = expected["participant_id"]
         assert_array_almost_equal(actual_projected_participants.loc[pid, ["x","y"]].values, expected["xy"])
@@ -83,6 +84,9 @@ def test_run_pca_real_data_below_100(polis_convo_data):
 @pytest.mark.parametrize("polis_convo_data", ["medium"], indirect=True)
 def test_run_pca_real_data_above_100(polis_convo_data):
     math_data, data_path, *_ = polis_convo_data
+    # Some signs are flipped for the "medium-with-meta" fixture data, because signs are arbitrary in PCA.
+    # If we initialize differently later on, it should flip and match.
+    math_data: Any = helpers.flip_signs_by_key(nested_dict=math_data, keys=["pca.comps[0]"])
     expected_pca = math_data["pca"]
 
     # Just fetch the moderated out statements from polismath (no need to recalculate here)
@@ -99,9 +103,7 @@ def test_run_pca_real_data_above_100(polis_convo_data):
 
     _, _, actual_pca = PcaUtils.run_pca(vote_matrix=real_vote_matrix)
 
-    # Some signs are flipped for the "medium" fixture data, because signs are arbitrary in PCA.
-    # If we initialize differently later on, it should flip and match.
-    assert -actual_pca.components_[0] == pytest.approx(expected_pca["comps"][0])
+    assert actual_pca.components_[0] == pytest.approx(expected_pca["comps"][0])
     assert actual_pca.components_[1] == pytest.approx(expected_pca["comps"][1])
     assert actual_pca.mean_ == pytest.approx(expected_pca["center"])
 
@@ -151,10 +153,12 @@ def test_scale_projected_data():
 @pytest.mark.parametrize("polis_convo_data", ["small-no-meta", "small-with-meta", "medium"], indirect=True)
 def test_with_proj_and_extremity(polis_convo_data):
     math_data, _, _ = polis_convo_data
-    expected_pca = math_data["pca"]
     # Invert to correct for flipped signs in polismath.
-    expected_pca["center"] = (-np.asarray(expected_pca["center"])).tolist()
-    expected_pca["comment-projection"] = (-np.asarray(expected_pca["comment-projection"])).tolist()
+    math_data: Any = helpers.flip_signs_by_key(
+        nested_dict=math_data,
+        keys=["pca.center", "pca.comment-projection"],
+    )
+    expected_pca = math_data["pca"]
 
     pca = {
         "center": expected_pca["center"],
