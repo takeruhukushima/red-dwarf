@@ -6,7 +6,7 @@ import pytest
 from tests.fixtures import polis_convo_data
 from reddwarf.utils import pca as PcaUtils
 from reddwarf.utils import matrix as MatrixUtils
-from reddwarf.polis import PolisClient
+from reddwarf.data_loader import Loader
 from tests import helpers
 
 
@@ -55,9 +55,8 @@ def test_run_pca_real_data_below_100(polis_convo_data):
     # Just fetch the moderated out statements from polismath (no need to recalculate here)
     mod_out_statement_ids = math_data["mod-out"]
 
-    client = PolisClient()
-    client.load_data(filepaths=[f"{data_path}/votes.json"])
-    real_vote_matrix = MatrixUtils.generate_raw_matrix(votes=client.data_loader.votes_data)
+    loader = Loader(filepaths=[f"{data_path}/votes.json"])
+    real_vote_matrix = MatrixUtils.generate_raw_matrix(votes=loader.votes_data)
 
     real_vote_matrix = MatrixUtils.simple_filter_matrix(
         vote_matrix=real_vote_matrix,
@@ -92,9 +91,8 @@ def test_run_pca_real_data_above_100(polis_convo_data):
     # Just fetch the moderated out statements from polismath (no need to recalculate here)
     mod_out_statement_ids = math_data["mod-out"]
 
-    client = PolisClient()
-    client.load_data(filepaths=[f"{data_path}/votes.json"])
-    real_vote_matrix = MatrixUtils.generate_raw_matrix(votes=client.data_loader.votes_data)
+    loader = Loader(filepaths=[f"{data_path}/votes.json"])
+    real_vote_matrix = MatrixUtils.generate_raw_matrix(votes=loader.votes_data)
 
     real_vote_matrix = MatrixUtils.simple_filter_matrix(
         vote_matrix=real_vote_matrix,
@@ -110,25 +108,24 @@ def test_run_pca_real_data_above_100(polis_convo_data):
 # TODO: Find a good place to run integration tests against real remote datasets.
 @pytest.mark.skip
 def test_run_pca_real_data_testing():
-    client = PolisClient()
-    # client.load_data(report_id="r6iwc8tb22am6hpd8f7c5") # 20 voters, 0/146 meta WORKS
-    # client.load_data(report_id="r5hr48j8y8mpcffk7crmk") # 27 voters, 11/63 meta WORKS strict=no
-    # client.load_data(report_id="r7dr5tzke7pbpbajynkv8") #  69 voters, 74/133 meta NOPE 2/133 mismatch strict=yes
-    # client.load_data(report_id="r8jhyfp54cyanhu26cz3v") #  90 voters, 0/51 meta WORKS strict=no
-    # client.load_data(report_id="r2dtdbwbsrzu8bj8wmpmc") #  87 voters, 3/92 meta WORKS strict=no
-    # client.load_data(report_id="r9cnkypdddkmnefz8k2bn") # 113 voters, 0/40 meta WORKS strict=no
-    # client.load_data(report_id="r4zurrpweay6khmsaab4e") # 108 voters, 0/82 meta WORKS strict=yes
-    # client.load_data(report_id="r5ackfcj5dmawnt2de7x7") # 109 voters, 16/95 meta NOPE DIFF SHAPES? bug?
-    # client.load_data(report_id="r6bpmcmizi2kyvhzkhfr7") # 23 voters, 0/9 meta WORKS strict=yes
-    # client.load_data(report_id="r4tfrhexm3dhawcfav6dy") # 116 voters, 0/170 meta WORKS
-    # client.load_data(report_id="r7f89nk32sjuknecjbrxp") # 135 voters, 0/52 meta WORKS
-    # client.load_data(report_id="r2xzujbewezpjdc9pmzhd") # 135 voters, 3/48 meta WORKS
-    # client.load_data(report_id="r8bzudrhs8j6petppicrj") # 140 voters, 0/46 meta WORKS
-    # client.load_data(report_id="r4zdxrdscmukmkakmbz3k") # 145 voters, 0/117 meta WORKS
-    client.load_data(report_id="r45ru4zfmutun54ttskne") # 336 voters, 15/148 meta NOPE 76/148 mismatch
-    # client.load_data(report_id="") # x voters, x/x meta ...
-    real_vote_matrix = MatrixUtils.generate_raw_matrix(votes=client.data_loader.votes_data)
-    math_data = client.data_loader.math_data
+    # loader = Loader(polis_id="r6iwc8tb22am6hpd8f7c5") # 20 voters, 0/146 meta WORKS
+    # loader = Loader(polis_id="r5hr48j8y8mpcffk7crmk") # 27 voters, 11/63 meta WORKS strict=no
+    # loader = Loader(polis_id="r7dr5tzke7pbpbajynkv8") #  69 voters, 74/133 meta NOPE 2/133 mismatch strict=yes
+    # loader = Loader(polis_id="r8jhyfp54cyanhu26cz3v") #  90 voters, 0/51 meta WORKS strict=no
+    # loader = Loader(polis_id="r2dtdbwbsrzu8bj8wmpmc") #  87 voters, 3/92 meta WORKS strict=no
+    # loader = Loader(polis_id="r9cnkypdddkmnefz8k2bn") # 113 voters, 0/40 meta WORKS strict=no
+    # loader = Loader(polis_id="r4zurrpweay6khmsaab4e") # 108 voters, 0/82 meta WORKS strict=yes
+    # loader = Loader(polis_id="r5ackfcj5dmawnt2de7x7") # 109 voters, 16/95 meta NOPE DIFF SHAPES? bug?
+    # loader = Loader(polis_id="r6bpmcmizi2kyvhzkhfr7") # 23 voters, 0/9 meta WORKS strict=yes
+    # loader = Loader(polis_id="r4tfrhexm3dhawcfav6dy") # 116 voters, 0/170 meta WORKS
+    # loader = Loader(polis_id="r7f89nk32sjuknecjbrxp") # 135 voters, 0/52 meta WORKS
+    # loader = Loader(polis_id="r2xzujbewezpjdc9pmzhd") # 135 voters, 3/48 meta WORKS
+    # loader = Loader(polis_id="r8bzudrhs8j6petppicrj") # 140 voters, 0/46 meta WORKS
+    # loader = Loader(polis_id="r4zdxrdscmukmkakmbz3k") # 145 voters, 0/117 meta WORKS
+    loader = Loader(polis_id="r45ru4zfmutun54ttskne") # 336 voters, 15/148 meta NOPE 76/148 mismatch
+    # loader = Loader(polis_id="") # x voters, x/x meta ...
+    real_vote_matrix = MatrixUtils.generate_raw_matrix(votes=loader.votes_data)
+    math_data = loader.math_data
     expected_pca = math_data["pca"]
 
     real_vote_matrix = MatrixUtils.simple_filter_matrix(
@@ -160,12 +157,12 @@ def test_with_proj_and_extremity(polis_convo_data):
     )
     expected_pca = math_data["pca"]
 
-    pca = {
+    minimal_pca = {
         "center": expected_pca["center"],
         "comps": expected_pca["comps"],
     }
 
-    calculated_pca = PcaUtils.with_proj_and_extremity(pca)
+    calculated_pca = PcaUtils.with_proj_and_extremity(pca=minimal_pca)
 
     assert expected_pca["comment-projection"] == calculated_pca["comment-projection"]
     assert expected_pca["comment-extremity"] == calculated_pca["comment-extremity"]

@@ -21,6 +21,7 @@
 - Add ability to filter unit tests and avoid running whole suite. ([#44](https://github.com/polis-community/red-dwarf/pull/44))
 - Improve test fixture to download remote Polis data.
 - Add helper to support simple sign-flips in Polis test data.
+- Remove usage of PolisClient in tests, in favour of [data] Loader.
 
 ## [0.2.0][] (2025-03-24)
 ### Fixed

@@ -4,7 +4,7 @@ from tests.fixtures import polis_convo_data
 from reddwarf.utils import stats
 
 from reddwarf.utils import stats, polismath, matrix
-from reddwarf.polis import PolisClient
+from reddwarf.data_loader import Loader
 
 def test_importance_metric_no_votes():
     expected_importance = [ 1/4,   2/4,   1,     2,      4   ]
@@ -309,14 +309,13 @@ def test_priority_metric_array():
 @pytest.mark.parametrize("polis_convo_data", ["small-no-meta", "small-with-meta", "medium-no-meta"], indirect=True)
 def test_group_aware_consensus_real_data(polis_convo_data):
     math_data, path, _ = polis_convo_data
-    client = PolisClient()
-    client.load_data(filepaths=[
+    loader = Loader(filepaths=[
         f'{path}/votes.json',
         f'{path}/comments.json',
         f'{path}/conversation.json',
     ])
-    VOTES = client.data_loader.votes_data
-    # STATEMENTS = client.data_loader.comments_data
+    VOTES = loader.votes_data
+    # STATEMENTS = loader.comments_data
 
     # _, _, mod_out, _ = stmnts.process_statements(statement_data=STATEMENTS)
     # print(mod_out)

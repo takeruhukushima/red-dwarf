@@ -1,7 +1,7 @@
 import pytest
 from tests.fixtures import polis_convo_data
 from reddwarf.implementations.polis import run_clustering
-from reddwarf.polis import PolisClient
+from reddwarf.data_loader import Loader
 from reddwarf.utils.statements import process_statements
 from reddwarf.utils.polismath import extract_data_from_polismath
 from numpy.testing import assert_array_equal
@@ -34,18 +34,17 @@ def test_run_clustering_real_data(polis_convo_data):
     init_centers = [group["center"] for group in math_data["group-clusters"]]
     init_centers = pad_to_size(init_centers, max_group_count)
 
-    client = PolisClient()
-    client.load_data(filepaths=[
+    loader = Loader(filepaths=[
         f"{data_path}/votes.json",
         # Loading these helps generate mod_out_statement_ids
         f"{data_path}/comments.json",
         f"{data_path}/conversation.json",
     ])
 
-    _, _, mod_out_statement_ids, _ = process_statements(statement_data=client.data_loader.comments_data)
+    _, _, mod_out_statement_ids, _ = process_statements(statement_data=loader.comments_data)
 
     result = run_clustering(
-        votes=client.data_loader.votes_data,
+        votes=loader.votes_data,
         mod_out_statement_ids=mod_out_statement_ids,
         keep_participant_ids=keep_participant_ids,
         max_group_count=max_group_count,
@@ -82,18 +81,17 @@ def test_run_clustering_real_data(polis_convo_data):
 def test_run_clustering_is_reproducible(polis_convo_data):
     _, data_path, _ = polis_convo_data
 
-    client = PolisClient()
-    client.load_data(filepaths=[
+    loader = Loader(filepaths=[
         f"{data_path}/votes.json",
         # Loading these helps generate mod_out_statement_ids
         f"{data_path}/comments.json",
         f"{data_path}/conversation.json",
     ])
 
-    _, _, mod_out_statement_ids, _ = process_statements(statement_data=client.data_loader.comments_data)
+    _, _, mod_out_statement_ids, _ = process_statements(statement_data=loader.comments_data)
 
     cluster_run_1 = run_clustering(
-        votes=client.data_loader.votes_data,
+        votes=loader.votes_data,
         mod_out_statement_ids=mod_out_statement_ids,
     )
 
@@ -101,7 +99,7 @@ def test_run_clustering_is_reproducible(polis_convo_data):
     padded_cluster_centers = pad_to_size(cluster_run_1.cluster_centers, max_group_count)
 
     cluster_run_2 = run_clustering(
-        votes=client.data_loader.votes_data,
+        votes=loader.votes_data,
         mod_out_statement_ids=mod_out_statement_ids,
         init_centers=padded_cluster_centers,
     )

@@ -3,7 +3,7 @@ from tests.fixtures import polis_convo_data
 from tests.helpers import get_grouped_statement_ids
 
 from reddwarf.utils import stats, polismath, matrix, statements as stmnts
-from reddwarf.polis import PolisClient
+from reddwarf.data_loader import Loader
 from reddwarf.types.polis import PolisRepness
 
 
@@ -11,14 +11,13 @@ from reddwarf.types.polis import PolisRepness
 @pytest.mark.parametrize("polis_convo_data", ["small-no-meta", "small-with-meta", "medium-no-meta"], indirect=True)
 def test_calculate_representativeness_real_data(polis_convo_data):
     math_data, path, _ = polis_convo_data
-    client = PolisClient()
-    client.load_data(filepaths=[
+    loader = Loader(filepaths=[
         f'{path}/votes.json',
         f'{path}/comments.json',
         f'{path}/conversation.json',
     ])
-    VOTES = client.data_loader.votes_data
-    STATEMENTS = client.data_loader.comments_data
+    VOTES = loader.votes_data
+    STATEMENTS = loader.comments_data
 
     _, _, mod_out, _ = stmnts.process_statements(statement_data=STATEMENTS)
 

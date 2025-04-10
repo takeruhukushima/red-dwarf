@@ -1,16 +1,15 @@
 import pytest
 from tests.fixtures import polis_convo_data
 from reddwarf.implementations import agora
-from reddwarf.polis import PolisClient
+from reddwarf.data_loader import Loader
 
 # A helper to generate votes list.
 def build_votes(data_fixture):
     _, data_path, *_ = data_fixture
 
-    client = PolisClient()
-    client.load_data(filepaths=[f"{data_path}/votes.json"])
+    loader = Loader(filepaths=[f"{data_path}/votes.json"])
 
-    return client.data_loader.votes_data
+    return loader.votes_data
 
 @pytest.mark.parametrize("polis_convo_data", ["small"], indirect=True)
 def test_run_clustering_real_data_small(polis_convo_data):
