@@ -74,7 +74,8 @@ NestedDict = dict[str, NestedValue]
 def flip_signs_by_key(nested_dict: NestedDict, keys: list[str] = []) -> Any:
     """
     Flips the signs of numeric values in a nested dict using dot-notation paths.
-    Supports nested arrays and array indexing like "foo.bar[0].baz[1]".
+    Supports nested arrays, array indexing (like "foo.bar[0].baz[1]"), and array
+    wildcards (like "foo.bar[*].baz).
 
     This helper is for quickly dealing with real polismath fixture data that has
     different signs than we calculate ourselves.
@@ -84,11 +85,13 @@ def flip_signs_by_key(nested_dict: NestedDict, keys: list[str] = []) -> Any:
     at the fixture level should help clarify this.
 
     Arguments:
-        obj (NestedDict): A nested dict of arbitrary depth, with lists of float values at some keys.
-        keys (list[str]): A list of dot-notation keys to flip signs within.
+        obj (NestedDict): A nested dict of arbitrary depth, with lists of float
+            values at some keys. keys (list[str]): A list of dot-notation keys to
+            flip signs within.
 
     Returns:
-        NestedDict: A nested dict with all the same original types, but with specific keys inverted.
+        Any: A nested dict with all the same original types, but with
+            specific keys inverted. (Typed as "Any" for convenience.)
     """
     import copy
     import re
@@ -101,40 +104,61 @@ def flip_signs_by_key(nested_dict: NestedDict, keys: list[str] = []) -> Any:
             return -value
         return value
 
-    def parse_path_segment(segment: str) -> list[Union[str, int]]:
-        parts: list[Union[str, int]] = []
-        for match in re.finditer(r'([^\[\]]+)|\[(\d+)\]', segment):
+    def parse_path_segment(segment: str) -> list[Union[str, int, Literal["*"]]]:
+        parts: list[Union[str, int, Literal["*"]]] = []
+        for match in re.finditer(r'([^\[\]]+)|\[(\d+|\*)\]', segment):
             key, idx = match.groups()
             if key:
                 parts.append(key)
-            elif idx:
+            elif idx == "*":
+                parts.append("*")
+            else:
                 parts.append(int(idx))
         return parts
 
-    def get_parent_and_final_key(root: NestedValue, path: str) -> tuple[Union[dict, list, None], Union[str, int, None]]:
+    def resolve_targets(root: NestedValue, path: str) -> list[tuple[Union[dict, list], Union[str, int]]]:
         segments = path.split(".")
-        parts: list[Union[str, int]] = []
+        parts: list[Union[str, int, Literal["*"]]] = []
         for seg in segments:
             parts.extend(parse_path_segment(seg))
 
-        current = root
-        for part in parts[:-1]:
+        def recurse(current: NestedValue, remaining: list[Union[str, int, Literal["*"]]]) -> list[tuple[Union[dict, list], Union[str, int]]]:
+            if not remaining:
+                return []
+
+            part, *rest = remaining
+
+            if len(rest) == 0:
+                # Final step: return the parent + final key/index
+                if isinstance(part, (str, int)):
+                    return [(current, part)]
+                elif part == "*":
+                    if isinstance(current, list):
+                        return [(current, i) for i in range(len(current))]
+                return []
+
             if isinstance(part, str) and isinstance(current, dict) and part in current:
-                current = current[part]
+                return recurse(current[part], rest)
+
             elif isinstance(part, int) and isinstance(current, list) and 0 <= part < len(current):
-                current = current[part]
-            else:
-                return None, None
-        return current, parts[-1] if parts else None
+                return recurse(current[part], rest)
+
+            elif part == "*" and isinstance(current, list):
+                results = []
+                for item in current:
+                    results.extend(recurse(item, rest))
+                return results
+
+            return []
+
+        return recurse(root, parts)
 
     for dot_key in keys:
-        parent, final_key = get_parent_and_final_key(result, dot_key)
-        if parent is None or final_key is None:
-            continue
-
-        if isinstance(final_key, str) and isinstance(parent, dict) and final_key in parent:
-            parent[final_key] = flip_recursive(parent[final_key])
-        elif isinstance(final_key, int) and isinstance(parent, list) and 0 <= final_key < len(parent):
-            parent[final_key] = flip_recursive(parent[final_key])
+        targets = resolve_targets(result, dot_key)
+        for parent, final_key in targets:
+            if isinstance(final_key, str) and isinstance(parent, dict) and final_key in parent:
+                parent[final_key] = flip_recursive(parent[final_key])
+            elif isinstance(final_key, int) and isinstance(parent, list) and 0 <= final_key < len(parent):
+                parent[final_key] = flip_recursive(parent[final_key])
 
     return result
