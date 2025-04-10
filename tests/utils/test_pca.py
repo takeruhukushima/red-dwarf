@@ -1,11 +1,12 @@
 import pandas as pd
 import numpy as np
-from numpy.testing import assert_allclose
+from numpy.testing import assert_allclose, assert_array_almost_equal
 import pytest
 from tests.fixtures import polis_convo_data
 from reddwarf.utils import pca as PcaUtils
 from reddwarf.utils import matrix as MatrixUtils
 from reddwarf.polis import PolisClient
+from tests.helpers import transform_base_clusters_to_participant_coords
 
 
 def test_run_pca_toy():
@@ -33,16 +34,21 @@ def test_run_pca_toy():
         index=[0, 1, 2, 3], # participant_ids
         dtype=float,
     )
-    actual_projected_data, pca = PcaUtils.run_pca(vote_matrix=initial_matrix)
+    actual_projected_participants, _, pca = PcaUtils.run_pca(vote_matrix=initial_matrix)
     actual_eigenvectors = pca.components_
     actual_eigenvalues = pca.explained_variance_
-    assert_allclose(actual_projected_data.values, expected_projections, rtol=10**-5)
+    assert_allclose(actual_projected_participants.values, expected_projections, rtol=10**-5)
     assert_allclose(actual_eigenvectors, expected_eigenvectors, rtol=10**-5)
     assert_allclose(actual_eigenvalues, expected_eigenvalues, rtol=10**-5)
 
-@pytest.mark.parametrize("polis_convo_data", ["small", "small-with-meta"], indirect=True)
+@pytest.mark.parametrize("polis_convo_data", ["small-no-meta", "small-with-meta"], indirect=True)
 def test_run_pca_real_data_below_100(polis_convo_data):
     math_data, data_path, *_ = polis_convo_data
+    # Invert to correct for flipped signs in polismath.
+    math_data["base-clusters"]["x"] = (-np.asarray(math_data["base-clusters"]["x"])).tolist()
+    math_data["base-clusters"]["y"] = (-np.asarray(math_data["base-clusters"]["y"])).tolist()
+    math_data["pca"]["center"] = (-np.asarray(math_data["pca"]["center"])).tolist()
+    math_data["pca"]["comment-projection"] = (-np.asarray(math_data["pca"]["comment-projection"])).tolist()
     expected_pca = math_data["pca"]
 
     # Just fetch the moderated out statements from polismath (no need to recalculate here)
@@ -57,11 +63,22 @@ def test_run_pca_real_data_below_100(polis_convo_data):
         mod_out_statement_ids=mod_out_statement_ids,
     )
 
-    _, actual_pca = PcaUtils.run_pca(vote_matrix=real_vote_matrix)
+    actual_projected_participants, actual_projected_statements, actual_pca = PcaUtils.run_pca(vote_matrix=real_vote_matrix)
 
     assert actual_pca.components_[0] == pytest.approx(expected_pca["comps"][0])
     assert actual_pca.components_[1] == pytest.approx(expected_pca["comps"][1])
-    assert -actual_pca.mean_ == pytest.approx(expected_pca["center"])
+    assert actual_pca.mean_ == pytest.approx(expected_pca["center"])
+
+    expected_participant_projections = transform_base_clusters_to_participant_coords(base_clusters=math_data["base-clusters"])
+    for expected in expected_participant_projections:
+        pid = expected["participant_id"]
+        assert_array_almost_equal(actual_projected_participants.loc[pid, ["x","y"]].values, expected["xy"])
+
+    # print(actual_projected_statements.values.transpose())
+    # print(expected_pca["comment-projection"])
+    # print(PcaUtils.pca_project_cmnts(actual_pca.components_, actual_pca.mean_).transpose())
+    # print(PcaUtils.pca_project_cmnts(expected_pca["comps"], np.asarray(expected_pca["center"])).transpose())
+    assert_array_almost_equal(actual_projected_statements.values.transpose(), expected_pca["comment-projection"])
 
 @pytest.mark.parametrize("polis_convo_data", ["medium"], indirect=True)
 def test_run_pca_real_data_above_100(polis_convo_data):
@@ -80,7 +97,7 @@ def test_run_pca_real_data_above_100(polis_convo_data):
         mod_out_statement_ids=mod_out_statement_ids,
     )
 
-    _, actual_pca = PcaUtils.run_pca(vote_matrix=real_vote_matrix)
+    _, _, actual_pca = PcaUtils.run_pca(vote_matrix=real_vote_matrix)
 
     # Some signs are flipped for the "medium" fixture data, because signs are arbitrary in PCA.
     # If we initialize differently later on, it should flip and match.
@@ -117,7 +134,7 @@ def test_run_pca_real_data_testing():
         statement_ids_mod_out=math_data["mod-out"],
     )
 
-    _, actual_pca = PcaUtils.run_pca(vote_matrix=real_vote_matrix)
+    _, _, actual_pca = PcaUtils.run_pca(vote_matrix=real_vote_matrix)
     # powerit_pca = PcaUtils.powerit_pca(real_vote_matrix.values)
 
     # We test absolute because PCA methods don't always give the same sign, and can flip.
@@ -131,14 +148,17 @@ def test_run_pca_real_data_testing():
 def test_scale_projected_data():
     raise
 
-@pytest.mark.parametrize("polis_convo_data", ["small-with-meta", "small-no-meta", "medium"], indirect=True)
+@pytest.mark.parametrize("polis_convo_data", ["small-no-meta", "small-with-meta", "medium"], indirect=True)
 def test_with_proj_and_extremity(polis_convo_data):
     math_data, _, _ = polis_convo_data
     expected_pca = math_data["pca"]
+    # Invert to correct for flipped signs in polismath.
+    expected_pca["center"] = (-np.asarray(expected_pca["center"])).tolist()
+    expected_pca["comment-projection"] = (-np.asarray(expected_pca["comment-projection"])).tolist()
 
     pca = {
-        "center": math_data["pca"]["center"],
-        "comps": math_data["pca"]["comps"],
+        "center": expected_pca["center"],
+        "comps": expected_pca["comps"],
     }
 
     calculated_pca = PcaUtils.with_proj_and_extremity(pca)
