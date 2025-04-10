@@ -8,7 +8,8 @@ from dataclasses import dataclass
 
 @dataclass
 class PolisClusteringResult:
-    projected_data: DataFrame
+    projected_participants: DataFrame
+    projected_statements: DataFrame
     components: NDArray
     eigenvalues: NDArray
     means: NDArray
@@ -64,30 +65,31 @@ def run_clustering(
     comps = pca.components_
     eigenvalues = pca.explained_variance_
 
-    projected_data = projected_participants.loc[participant_ids_in, :]
+    projected_participants = projected_participants.loc[participant_ids_in, :]
 
     # To match Polis output, we need to reverse signs for centers and projections
     # TODO: Investigate why this is. Perhaps related to signs being flipped on agree/disagree back in the day.
-    projected_data, center = -projected_data, -center
+    # projected_participants, center = -projected_participants, center
 
     if force_group_count:
         cluster_labels, cluster_centers = run_kmeans(
-            dataframe=projected_data,
+            dataframe=projected_participants,
             n_clusters=force_group_count,
             init_centers=init_centers,
             random_state=random_state,
         )
     else:
         _, _, cluster_labels, cluster_centers = find_optimal_k(
-            projected_data=projected_data,
+            projected_data=projected_participants,
             max_group_count=max_group_count,
             init_centers=init_centers,
             random_state=random_state,
         )
-    projected_data = projected_data.assign(cluster_id=cluster_labels)
+    projected_participants = projected_participants.assign(cluster_id=cluster_labels)
 
     return PolisClusteringResult(
-        projected_data=projected_data,
+        projected_participants=projected_participants,
+        projected_statements=projected_statements,
         components=comps,
         eigenvalues=eigenvalues,
         means=center,
