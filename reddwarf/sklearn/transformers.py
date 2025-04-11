@@ -25,6 +25,14 @@ class SparsityAwareScaler(BaseEstimator, TransformerMixin):
         return self
 
     def transform(self, X):
+        scale_factors = self._calculate_scale_factors()
+        return X * scale_factors[:, np.newaxis]
+
+    def inverse_transform(self, X):
+        scale_factors = self._calculate_scale_factors()
+        return X / scale_factors[:, np.newaxis]
+
+    def _calculate_scale_factors(self):
         if self.X_sparse is None:
             raise AttributeError(
                 "Missing `X_sparse`. Pass `X_sparse` when initializing SparsityAwareScaler."
@@ -39,4 +47,4 @@ class SparsityAwareScaler(BaseEstimator, TransformerMixin):
 
         scale_factors = np.sqrt(n_features / np.maximum(1, n_non_missing))
 
-        return X * scale_factors[:, np.newaxis]
+        return scale_factors
