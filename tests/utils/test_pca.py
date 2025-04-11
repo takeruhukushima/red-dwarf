@@ -1,6 +1,7 @@
 import pandas as pd
 from numpy.testing import assert_allclose, assert_array_almost_equal
 import pytest
+from reddwarf.utils.statements import process_statements
 from tests.fixtures import polis_convo_data
 from reddwarf.utils import pca as PcaUtils
 from reddwarf.utils import matrix as MatrixUtils
@@ -42,27 +43,39 @@ def test_run_pca_toy():
 
 @pytest.mark.parametrize("polis_convo_data", ["small-no-meta", "small-with-meta", "medium-no-meta", "medium-with-meta"], indirect=True)
 def test_matching_explained_variance(polis_convo_data):
+    """
+    This is the most robust way to comfirm our PCA calculations are working,
+    since variance isn't affect by arbitrary but expected sign-flips of
+    components, nor potential unexpected sign-flip bugs in polismath from
+    historic agree/disagree behavior changes.
+    """
     fixture = polis_convo_data
-    expected_pca = fixture.math_data["pca"]
 
-    # Generate PCA object almost from scratch.
-    loader = Loader(filepaths=[f"{fixture.data_dir}/votes.json"])
-    # TODO: Generate mod-out from scratch?
-    mod_out_statement_ids = fixture.math_data["mod-out"]
+    loader = Loader(filepaths=[
+        f"{fixture.data_dir}/votes.json",
+        f"{fixture.data_dir}/comments.json",
+        f"{fixture.data_dir}/math-pca2.json",
+    ])
+
+    expected_pca = loader.math_data["pca"]
+
+    # Generate PCA object and explained variance from scratch.
+    _, _, mod_out_statement_ids, _ = process_statements(loader.comments_data)
     real_vote_matrix = MatrixUtils.generate_raw_matrix(votes=loader.votes_data)
     real_vote_matrix = MatrixUtils.simple_filter_matrix(
         vote_matrix=real_vote_matrix,
         mod_out_statement_ids=mod_out_statement_ids,
     )
     _, _, actual_pca = PcaUtils.run_pca(vote_matrix=real_vote_matrix)
-
-    # Check explained variance
     actual_variance = actual_pca.explained_variance_
+
+    # Rebuild explained variance from polismath data.
     expected_variance = helpers.calculate_explained_variance(
-        X_sparse=real_vote_matrix.values,
+        sparse_vote_matrix=real_vote_matrix.values,
         means=expected_pca["center"],
         components=expected_pca["comps"],
     )
+
     assert actual_variance == pytest.approx(expected_variance)
 
 @pytest.mark.parametrize("polis_convo_data", ["small-no-meta", "small-with-meta"], indirect=True)

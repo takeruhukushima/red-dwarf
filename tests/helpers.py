@@ -166,21 +166,21 @@ def flip_signs_by_key(nested_dict: NestedDict, keys: list[str] = []) -> Any:
 
     return result
 
-def calculate_explained_variance(X_sparse, means, components):
+def calculate_explained_variance(sparse_vote_matrix, means, components):
     """
     Derive explained variance from simpler polismath outputs.
 
     Explained variance is not sign-dependant, so great for unit tests.
 
     Arguments:
-        X_sparse (np.ndarray): Sparse vote_matrix 2D numpy array
+        sparse_vote_matrix (np.ndarray): Sparse vote_matrix 2D numpy array
         means (list[float]): List of feature means
         components (list[list[float]]): List of eigenvectors/components
 
     Returns:
         list[float]: Variance explained by each component (n_components,)
     """
-    X_imputed = SimpleImputer().fit_transform(X_sparse)
+    X_imputed = SimpleImputer().fit_transform(sparse_vote_matrix)
     means, comps = [np.asarray(arr) for arr in [means, components]]
     X_centered = X_imputed - means
     X_projected = X_centered @ comps.transpose()
