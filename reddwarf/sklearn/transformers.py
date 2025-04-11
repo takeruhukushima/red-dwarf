@@ -1,5 +1,6 @@
 import numpy as np
 from typing import Optional
+from numpy.typing import NDArray
 from sklearn.base import BaseEstimator, TransformerMixin
 
 class SparsityAwareScaler(BaseEstimator, TransformerMixin):
@@ -11,7 +12,7 @@ class SparsityAwareScaler(BaseEstimator, TransformerMixin):
     Attributes:
         X_sparse (np.ndarray | None): A sparse array with shape (n_features,)
     """
-    def __init__(self, X_sparse: Optional[np.ndarray] = None):
+    def __init__(self, X_sparse: Optional[NDArray[np.float64]] = None):
         self.X_sparse = X_sparse
 
     # See: https://scikit-learn.org/stable/modules/generated/sklearn.utils.Tags.html#sklearn.utils.Tags
@@ -25,26 +26,30 @@ class SparsityAwareScaler(BaseEstimator, TransformerMixin):
         return self
 
     def transform(self, X):
-        scale_factors = self._calculate_scale_factors()
+        scale_factors = self._calculate_scaling_factors()
         return X * scale_factors[:, np.newaxis]
 
     def inverse_transform(self, X):
-        scale_factors = self._calculate_scale_factors()
+        scale_factors = self._calculate_scaling_factors()
         return X / scale_factors[:, np.newaxis]
 
-    def _calculate_scale_factors(self):
+    def _calculate_scaling_factors(self):
         if self.X_sparse is None:
             raise AttributeError(
                 "Missing `X_sparse`. Pass `X_sparse` when initializing SparsityAwareScaler."
             )
 
-        # This is the number of total statements/columns: n_statements
-        n_features = self.X_sparse.shape[1]
-        # This is the number of votes per participant row: n_votes
-        n_non_missing = np.count_nonzero(~np.isnan(self.X_sparse), axis=1)
+        # The total number of statements in matrix.
+        _, n_cols = self.X_sparse.shape
+        n_total_statements = n_features = n_cols
+
+        # List of votes per participant row.
+        vote_mask = ~np.isnan(self.X_sparse)
+        n_participant_votes = n_non_missing = np.count_nonzero(vote_mask, axis=1)
         # Ref: https://hyp.is/x6nhItMMEe-v1KtYFgpOiA/gwern.net/doc/sociology/2021-small.pdf
         # Ref: https://github.com/compdemocracy/polis/blob/15aa65c9ca9e37ecf57e2786d7d81a4bd4ad37ef/math/src/polismath/math/pca.clj#L155-L1
 
-        scale_factors = np.sqrt(n_features / np.maximum(1, n_non_missing))
+        # scaling_factors = np.sqrt(n_features / np.maximum(1, n_non_missing))
+        scaling_factors = np.sqrt(n_total_statements / np.maximum(1, n_participant_votes))
 
-        return scale_factors
+        return scaling_factors
