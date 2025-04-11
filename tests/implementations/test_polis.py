@@ -14,7 +14,7 @@ from tests import helpers
 # we'll need to implement base clustering.
 @pytest.mark.parametrize("polis_convo_data", ["small-no-meta"], indirect=True)
 def test_run_clustering_real_data(polis_convo_data):
-    math_data, data_path, _ = polis_convo_data
+    math_data, data_path, _, keep_participant_ids = polis_convo_data
     math_data = helpers.flip_signs_by_key(nested_dict=math_data, keys=["pca.center", "pca.comment-projection", "base-clusters.x", "base-clusters.y", "group-clusters[*].center"])
 
     # We hardcode this because Polis has some bespoke rules that keep these IDs in for clustering.
@@ -23,7 +23,10 @@ def test_run_clustering_real_data(polis_convo_data):
     # 10 -> 2 vote @ statements #21 (participant #1's) & #29 (their own, moderated in).
     # 11 -> 1 vote @ statement #29 (participant #10's)
     # 14 -> 1 vote @ statement #27 (participant #6's)
-    keep_participant_ids = [ 5, 10, 11, 14 ]
+
+    # We're moving this into polis_convo_data, for better parametrization.
+    # keep_participant_ids = [ 5, 10, 11, 14 ]
+
     # We force kmeans to find a specific value because Polis does this for something they call k-smoothing.
     # TODO: Get k-smoothing working, and simulate how k is held back.
     force_group_count = len(math_data["group-clusters"])
@@ -75,7 +78,7 @@ def test_run_clustering_real_data(polis_convo_data):
     # Check that the cluster labels all match when K is forced to match.
     _, expected_cluster_labels = extract_data_from_polismath(math_data)
     calculated_cluster_labels = result.projected_participants["cluster_id"].values
-    assert_array_equal(calculated_cluster_labels, expected_cluster_labels)
+    assert_array_equal(calculated_cluster_labels, expected_cluster_labels) # type:ignore
 
     # from reddwarf.data_presenter import generate_figure
     # print(projected_ptpts)
@@ -86,7 +89,7 @@ def test_run_clustering_real_data(polis_convo_data):
 
 @pytest.mark.parametrize("polis_convo_data", ["small-no-meta"], indirect=True)
 def test_run_clustering_is_reproducible(polis_convo_data):
-    _, data_path, _ = polis_convo_data
+    _, data_path, _, _ = polis_convo_data
 
     loader = Loader(filepaths=[
         f"{data_path}/votes.json",
@@ -112,7 +115,7 @@ def test_run_clustering_is_reproducible(polis_convo_data):
     )
 
     # same number of clusters
-    assert len(cluster_run_1.cluster_centers) == len(cluster_run_2.cluster_centers)
+    assert len(cluster_run_1.cluster_centers) == len(cluster_run_2.cluster_centers) # type:ignore
 
     # projected statements and cluster IDs
     assert_frame_equal(cluster_run_1.projected_participants, cluster_run_2.projected_participants)

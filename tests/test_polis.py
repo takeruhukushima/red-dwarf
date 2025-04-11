@@ -7,7 +7,7 @@ from tests.fixtures import polis_convo_data
 
 @pytest.mark.parametrize("polis_convo_data", ["small-no-meta", "small-with-meta", "medium-with-meta", "medium-no-meta"], indirect=True)
 def test_user_vote_counts(polis_convo_data):
-    data, path, _ = polis_convo_data
+    data, path, _, _ = polis_convo_data
     expected_data = data['user-vote-counts']
     expected_data = {int(k): v for k,v in expected_data.items()}
 
@@ -20,7 +20,7 @@ def test_user_vote_counts(polis_convo_data):
 
 @pytest.mark.parametrize("polis_convo_data", ["small-no-meta", "small-with-meta", "medium-with-meta", "medium-no-meta"], indirect=True)
 def test_meta_tids(polis_convo_data):
-    data, path, _ = polis_convo_data
+    data, path, _, _ = polis_convo_data
     expected_data = data['meta-tids']
 
     client = PolisClient(is_strict_moderation=True)
@@ -30,7 +30,7 @@ def test_meta_tids(polis_convo_data):
 
 @pytest.mark.parametrize("polis_convo_data", ["small-no-meta", "small-with-meta", "medium-with-meta", "medium-no-meta"], indirect=True)
 def test_mod_in(polis_convo_data):
-    data, path, _ = polis_convo_data
+    data, path, _, _ = polis_convo_data
     expected_data = data['mod-in']
 
     client = PolisClient(is_strict_moderation=True)
@@ -40,7 +40,7 @@ def test_mod_in(polis_convo_data):
 
 @pytest.mark.parametrize("polis_convo_data", ["small-no-meta", "small-with-meta", "medium-with-meta", "medium-no-meta"], indirect=True)
 def test_mod_out(polis_convo_data):
-    data, path, _ = polis_convo_data
+    data, path, _, _ = polis_convo_data
     expected_data = data['mod-out']
 
     client = PolisClient(is_strict_moderation=True)
@@ -50,7 +50,7 @@ def test_mod_out(polis_convo_data):
 
 @pytest.mark.parametrize("polis_convo_data", ["small-no-meta", "small-with-meta", "medium-with-meta", "medium-no-meta"], indirect=True)
 def test_last_vote_timestamp(polis_convo_data):
-    data, path, _ = polis_convo_data
+    data, path, _, _ = polis_convo_data
     expected_data = data['lastVoteTimestamp']
 
     client = PolisClient()
@@ -62,7 +62,7 @@ SHAPE_AXIS = { 'row': 0, 'column': 1 }
 
 @pytest.mark.parametrize("polis_convo_data", ["small-no-meta", "small-with-meta", "medium-with-meta", "medium-no-meta"], indirect=True)
 def test_participant_count(polis_convo_data):
-    data, path, _ = polis_convo_data
+    data, path, _, _ = polis_convo_data
     expected_data = data['n']
 
     client = PolisClient()
@@ -73,7 +73,7 @@ def test_participant_count(polis_convo_data):
 
 @pytest.mark.parametrize("polis_convo_data", ["small-no-meta", "small-with-meta", "medium-with-meta", "medium-no-meta"], indirect=True)
 def test_statement_count(polis_convo_data):
-    data, path, _ = polis_convo_data
+    data, path, _, _ = polis_convo_data
     expected_data = data['n-cmts']
 
     client = PolisClient()
@@ -84,7 +84,7 @@ def test_statement_count(polis_convo_data):
 
 @pytest.mark.parametrize("polis_convo_data", ["small-no-meta", "small-with-meta", "medium-with-meta", "medium-no-meta"], indirect=True)
 def test_impute_missing_values(polis_convo_data):
-    _, path, _ = polis_convo_data
+    _, path, _, _ = polis_convo_data
     client = PolisClient(is_strict_moderation=False)
     client.load_data(filepaths=[
         f'{path}/votes.json',
@@ -100,7 +100,7 @@ def test_impute_missing_values(polis_convo_data):
 # This test can't be paramtrized without changes.
 @pytest.mark.parametrize("polis_convo_data", ["small"], indirect=True)
 def test_filtered_participants_grouped(polis_convo_data):
-    data, path, _ = polis_convo_data
+    data, path, _, _ = polis_convo_data
     expected_data = data['in-conv']
 
     client = PolisClient(is_strict_moderation=False)
@@ -126,7 +126,7 @@ def test_infer_moderation_type_from_api():
 # TODO: Label parametrized data by "strict" vs "non-strict" moderation.
 @pytest.mark.parametrize("polis_convo_data", ["small"], indirect=True)
 def test_infer_moderation_type_from_file(polis_convo_data):
-    _, path, _ = polis_convo_data
+    _, path, _, _ = polis_convo_data
 
     client = PolisClient()
     assert client.is_strict_moderation is None
@@ -188,7 +188,7 @@ class Test_Client:
 @pytest.mark.skip
 @pytest.mark.parametrize("polis_convo_data", ["small-no-meta", "small-with-meta", "medium-with-meta", "medium-no-meta"], indirect=True)
 def test_group_cluster_count(polis_convo_data):
-    data, path, _ = polis_convo_data
+    data, path, _, _ = polis_convo_data
     expected_data = data['group-clusters']
 
     client = PolisClient()
@@ -199,7 +199,7 @@ def test_group_cluster_count(polis_convo_data):
 @pytest.mark.skip
 @pytest.mark.parametrize("polis_convo_data", ["small-no-meta", "small-with-meta", "medium-with-meta", "medium-no-meta"], indirect=True)
 def test_pca_base_cluster_count(polis_convo_data):
-    data, path, _ = polis_convo_data
+    data, path, _, _ = polis_convo_data
     expected_data = data['base-clusters']
 
     client = PolisClient()

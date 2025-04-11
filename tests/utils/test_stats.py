@@ -153,7 +153,7 @@ def test_priority_metric_no_votes():
 # TODO: Investigate why "medium-with-meta" and "medium-no-meta" don't pass.
 @pytest.mark.parametrize("polis_convo_data", ["small-no-meta", "small-with-meta"], indirect=True)
 def test_priority_metric_real_data(polis_convo_data):
-    math_data, _, _ = polis_convo_data
+    math_data, _, _, _ = polis_convo_data
     votes_base = math_data["votes-base"]
     for statement_id, votes in votes_base.items():
         expected_priority = math_data["comment-priorities"][statement_id]
@@ -308,7 +308,7 @@ def test_priority_metric_array():
 # TODO: Investigate why "medium-with-meta" doesn't work. (59/60 mismatched)
 @pytest.mark.parametrize("polis_convo_data", ["small-no-meta", "small-with-meta", "medium-no-meta"], indirect=True)
 def test_group_aware_consensus_real_data(polis_convo_data):
-    math_data, path, _ = polis_convo_data
+    math_data, path, _, _ = polis_convo_data
     loader = Loader(filepaths=[
         f'{path}/votes.json',
         f'{path}/comments.json',

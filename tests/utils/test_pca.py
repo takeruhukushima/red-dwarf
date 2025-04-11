@@ -42,12 +42,8 @@ def test_run_pca_toy():
 
 @pytest.mark.parametrize("polis_convo_data", ["small-no-meta", "small-with-meta"], indirect=True)
 def test_run_pca_real_data_below_100(polis_convo_data):
-    math_data, data_path, *_ = polis_convo_data
-    # Invert to correct for flipped signs in polismath.
-    math_data = helpers.flip_signs_by_key(
-        nested_dict=math_data,
-        keys=["pca.center", "pca.comment-projection", "base-clusters.x", "base-clusters.y", "group-clusters[*].center"],
-    )
+    math_data, data_path, *_, _ = polis_convo_data
+    math_data = helpers.flip_signs_by_key(nested_dict=math_data, keys=["pca.center", "pca.comment-projection", "base-clusters.x", "base-clusters.y", "group-clusters[*].center"])
     expected_pca = math_data["pca"]
 
     # Just fetch the moderated out statements from polismath (no need to recalculate here)
@@ -80,7 +76,7 @@ def test_run_pca_real_data_below_100(polis_convo_data):
 
 @pytest.mark.parametrize("polis_convo_data", ["medium-with-meta"], indirect=True)
 def test_run_pca_real_data_above_100(polis_convo_data):
-    math_data, data_path, *_ = polis_convo_data
+    math_data, data_path, *_, _ = polis_convo_data
     # Some signs are flipped for the "medium-with-meta" fixture data, because signs are arbitrary in PCA.
     # If we initialize differently later on, it should flip and match.
     math_data = helpers.flip_signs_by_key(nested_dict=math_data, keys=["pca.comps[0]"])
@@ -143,12 +139,9 @@ def test_run_pca_real_data_testing():
 
 @pytest.mark.parametrize("polis_convo_data", ["small-no-meta", "small-with-meta", "medium-with-meta"], indirect=True)
 def test_with_proj_and_extremity(polis_convo_data):
-    math_data, _, _ = polis_convo_data
+    math_data, _, _, _ = polis_convo_data
     # Invert to correct for flipped signs in polismath.
-    math_data = helpers.flip_signs_by_key(
-        nested_dict=math_data,
-        keys=["pca.center", "pca.comment-projection", "base-clusters.x", "base-clusters.y", "group-clusters[*].center"],
-    )
+    math_data = helpers.flip_signs_by_key(nested_dict=math_data, keys=["pca.center", "pca.comment-projection", "base-clusters.x", "base-clusters.y", "group-clusters[*].center"])
     expected_pca = math_data["pca"]
 
     minimal_pca = {

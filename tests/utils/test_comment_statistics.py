@@ -10,7 +10,7 @@ from reddwarf.types.polis import PolisRepness
 # TODO: Investigate why "medium-with-meta" won't pass.
 @pytest.mark.parametrize("polis_convo_data", ["small-no-meta", "small-with-meta", "medium-no-meta"], indirect=True)
 def test_calculate_representativeness_real_data(polis_convo_data):
-    math_data, path, _ = polis_convo_data
+    math_data, path, _, _ = polis_convo_data
     loader = Loader(filepaths=[
         f'{path}/votes.json',
         f'{path}/comments.json',

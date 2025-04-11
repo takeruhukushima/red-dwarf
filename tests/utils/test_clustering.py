@@ -6,7 +6,7 @@ import pandas as pd
 
 @pytest.mark.parametrize("polis_convo_data", ["small"], indirect=True)
 def test_run_kmeans_real_data_reproducible(polis_convo_data):
-    math_data, *_ = polis_convo_data
+    math_data, *_, _ = polis_convo_data
 
     expected_cluster_centers = [group["center"] for group in math_data["group-clusters"]]
     cluster_count = len(expected_cluster_centers)
@@ -38,7 +38,7 @@ def test_run_kmeans_real_data_reproducible(polis_convo_data):
 # This is likely due to k-smoothing holding back the k value at 3 in polismath, and we're finding the real current one.
 @pytest.mark.parametrize("polis_convo_data", ["small-with-meta"], indirect=True)
 def test_find_optimal_k_real_data(polis_convo_data):
-    math_data, *_ = polis_convo_data
+    math_data, *_, _ = polis_convo_data
     MAX_GROUP_COUNT = 5
 
     # Get centers from polismath.

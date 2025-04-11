@@ -17,12 +17,14 @@ def polis_convo_data(request):
     try to download that conversation's data for testing.
     """
     path = None
+    keep_participant_ids = []
 
     if request.param in ["small", "small-no-meta", "small-with-mod-out"]:
         # See: https://pol.is/4cvkai2ctw
         # See: https://pol.is/report/r6bpmcmizi2kyvhzkhfr7
         # 23 ptpts, 2 groups, 0/9 meta, strict=yes
         path = "tests/fixtures/below-100-ptpts"
+        keep_participant_ids = [ 5, 10, 11, 14 ]
     elif request.param == "small-no-meta-bad":
         # BUG: DATA INTEGRITY ISSUES.
         # Missing votes via API and so doesn't match user_vote_count
@@ -35,6 +37,7 @@ def polis_convo_data(request):
         # See: https://pol.is/report/r6ipxzfudddppwesbmtmn
         # 27 ptpts, 3 groups, 4/57 meta, strict=no
         path = "tests/fixtures/25ptpt-3gp-no-strict-with-meta"
+        keep_participant_ids = []
     elif request.param in ["medium", "medium-with-meta"]:
         # See: https://pol.is/3ntrtcehas
         # See: https://pol.is/report/r68fknmmmyhdpi3sh4ctc
@@ -45,13 +48,16 @@ def polis_convo_data(request):
         # See: https://pol.is/report/r4zdxrdscmukmkakmbz3k
         # 160 ptpts, 3 groups, 0/118 meta, strict=no
         path = "tests/fixtures/150ptpt-3gp-no-strict-no-meta"
+    elif request.param == "6da26haxpe":
+        keep_participant_ids = [ 4, 5, 6, 10 ]
+        # sign_flip_keys = ["pca.center", "pca.comment-projection[0]", "base-clusters.x", "group-clusters[*].center[0]", "pca.comps[1]"]
 
     if path:
         filename = "math-pca2.json"
         with open(f"{path}/{filename}", 'r') as f:
             data = json.load(f)
 
-        yield data, path, filename
+        yield data, path, filename, keep_participant_ids
         return
 
     # If no match of specific local fixture, see if this looks like remote Polis data.
@@ -65,7 +71,7 @@ def polis_convo_data(request):
             # Download remote data based on Polis report or conversation ID.
             loader = Loader(polis_id=request.param, output_dir=path)
             data = loader.math_data
-            yield data, path, filename
+            yield data, path, filename, keep_participant_ids
             # Tmpdir cleanup will happen after yield completes
             return
 
