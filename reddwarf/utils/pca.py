@@ -2,7 +2,7 @@ from numpy.typing import ArrayLike
 import pandas as pd
 import numpy as np
 from reddwarf.utils.matrix import VoteMatrix
-from reddwarf.sklearn.transformers import SparsityAwareScaler
+from reddwarf.sklearn.transformers import SparsityAwareScaler, calculate_scaling_factors
 from typing import Tuple
 
 from sklearn.decomposition import PCA
@@ -97,9 +97,6 @@ def sparsity_aware_project_ptpt(participant_votes, statement_components, stateme
     statement_components = np.array(statement_components)  # Shape: (2, n_features)
     statement_means = np.array(statement_means)  # Shape: (n_features,)
 
-    # TODO: This included zerod out (moderated) statements. Should it?
-    n_statements = len(participant_votes)
-
     participant_votes = np.array(participant_votes)
     mask = ~np.isnan(participant_votes)  # Only consider non-null values
 
@@ -112,13 +109,12 @@ def sparsity_aware_project_ptpt(participant_votes, statement_components, stateme
     p1 = np.dot(x_vals, pc1_vals)
     p2 = np.dot(x_vals, pc2_vals)
 
-    # Non-null votes count
-    n_votes = np.count_nonzero(mask)
-    scale = np.sqrt(n_statements / max(n_votes, 1))
+    scaling_factor = calculate_scaling_factors(participant_votes)
 
-    projected_coord = scale * np.array([p1, p2])
+    coord_projected = np.array([p1, p2])
+    coord_scaled = coord_projected * scaling_factor
 
-    return projected_coord
+    return coord_scaled
 
 # TODO: Clean up variables and docs.
 def sparsity_aware_project_ptpts(vote_matrix, statement_components, statement_means):

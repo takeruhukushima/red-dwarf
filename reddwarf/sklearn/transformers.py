@@ -3,6 +3,30 @@ from typing import Optional
 from numpy.typing import NDArray
 from sklearn.base import BaseEstimator, TransformerMixin
 
+Array1D = NDArray[np.float64]
+Array2D = NDArray[np.float64]
+
+def calculate_scaling_factors(X_sparse: Array1D | Array2D) -> Array1D:
+    # This allows function to work for 2D (full vote_matrix) and 1D (participant_votes).
+    # It essentially nest an 1D matrix in a 2D one.
+    X_sparse = np.atleast_2d(X_sparse)
+
+    # The total number of statements in matrix.
+    # TODO: This included zero'd out (moderated) statements. Should it?
+    _, n_col = X_sparse.shape
+    n_total_statements = n_features = n_col
+
+    # List of votes per participant row.
+    vote_mask = ~np.isnan(X_sparse)
+    n_participant_votes = n_non_missing = np.count_nonzero(vote_mask, axis=1)
+    # Ref: https://hyp.is/x6nhItMMEe-v1KtYFgpOiA/gwern.net/doc/sociology/2021-small.pdf
+    # Ref: https://github.com/compdemocracy/polis/blob/15aa65c9ca9e37ecf57e2786d7d81a4bd4ad37ef/math/src/polismath/math/pca.clj#L155-L1
+
+    # scaling_factors = np.sqrt(n_features / np.maximum(1, n_non_missing))
+    scaling_factors = np.sqrt(n_total_statements / np.maximum(1, n_participant_votes))
+
+    return scaling_factors
+
 class SparsityAwareScaler(BaseEstimator, TransformerMixin):
     """
     Scale projected points (participant/statements) based on sparsity of vote
@@ -12,7 +36,7 @@ class SparsityAwareScaler(BaseEstimator, TransformerMixin):
     Attributes:
         X_sparse (np.ndarray | None): A sparse array with shape (n_features,)
     """
-    def __init__(self, X_sparse: Optional[NDArray[np.float64]] = None):
+    def __init__(self, X_sparse: Optional[Array1D | Array2D] = None):
         self.X_sparse = X_sparse
 
     # See: https://scikit-learn.org/stable/modules/generated/sklearn.utils.Tags.html#sklearn.utils.Tags
@@ -26,12 +50,12 @@ class SparsityAwareScaler(BaseEstimator, TransformerMixin):
         return self
 
     def transform(self, X):
-        scale_factors = self._calculate_scaling_factors()
-        return X * scale_factors[:, np.newaxis]
+        scaling_factors = self._calculate_scaling_factors()
+        return X * scaling_factors[:, np.newaxis]
 
     def inverse_transform(self, X):
-        scale_factors = self._calculate_scaling_factors()
-        return X / scale_factors[:, np.newaxis]
+        scaling_factors = self._calculate_scaling_factors()
+        return X / scaling_factors[:, np.newaxis]
 
     def _calculate_scaling_factors(self):
         if self.X_sparse is None:
@@ -39,17 +63,4 @@ class SparsityAwareScaler(BaseEstimator, TransformerMixin):
                 "Missing `X_sparse`. Pass `X_sparse` when initializing SparsityAwareScaler."
             )
 
-        # The total number of statements in matrix.
-        _, n_cols = self.X_sparse.shape
-        n_total_statements = n_features = n_cols
-
-        # List of votes per participant row.
-        vote_mask = ~np.isnan(self.X_sparse)
-        n_participant_votes = n_non_missing = np.count_nonzero(vote_mask, axis=1)
-        # Ref: https://hyp.is/x6nhItMMEe-v1KtYFgpOiA/gwern.net/doc/sociology/2021-small.pdf
-        # Ref: https://github.com/compdemocracy/polis/blob/15aa65c9ca9e37ecf57e2786d7d81a4bd4ad37ef/math/src/polismath/math/pca.clj#L155-L1
-
-        # scaling_factors = np.sqrt(n_features / np.maximum(1, n_non_missing))
-        scaling_factors = np.sqrt(n_total_statements / np.maximum(1, n_participant_votes))
-
-        return scaling_factors
+        return calculate_scaling_factors(X_sparse=self.X_sparse)
