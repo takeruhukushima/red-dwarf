@@ -14,6 +14,7 @@
 - Removed `scale_projected_data()` in `PolisClient` (now happens in `run_pca()`).
 - Deprecate `PolisClient()`.
 - Add `inverse_transform()` to `SparsityAwareScaler`.
+- Add data loader support for local math data files.
 
 ### Chores
 - Moved agora implementation from `reddwarf.agora` to `reddwarf.implementations.agora` (deprecation warning).
