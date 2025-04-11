@@ -12,7 +12,7 @@ from tests import helpers
 # This test will only match polismath for sub-100 participant convos.
 # For testing our code agaisnt real data with against larger conversations,
 # we'll need to implement base clustering.
-@pytest.mark.parametrize("polis_convo_data", ["small-no-meta"], indirect=True)
+@pytest.mark.parametrize("polis_convo_data", ["small-no-meta", "small-with-meta"], indirect=True)
 def test_run_clustering_real_data(polis_convo_data):
     math_data, data_path, _, keep_participant_ids = polis_convo_data
     math_data = helpers.flip_signs_by_key(nested_dict=math_data, keys=["pca.center", "pca.comment-projection", "base-clusters.x", "base-clusters.y", "group-clusters[*].center"])
