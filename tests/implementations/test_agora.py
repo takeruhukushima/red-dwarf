@@ -5,9 +5,9 @@ from reddwarf.data_loader import Loader
 
 # A helper to generate votes list.
 def build_votes(data_fixture):
-    _, data_path, *_ = data_fixture
+    fixture = data_fixture
 
-    loader = Loader(filepaths=[f"{data_path}/votes.json"])
+    loader = Loader(filepaths=[f"{fixture.data_dir}/votes.json"])
 
     return loader.votes_data
 

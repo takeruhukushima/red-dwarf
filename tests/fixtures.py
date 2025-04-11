@@ -1,9 +1,18 @@
+from typing import Any
 import pytest
 import json
 import re
+from dataclasses import dataclass
 
 REPORT_ID_RE = r"^r[a-z0-9]{20}$"
 CONVO_ID_RE = r"^\d[a-z0-9]{4,9}$"
+
+@dataclass
+class PolisFixtureResult:
+    math_data: Any
+    data_dir: str
+    filename: str
+    keep_participant_ids: list[int] | list[str]
 
 @pytest.fixture
 def polis_convo_data(request):
@@ -57,7 +66,12 @@ def polis_convo_data(request):
         with open(f"{path}/{filename}", 'r') as f:
             data = json.load(f)
 
-        yield data, path, filename, keep_participant_ids
+        yield PolisFixtureResult(
+            math_data=data,
+            data_dir=path,
+            filename=filename,
+            keep_participant_ids=keep_participant_ids,
+        )
         return
 
     # If no match of specific local fixture, see if this looks like remote Polis data.
@@ -66,12 +80,16 @@ def polis_convo_data(request):
         import tempfile
 
         with tempfile.TemporaryDirectory() as tmpdirname:
-            path = tmpdirname
-            filename = "math-pca2.json"
             # Download remote data based on Polis report or conversation ID.
-            loader = Loader(polis_id=request.param, output_dir=path)
-            data = loader.math_data
-            yield data, path, filename, keep_participant_ids
+            loader = Loader(polis_id=request.param, output_dir=tmpdirname)
+
+            filename = "math-pca2.json"
+            yield PolisFixtureResult(
+                math_data=loader.math_data,
+                data_dir=tmpdirname,
+                filename=filename,
+                keep_participant_ids=keep_participant_ids,
+            )
             # Tmpdir cleanup will happen after yield completes
             return
 

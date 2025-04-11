@@ -7,15 +7,15 @@ from reddwarf.utils.polismath import extract_data_from_polismath
 from numpy.testing import assert_array_equal, assert_array_almost_equal
 from pandas.testing import assert_frame_equal
 from tests import helpers
-
+import numpy as np
 
 # This test will only match polismath for sub-100 participant convos.
 # For testing our code agaisnt real data with against larger conversations,
 # we'll need to implement base clustering.
 @pytest.mark.parametrize("polis_convo_data", ["small-no-meta", "small-with-meta"], indirect=True)
 def test_run_clustering_real_data(polis_convo_data):
-    math_data, data_path, _, keep_participant_ids = polis_convo_data
-    math_data = helpers.flip_signs_by_key(nested_dict=math_data, keys=["pca.center", "pca.comment-projection", "base-clusters.x", "base-clusters.y", "group-clusters[*].center"])
+    fixture = polis_convo_data
+    math_data = helpers.flip_signs_by_key(nested_dict=fixture.math_data, keys=["pca.center", "pca.comment-projection", "base-clusters.x", "base-clusters.y", "group-clusters[*].center"])
 
     # We hardcode this because Polis has some bespoke rules that keep these IDs in for clustering.
     # TODO: Try to determine why each pid is kept. Can maybe determine by incrementing through vote history.
@@ -39,10 +39,10 @@ def test_run_clustering_real_data(polis_convo_data):
     init_centers = helpers.pad_to_size(init_centers, max_group_count)
 
     loader = Loader(filepaths=[
-        f"{data_path}/votes.json",
+        f"{fixture.data_dir}/votes.json",
         # Loading these helps generate mod_out_statement_ids
-        f"{data_path}/comments.json",
-        f"{data_path}/conversation.json",
+        f"{fixture.data_dir}/comments.json",
+        f"{fixture.data_dir}/conversation.json",
     ])
 
     _, _, mod_out_statement_ids, _ = process_statements(statement_data=loader.comments_data)
@@ -50,7 +50,7 @@ def test_run_clustering_real_data(polis_convo_data):
     result = run_clustering(
         votes=loader.votes_data,
         mod_out_statement_ids=mod_out_statement_ids,
-        keep_participant_ids=keep_participant_ids,
+        keep_participant_ids=fixture.keep_participant_ids,
         max_group_count=max_group_count,
         init_centers=init_centers,
         force_group_count=force_group_count,
@@ -89,13 +89,13 @@ def test_run_clustering_real_data(polis_convo_data):
 
 @pytest.mark.parametrize("polis_convo_data", ["small-no-meta"], indirect=True)
 def test_run_clustering_is_reproducible(polis_convo_data):
-    _, data_path, _, _ = polis_convo_data
+    fixture = polis_convo_data
 
     loader = Loader(filepaths=[
-        f"{data_path}/votes.json",
+        f"{fixture.data_dir}/votes.json",
         # Loading these helps generate mod_out_statement_ids
-        f"{data_path}/comments.json",
-        f"{data_path}/conversation.json",
+        f"{fixture.data_dir}/comments.json",
+        f"{fixture.data_dir}/conversation.json",
     ])
 
     _, _, mod_out_statement_ids, _ = process_statements(statement_data=loader.comments_data)

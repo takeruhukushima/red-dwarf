@@ -7,54 +7,54 @@ from tests.fixtures import polis_convo_data
 
 @pytest.mark.parametrize("polis_convo_data", ["small-no-meta", "small-with-meta", "medium-with-meta", "medium-no-meta"], indirect=True)
 def test_user_vote_counts(polis_convo_data):
-    data, path, _, _ = polis_convo_data
-    expected_data = data['user-vote-counts']
+    fixture = polis_convo_data
+    expected_data = fixture.math_data['user-vote-counts']
     expected_data = {int(k): v for k,v in expected_data.items()}
 
     # Instantiate the PolisClient and load raw data
     client = PolisClient()
-    client.load_data(filepaths=[f'{path}/votes.json'])
+    client.load_data(filepaths=[f'{fixture.data_dir}/votes.json'])
 
     # Call the method and assert the result matches the expected data
     assert client.get_user_vote_counts() == expected_data
 
 @pytest.mark.parametrize("polis_convo_data", ["small-no-meta", "small-with-meta", "medium-with-meta", "medium-no-meta"], indirect=True)
 def test_meta_tids(polis_convo_data):
-    data, path, _, _ = polis_convo_data
-    expected_data = data['meta-tids']
+    fixture = polis_convo_data
+    expected_data = fixture.math_data['meta-tids']
 
     client = PolisClient(is_strict_moderation=True)
-    client.load_data(filepaths=[f'{path}/comments.json'])
+    client.load_data(filepaths=[f'{fixture.data_dir}/comments.json'])
 
     assert client.get_meta_tids() == sorted(expected_data)
 
 @pytest.mark.parametrize("polis_convo_data", ["small-no-meta", "small-with-meta", "medium-with-meta", "medium-no-meta"], indirect=True)
 def test_mod_in(polis_convo_data):
-    data, path, _, _ = polis_convo_data
-    expected_data = data['mod-in']
+    fixture = polis_convo_data
+    expected_data = fixture.math_data['mod-in']
 
     client = PolisClient(is_strict_moderation=True)
-    client.load_data(filepaths=[f'{path}/comments.json'])
+    client.load_data(filepaths=[f'{fixture.data_dir}/comments.json'])
 
     assert client.get_mod_in() == sorted(expected_data)
 
 @pytest.mark.parametrize("polis_convo_data", ["small-no-meta", "small-with-meta", "medium-with-meta", "medium-no-meta"], indirect=True)
 def test_mod_out(polis_convo_data):
-    data, path, _, _ = polis_convo_data
-    expected_data = data['mod-out']
+    fixture = polis_convo_data
+    expected_data = fixture.math_data['mod-out']
 
     client = PolisClient(is_strict_moderation=True)
-    client.load_data(filepaths=[f'{path}/comments.json'])
+    client.load_data(filepaths=[f'{fixture.data_dir}/comments.json'])
 
     assert sorted(client.get_mod_out()) == sorted(expected_data)
 
 @pytest.mark.parametrize("polis_convo_data", ["small-no-meta", "small-with-meta", "medium-with-meta", "medium-no-meta"], indirect=True)
 def test_last_vote_timestamp(polis_convo_data):
-    data, path, _, _ = polis_convo_data
-    expected_data = data['lastVoteTimestamp']
+    fixture = polis_convo_data
+    expected_data = fixture.math_data['lastVoteTimestamp']
 
     client = PolisClient()
-    client.load_data(filepaths=[f'{path}/votes.json'])
+    client.load_data(filepaths=[f'{fixture.data_dir}/votes.json'])
 
     assert client.get_last_vote_timestamp() == expected_data
 
@@ -62,33 +62,33 @@ SHAPE_AXIS = { 'row': 0, 'column': 1 }
 
 @pytest.mark.parametrize("polis_convo_data", ["small-no-meta", "small-with-meta", "medium-with-meta", "medium-no-meta"], indirect=True)
 def test_participant_count(polis_convo_data):
-    data, path, _, _ = polis_convo_data
-    expected_data = data['n']
+    fixture = polis_convo_data
+    expected_data = fixture.math_data['n']
 
     client = PolisClient()
-    client.load_data(filepaths=[f'{path}/votes.json'])
+    client.load_data(filepaths=[f'{fixture.data_dir}/votes.json'])
     client.get_matrix()
 
     assert client.participant_count == expected_data
 
 @pytest.mark.parametrize("polis_convo_data", ["small-no-meta", "small-with-meta", "medium-with-meta", "medium-no-meta"], indirect=True)
 def test_statement_count(polis_convo_data):
-    data, path, _, _ = polis_convo_data
-    expected_data = data['n-cmts']
+    fixture = polis_convo_data
+    expected_data = fixture.math_data['n-cmts']
 
     client = PolisClient()
-    client.load_data(filepaths=[f'{path}/votes.json'])
+    client.load_data(filepaths=[f'{fixture.data_dir}/votes.json'])
     client.get_matrix()
 
     assert client.statement_count == expected_data
 
 @pytest.mark.parametrize("polis_convo_data", ["small-no-meta", "small-with-meta", "medium-with-meta", "medium-no-meta"], indirect=True)
 def test_impute_missing_values(polis_convo_data):
-    _, path, _, _ = polis_convo_data
+    fixture = polis_convo_data
     client = PolisClient(is_strict_moderation=False)
     client.load_data(filepaths=[
-        f'{path}/votes.json',
-        f'{path}/comments.json',
+        f'{fixture.data_dir}/votes.json',
+        f'{fixture.data_dir}/comments.json',
     ])
     matrix_with_missing = client.get_matrix(is_filtered=True)
     matrix_without_missing = utils.impute_missing_votes(matrix_with_missing)
@@ -100,13 +100,13 @@ def test_impute_missing_values(polis_convo_data):
 # This test can't be paramtrized without changes.
 @pytest.mark.parametrize("polis_convo_data", ["small"], indirect=True)
 def test_filtered_participants_grouped(polis_convo_data):
-    data, path, _, _ = polis_convo_data
-    expected_data = data['in-conv']
+    fixture = polis_convo_data
+    expected_data = fixture.math_data['in-conv']
 
     client = PolisClient(is_strict_moderation=False)
     client.load_data(filepaths=[
-        f'{path}/votes.json',
-        f'{path}/comments.json',
+        f'{fixture.data_dir}/votes.json',
+        f'{fixture.data_dir}/comments.json',
     ])
 
     unaligned_matrix = client.get_matrix(is_filtered=True)
@@ -126,11 +126,11 @@ def test_infer_moderation_type_from_api():
 # TODO: Label parametrized data by "strict" vs "non-strict" moderation.
 @pytest.mark.parametrize("polis_convo_data", ["small"], indirect=True)
 def test_infer_moderation_type_from_file(polis_convo_data):
-    _, path, _, _ = polis_convo_data
+    fixture = polis_convo_data
 
     client = PolisClient()
     assert client.is_strict_moderation is None
-    client.load_data(filepaths=[f'{path}/conversation.json'])
+    client.load_data(filepaths=[f'{fixture.data_dir}/conversation.json'])
     assert client.is_strict_moderation is not None
 
 def test_load_data_from_report_id():
@@ -188,22 +188,22 @@ class Test_Client:
 @pytest.mark.skip
 @pytest.mark.parametrize("polis_convo_data", ["small-no-meta", "small-with-meta", "medium-with-meta", "medium-no-meta"], indirect=True)
 def test_group_cluster_count(polis_convo_data):
-    data, path, _, _ = polis_convo_data
-    expected_data = data['group-clusters']
+    fixture = polis_convo_data
+    expected_data = fixture.math_data['group-clusters']
 
     client = PolisClient()
-    client.load_data(f'{path}/votes.json')
+    client.load_data(f'{fixture.data_dir}/votes.json')
 
     assert len(client.get_group_clusters()) == len(expected_data)
 
 @pytest.mark.skip
 @pytest.mark.parametrize("polis_convo_data", ["small-no-meta", "small-with-meta", "medium-with-meta", "medium-no-meta"], indirect=True)
 def test_pca_base_cluster_count(polis_convo_data):
-    data, path, _, _ = polis_convo_data
-    expected_data = data['base-clusters']
+    fixture = polis_convo_data
+    expected_data = fixture.math_data['base-clusters']
 
     client = PolisClient()
-    client.load_data(f'{path}/votes.json')
+    client.load_data(f'{fixture.data_dir}/votes.json')
 
     assert len(client.base_clusters.get('x', [])) == len(expected_data['x'])
     assert len(client.base_clusters.get('y', [])) == len(expected_data['y'])

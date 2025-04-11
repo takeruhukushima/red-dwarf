@@ -27,6 +27,7 @@
 - Remove usage of PolisClient in tests, in favour of [data] Loader.
 - Start storing `keep_participant_ids` in fixtures.
 - Add solid unit test for expected variance, which is stablest measure we can derive.
+- Use dataclasses for `polis_convo_data` test fixture.
 
 ## [0.2.0][] (2025-03-24)
 ### Fixed

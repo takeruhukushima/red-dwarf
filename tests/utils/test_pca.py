@@ -42,13 +42,13 @@ def test_run_pca_toy():
 
 @pytest.mark.parametrize("polis_convo_data", ["small-no-meta", "small-with-meta", "medium-no-meta", "medium-with-meta"], indirect=True)
 def test_matching_explained_variance(polis_convo_data):
-    math_data, config_dir, *_ = polis_convo_data
-    expected_pca = math_data["pca"]
+    fixture = polis_convo_data
+    expected_pca = fixture.math_data["pca"]
 
     # Generate PCA object almost from scratch.
-    loader = Loader(filepaths=[f"{config_dir}/votes.json"])
+    loader = Loader(filepaths=[f"{fixture.data_dir}/votes.json"])
     # TODO: Generate mod-out from scratch?
-    mod_out_statement_ids = math_data["mod-out"]
+    mod_out_statement_ids = fixture.math_data["mod-out"]
     real_vote_matrix = MatrixUtils.generate_raw_matrix(votes=loader.votes_data)
     real_vote_matrix = MatrixUtils.simple_filter_matrix(
         vote_matrix=real_vote_matrix,
@@ -67,14 +67,14 @@ def test_matching_explained_variance(polis_convo_data):
 
 @pytest.mark.parametrize("polis_convo_data", ["small-no-meta", "small-with-meta"], indirect=True)
 def test_run_pca_real_data_below_100(polis_convo_data):
-    math_data, data_path, *_, _ = polis_convo_data
-    math_data = helpers.flip_signs_by_key(nested_dict=math_data, keys=["pca.center", "pca.comment-projection", "base-clusters.x", "base-clusters.y", "group-clusters[*].center"])
+    fixture = polis_convo_data
+    math_data = helpers.flip_signs_by_key(nested_dict=fixture.math_data, keys=["pca.center", "pca.comment-projection", "base-clusters.x", "base-clusters.y", "group-clusters[*].center"])
     expected_pca = math_data["pca"]
 
     # Just fetch the moderated out statements from polismath (no need to recalculate here)
     mod_out_statement_ids = math_data["mod-out"]
 
-    loader = Loader(filepaths=[f"{data_path}/votes.json"])
+    loader = Loader(filepaths=[f"{fixture.data_dir}/votes.json"])
     real_vote_matrix = MatrixUtils.generate_raw_matrix(votes=loader.votes_data)
 
     real_vote_matrix = MatrixUtils.simple_filter_matrix(
@@ -101,16 +101,16 @@ def test_run_pca_real_data_below_100(polis_convo_data):
 
 @pytest.mark.parametrize("polis_convo_data", ["medium-with-meta"], indirect=True)
 def test_run_pca_real_data_above_100(polis_convo_data):
-    math_data, data_path, *_, _ = polis_convo_data
+    fixture = polis_convo_data
     # Some signs are flipped for the "medium-with-meta" fixture data, because signs are arbitrary in PCA.
     # If we initialize differently later on, it should flip and match.
-    math_data = helpers.flip_signs_by_key(nested_dict=math_data, keys=["pca.comps[0]"])
+    math_data = helpers.flip_signs_by_key(nested_dict=fixture.math_data, keys=["pca.comps[0]"])
     expected_pca = math_data["pca"]
 
     # Just fetch the moderated out statements from polismath (no need to recalculate here)
     mod_out_statement_ids = math_data["mod-out"]
 
-    loader = Loader(filepaths=[f"{data_path}/votes.json"])
+    loader = Loader(filepaths=[f"{fixture.data_dir}/votes.json"])
     real_vote_matrix = MatrixUtils.generate_raw_matrix(votes=loader.votes_data)
 
     real_vote_matrix = MatrixUtils.simple_filter_matrix(
@@ -164,9 +164,9 @@ def test_run_pca_real_data_testing():
 
 @pytest.mark.parametrize("polis_convo_data", ["small-no-meta", "small-with-meta", "medium-with-meta"], indirect=True)
 def test_with_proj_and_extremity(polis_convo_data):
-    math_data, _, _, _ = polis_convo_data
+    fixture = polis_convo_data
     # Invert to correct for flipped signs in polismath.
-    math_data = helpers.flip_signs_by_key(nested_dict=math_data, keys=["pca.center", "pca.comment-projection", "base-clusters.x", "base-clusters.y", "group-clusters[*].center"])
+    math_data = helpers.flip_signs_by_key(nested_dict=fixture.math_data, keys=["pca.center", "pca.comment-projection", "base-clusters.x", "base-clusters.y", "group-clusters[*].center"])
     expected_pca = math_data["pca"]
 
     minimal_pca = {
