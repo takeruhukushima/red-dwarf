@@ -12,6 +12,8 @@
 - Add singular `polis_id` arg as recommended way to download (auto-detect `report_id` vs `converation_id`).
 - Calculate group-aware consensus stats. ([#28](https://github.com/polis-community/red-dwarf/pull/28))
 - Removed `scale_projected_data()` in `PolisClient` (now happens in `run_pca()`).
+- Deprecate `PolisClient()`.
+- Add `inverse_transform()` to `SparsityAwareScaler`.
 
 ### Chores
 - Moved agora implementation from `reddwarf.agora` to `reddwarf.implementations.agora` (deprecation warning).
@@ -23,6 +25,8 @@
 - Improve test fixture to download remote Polis data.
 - Add helper to support simple sign-flips in Polis test data.
 - Remove usage of PolisClient in tests, in favour of [data] Loader.
+- Start storing `keep_participant_ids` in fixtures.
+- Add solid unit test for expected variance, which is stablest measure we can derive.
 
 ## [0.2.0][] (2025-03-24)
 ### Fixed
