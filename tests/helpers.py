@@ -1,5 +1,8 @@
+from sklearn.impute import SimpleImputer
 from reddwarf.types.polis import PolisRepness
 from typing import Any, Union, Literal
+import numpy as np
+
 
 def get_grouped_statement_ids(repness: PolisRepness) -> dict[str, list[dict[str, list[int]]]]:
     """A helper to compare only tid in groups, rather than full repness object."""
@@ -162,3 +165,25 @@ def flip_signs_by_key(nested_dict: NestedDict, keys: list[str] = []) -> Any:
                 parent[final_key] = flip_recursive(parent[final_key])
 
     return result
+
+def calculate_explained_variance(X_sparse, means, components):
+    """
+    Derive explained variance from simpler polismath outputs.
+
+    Explained variance is not sign-dependant, so great for unit tests.
+
+    Arguments:
+        X_sparse (np.ndarray): Sparse vote_matrix 2D numpy array
+        means (list[float]): List of feature means
+        components (list[list[float]]): List of eigenvectors/components
+
+    Returns:
+        list[float]: Variance explained by each component (n_components,)
+    """
+    X_imputed = SimpleImputer().fit_transform(X_sparse)
+    means, comps = [np.asarray(arr) for arr in [means, components]]
+    X_centered = X_imputed - means
+    X_projected = X_centered @ comps.transpose()
+    explained_variance = np.var(X_projected, axis=0, ddof=1)
+
+    return explained_variance

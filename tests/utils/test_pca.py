@@ -40,6 +40,31 @@ def test_run_pca_toy():
     assert_allclose(actual_eigenvectors, expected_eigenvectors, rtol=10**-5)
     assert_allclose(actual_eigenvalues, expected_eigenvalues, rtol=10**-5)
 
+@pytest.mark.parametrize("polis_convo_data", ["small-no-meta", "small-with-meta", "medium-no-meta", "medium-with-meta"], indirect=True)
+def test_matching_explained_variance(polis_convo_data):
+    math_data, config_dir, *_ = polis_convo_data
+    expected_pca = math_data["pca"]
+
+    # Generate PCA object almost from scratch.
+    loader = Loader(filepaths=[f"{config_dir}/votes.json"])
+    # TODO: Generate mod-out from scratch?
+    mod_out_statement_ids = math_data["mod-out"]
+    real_vote_matrix = MatrixUtils.generate_raw_matrix(votes=loader.votes_data)
+    real_vote_matrix = MatrixUtils.simple_filter_matrix(
+        vote_matrix=real_vote_matrix,
+        mod_out_statement_ids=mod_out_statement_ids,
+    )
+    _, _, actual_pca = PcaUtils.run_pca(vote_matrix=real_vote_matrix)
+
+    # Check explained variance
+    actual_variance = actual_pca.explained_variance_
+    expected_variance = helpers.calculate_explained_variance(
+        X_sparse=real_vote_matrix.values,
+        means=expected_pca["center"],
+        components=expected_pca["comps"],
+    )
+    assert actual_variance == pytest.approx(expected_variance)
+
 @pytest.mark.parametrize("polis_convo_data", ["small-no-meta", "small-with-meta"], indirect=True)
 def test_run_pca_real_data_below_100(polis_convo_data):
     math_data, data_path, *_, _ = polis_convo_data
