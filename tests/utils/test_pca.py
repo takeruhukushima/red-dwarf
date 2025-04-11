@@ -78,6 +78,44 @@ def test_matching_explained_variance(polis_convo_data):
 
     assert actual_variance == pytest.approx(expected_variance)
 
+@pytest.mark.parametrize("polis_convo_data", ["small-with-mod-out-votes"], indirect=True)
+def test_explained_variance_modification_fails(polis_convo_data):
+    fixture = polis_convo_data
+
+    loader = Loader(filepaths=[
+        f"{fixture.data_dir}/votes.json",
+        f"{fixture.data_dir}/comments.json",
+        f"{fixture.data_dir}/math-pca2.json",
+    ])
+
+    expected_pca = loader.math_data["pca"]
+
+    # Generate PCA object and explained variance from scratch.
+    _, _, mod_out_statement_ids, _ = process_statements(loader.comments_data)
+
+    # HERE: We pop off one mod-out statement, so it stays in during our
+    # calculation. We happen to know that the final statement ID we pop off has
+    # votes. (It wouldn't matter if it didn't.)
+    assert len(mod_out_statement_ids) > 0
+    mod_out_statement_ids.pop()
+
+    real_vote_matrix = MatrixUtils.generate_raw_matrix(votes=loader.votes_data)
+    real_vote_matrix = MatrixUtils.simple_filter_matrix(
+        vote_matrix=real_vote_matrix,
+        mod_out_statement_ids=mod_out_statement_ids,
+    )
+    _, _, actual_pca = PcaUtils.run_pca(vote_matrix=real_vote_matrix)
+    actual_variance = actual_pca.explained_variance_
+
+    # Rebuild explained variance from polismath data.
+    expected_variance = helpers.calculate_explained_variance(
+        sparse_vote_matrix=real_vote_matrix.values,
+        means=expected_pca["center"],
+        components=expected_pca["comps"],
+    )
+
+    assert actual_variance != pytest.approx(expected_variance)
+
 @pytest.mark.parametrize("polis_convo_data", ["small-no-meta", "small-with-meta"], indirect=True)
 def test_run_pca_real_data_below_100(polis_convo_data):
     fixture = polis_convo_data

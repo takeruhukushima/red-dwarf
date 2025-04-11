@@ -28,7 +28,7 @@ def polis_convo_data(request):
     path = None
     keep_participant_ids = []
 
-    if request.param in ["small", "small-no-meta", "small-with-mod-out"]:
+    if request.param in ["small", "small-no-meta"]:
         # See: https://pol.is/4cvkai2ctw
         # See: https://pol.is/report/r6bpmcmizi2kyvhzkhfr7
         # 23 ptpts, 2 groups, 0/9 meta, strict=yes
@@ -41,7 +41,10 @@ def polis_convo_data(request):
         # See: https://pol.is/report/r64ajcsmp9butzxhzj44c
         # 51 ptpts, 3 groups, 0/29 meta, strict=yes
         path = "tests/fixtures/50ptpt-3gp-strict-no-meta"
-    elif request.param == "small-with-meta":
+    elif request.param in ["small-with-meta", "small-with-mod-out-votes"]:
+        # The final mod-out statement has votes, so will affect calculations if
+        # removed from list and re-entered into calculations.
+        #
         # See: https://pol.is/2dhnep37ie
         # See: https://pol.is/report/r6ipxzfudddppwesbmtmn
         # 27 ptpts, 3 groups, 4/57 meta, strict=no
