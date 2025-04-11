@@ -10,6 +10,8 @@ import pandas as pd
 def generate_figure(
         coord_dataframe: pd.DataFrame,
         labels: Optional[List[int]] = None,
+        flip_x: bool = False,
+        flip_y: bool = False,
 ) -> None:
     """
     Generates a matplotlib scatterplot with optional bounded clusters.
@@ -17,9 +19,15 @@ def generate_figure(
     The plot is drawn from a dataframe of xy values, each point labelled by index `participant_id`.
     When a list of labels are supplied (corresponding to each row), concave hulls are drawn around them.
 
+    Signs of PCA projection coordinates are arbitrary, and can flip without
+    meaning. Inverting axes can help compare results with Polis platform
+    visualizations.
+
     Args:
         coord_dataframe (pd.DataFrame): A dataframe of coordinates with columns named `x` and `y`, indexed by `participant_id`.
         labels (List[int]): A list of labels, one for each row in `coord_dataframe`.
+        flip_x (bool): Flip the presentation of the X-axis so it descends left-to-right
+        flip_y (bool): Flip the presentation of the Y-axis so it descends top-to-bottom
 
     Returns:
         None.
@@ -27,7 +35,11 @@ def generate_figure(
     plt.figure(figsize=(7, 5), dpi=80)
     plt.axhline(y=0, color='k', linestyle='-', linewidth=0.5)
     plt.axvline(x=0, color='k', linestyle='-', linewidth=0.5)
-    plt.gca().invert_yaxis()
+
+    if flip_x:
+        plt.gca().invert_xaxis()
+    if flip_y:
+        plt.gca().invert_yaxis()
 
     # Label points with participant_id if no labels set.
     for participant_id, row in coord_dataframe.iterrows():
