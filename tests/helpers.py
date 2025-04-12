@@ -14,7 +14,12 @@ def get_grouped_statement_ids(repness: PolisRepness) -> dict[str, list[dict[str,
 
     return {"groups": groups}
 
-def pad_to_size(lst, size):
+# TODO: Be smarter about this, and randomly generate extra centroid guesses via
+# best-practice. See Polis codebase for their way of generating.
+def pad_centroid_list_to_length(lst, size):
+    """
+    Pad a list of centroid guesses with [0,0] up to specific length.
+    """
     return list(lst) + [[0., 0.]]*(size - len(lst))
 
 def transform_base_clusters_to_participant_coords(base_clusters):

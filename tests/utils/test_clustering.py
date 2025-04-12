@@ -1,7 +1,7 @@
 import pytest
 from reddwarf.utils.clustering import run_kmeans, find_optimal_k
 from tests.fixtures import polis_convo_data
-from tests.helpers import pad_to_size, transform_base_clusters_to_participant_coords
+from tests.helpers import pad_centroid_list_to_length, transform_base_clusters_to_participant_coords
 import pandas as pd
 
 @pytest.mark.parametrize("polis_convo_data", ["small"], indirect=True)
@@ -58,7 +58,7 @@ def test_find_optimal_k_real_data(polis_convo_data):
         projected_data=projected_participants_df,
         max_group_count=MAX_GROUP_COUNT,
         # Pad center guesses to have enough values for testing up to max k groups.
-        init_centers=pad_to_size(expected_centers, MAX_GROUP_COUNT)
+        init_centers=pad_centroid_list_to_length(expected_centers, MAX_GROUP_COUNT)
     )
     optimal_k, silhouette_score, cluster_labels, cluster_centers = results # for documentation
 

@@ -36,7 +36,7 @@ def test_run_clustering_real_data(polis_convo_data):
 
     max_group_count = 5
     init_centers = [group["center"] for group in math_data["group-clusters"]]
-    init_centers = helpers.pad_to_size(init_centers, max_group_count)
+    init_centers = helpers.pad_centroid_list_to_length(init_centers, max_group_count)
 
     loader = Loader(filepaths=[
         f"{fixture.data_dir}/votes.json",
@@ -106,7 +106,7 @@ def test_run_clustering_is_reproducible(polis_convo_data):
     )
 
     max_group_count = 5
-    padded_cluster_centers = helpers.pad_to_size(cluster_run_1.cluster_centers, max_group_count)
+    padded_cluster_centers = helpers.pad_centroid_list_to_length(cluster_run_1.cluster_centers, max_group_count)
 
     cluster_run_2 = run_clustering(
         votes=loader.votes_data,
