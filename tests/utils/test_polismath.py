@@ -44,3 +44,7 @@ def test_user_vote_count_sanity_check(polis_convo_data):
     actual_user_vote_counts = real_vote_matrix.count(axis="columns")
 
     assert expected_user_vote_counts == actual_user_vote_counts.to_dict()
+
+@pytest.mark.skip
+def test_get_corrected_centroid_guesses():
+    raise NotImplementedError

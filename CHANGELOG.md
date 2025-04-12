@@ -30,6 +30,7 @@
 - Start storing `keep_participant_ids` in fixtures.
 - Add solid unit test for expected variance, which is stablest measure we can derive.
 - Use dataclasses for `polis_convo_data` test fixture.
+- Add `utils.polismath.get_corrected_centroid_guesses()` to initiate centroid guesses from Polis API.
 
 ## [0.2.0][] (2025-03-24)
 ### Fixed
