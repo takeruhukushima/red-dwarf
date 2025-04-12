@@ -16,6 +16,10 @@
 - Add `inverse_transform()` to `SparsityAwareScaler`.
 - Add data loader support for local math data files.
 - Add support to easily flip signs in `generate_figure()`.
+- Modify `generate_figure()` to accept more effective args.
+    - Use numpy args of `coord_data`, `coord_labels` and `cluster_labels`
+      individually, rather than using DataFrames.
+    - Allow passing extra `coord_data` beyond what's labelled.
 
 ### Chores
 - Moved agora implementation from `reddwarf.agora` to `reddwarf.implementations.agora` (deprecation warning).

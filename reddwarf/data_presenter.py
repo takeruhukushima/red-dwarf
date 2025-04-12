@@ -9,7 +9,7 @@ import pandas as pd
 
 def generate_figure(
         coord_data,
-        coord_labels,
+        coord_labels = None,
         cluster_labels: Optional[List[int]] = None,
         flip_x: bool = False,
         flip_y: bool = False,
@@ -42,30 +42,45 @@ def generate_figure(
     if flip_y:
         plt.gca().invert_yaxis()
 
-    # Label points with participant_id
-    for label, xy in zip(coord_labels, coord_data):
-        plt.annotate(str(label),
-            (float(xy[0]), float(xy[1])),
-            xytext=(2, 2),
-            color="gray",
-            textcoords='offset points')
+    # Label points when coordinate labels are provided.
+    if coord_labels is not None:
+        for label, xy in zip(coord_labels, coord_data):
+            plt.annotate(str(label),
+                (float(xy[0]), float(xy[1])),
+                xytext=(2, 2),
+                color="gray",
+                textcoords='offset points')
 
     scatter_kwargs = defaultdict()
     scatter_kwargs["x"] = coord_data[:, 0]
     scatter_kwargs["y"] = coord_data[:, 1]
     scatter_kwargs["s"] = 10       # point size
     scatter_kwargs["alpha"] = 0.8  # point transparency
+
+    # Wrap clusters in hulls when cluster labels are provided.
     if cluster_labels is not None:
         # Ref: https://matplotlib.org/stable/users/explain/colors/colormaps.html#qualitative
         scatter_kwargs["cmap"] = "Set1"      # color map
+
+        # Pad cluster_labels to match the number of points
+        UNGROUPED_LABEL = -1
+        if len(cluster_labels) < len(coord_data):
+            pad_length = len(coord_data) - len(cluster_labels)
+            cluster_labels = np.concatenate([cluster_labels, [UNGROUPED_LABEL] * pad_length])
+
         scatter_kwargs["c"] = cluster_labels # color indexes
 
         print("Calculating convex hulls around clusters...")
+        # Subset to allow unlabelled points to just be plotted
         unique_labels = np.unique(cluster_labels)
         for label in unique_labels:
+            if label == UNGROUPED_LABEL:
+                continue # skip hulls when ungrouped label was padded in
+
             label_mask = cluster_labels == label
             cluster_points = coord_data[label_mask]
-            print(f"Hull {str(label)}, bounding {len(cluster_points)} points")
+
+            print(f"Hull {label}, bounding {len(cluster_points)} points")
 
             if len(cluster_points) < 3:
                 # TODO: Accomodate 2 points like Polis platform does.
