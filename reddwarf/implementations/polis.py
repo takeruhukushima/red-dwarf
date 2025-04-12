@@ -3,7 +3,7 @@ from numpy.typing import NDArray
 from pandas import DataFrame
 from reddwarf.utils.matrix import generate_raw_matrix, simple_filter_matrix, get_participant_ids
 from reddwarf.utils.pca import run_pca
-from reddwarf.utils.clustering import find_optimal_k, run_kmeans
+from reddwarf.utils.clustering import find_optimal_k, run_kmeans, pad_centroid_list_to_length
 from dataclasses import dataclass
 
 @dataclass
@@ -67,9 +67,10 @@ def run_clustering(
 
     projected_participants = projected_participants.loc[participant_ids_in, :]
 
-    # To match Polis output, we need to reverse signs for centers and projections
-    # TODO: Investigate why this is. Perhaps related to signs being flipped on agree/disagree back in the day.
-    # projected_participants, center = -projected_participants, center
+    if init_centers:
+        # When init_center guesses have been seeded, pad them to max_group_count.
+        # TODO: Randomly generate guesses, rather than using the origin.
+        init_centers = pad_centroid_list_to_length(init_centers, max_group_count)
 
     if force_group_count:
         cluster_labels, cluster_centers = run_kmeans(

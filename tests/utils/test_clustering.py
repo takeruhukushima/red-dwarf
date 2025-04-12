@@ -1,7 +1,8 @@
 import pytest
 from reddwarf.utils.clustering import run_kmeans, find_optimal_k
 from tests.fixtures import polis_convo_data
-from tests.helpers import pad_centroid_list_to_length, transform_base_clusters_to_participant_coords
+from tests.helpers import transform_base_clusters_to_participant_coords
+from reddwarf.utils.clustering import pad_centroid_list_to_length
 import pandas as pd
 
 @pytest.mark.parametrize("polis_convo_data", ["small"], indirect=True)
@@ -69,3 +70,7 @@ def test_find_optimal_k_real_data(polis_convo_data):
     assert len(expected_centers) == len(calculated_centers)
     for i, _ in enumerate(expected_centers):
         assert expected_centers[i] == pytest.approx(calculated_centers[i])
+
+@pytest.mark.skip
+def test_pad_centroid_list_to_length():
+    raise NotImplementedError

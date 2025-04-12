@@ -4,10 +4,10 @@ from reddwarf.implementations.polis import run_clustering
 from reddwarf.data_loader import Loader
 from reddwarf.utils.statements import process_statements
 from reddwarf.utils.polismath import extract_data_from_polismath
+from reddwarf.utils.clustering import pad_centroid_list_to_length
 from numpy.testing import assert_array_equal, assert_array_almost_equal
 from pandas.testing import assert_frame_equal
 from tests import helpers
-import numpy as np
 
 # This test will only match polismath for sub-100 participant convos.
 # For testing our code agaisnt real data with against larger conversations,
@@ -36,7 +36,7 @@ def test_run_clustering_real_data(polis_convo_data):
 
     max_group_count = 5
     init_centers = [group["center"] for group in math_data["group-clusters"]]
-    init_centers = helpers.pad_centroid_list_to_length(init_centers, max_group_count)
+    init_centers = pad_centroid_list_to_length(init_centers, max_group_count)
 
     loader = Loader(filepaths=[
         f"{fixture.data_dir}/votes.json",
@@ -106,7 +106,7 @@ def test_run_clustering_is_reproducible(polis_convo_data):
     )
 
     max_group_count = 5
-    padded_cluster_centers = helpers.pad_centroid_list_to_length(cluster_run_1.cluster_centers, max_group_count)
+    padded_cluster_centers = pad_centroid_list_to_length(cluster_run_1.cluster_centers, max_group_count)
 
     cluster_run_2 = run_clustering(
         votes=loader.votes_data,
@@ -124,3 +124,7 @@ def test_run_clustering_is_reproducible(polis_convo_data):
     # statement centers/means
     assert cluster_run_1.means.tolist() == cluster_run_2.means.tolist()
     assert cluster_run_1.cluster_centers.tolist() == cluster_run_2.cluster_centers.tolist()
+
+@pytest.mark.skip
+def test_init_cluster_padding():
+    raise NotImplementedError

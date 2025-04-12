@@ -20,6 +20,7 @@
     - Use numpy args of `coord_data`, `coord_labels` and `cluster_labels`
       individually, rather than using DataFrames.
     - Allow passing extra `coord_data` beyond what's labelled.
+- Add automatic padding to polis implementation when cluster centroid guesses are provided.
 
 ### Chores
 - Moved agora implementation from `reddwarf.agora` to `reddwarf.implementations.agora` (deprecation warning).

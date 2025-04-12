@@ -96,3 +96,12 @@ def find_optimal_k(
     optimal_cluster_centers = best_cluster_centers
 
     return optimal_k, optimal_silhouette, optimal_cluster_labels, optimal_cluster_centers
+
+# TODO: Be smarter about this, and randomly generate extra centroid guesses via
+# best-practice. See Polis codebase for their way of generating.
+# Meaningless clusters are more likely in the center, so important to distribute.
+def pad_centroid_list_to_length(lst, size):
+    """
+    Pad a list of centroid guesses with [0,0] up to specific length.
+    """
+    return list(lst) + [[0., 0.]]*(size - len(lst))
