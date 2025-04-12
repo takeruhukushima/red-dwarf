@@ -1,6 +1,8 @@
 import pytest
 from reddwarf.data_loader import Loader
 
+from tests.fixtures import polis_convo_data
+
 # 3 groups, 28 ptpts (24 grouped), 63 statements.
 # See: https://pol.is/report/r5hr48j8y8mpcffk7crmk
 SMALL_CONVO_ID = "9knpdktubt"
@@ -96,6 +98,38 @@ def test_load_data_via_polis_id_convo_id():
     # Can't get report_id from convo_id
     assert loader.report_id == None
     assert len(loader.votes_data) > 0
+
+@pytest.mark.parametrize("polis_convo_data", ["small-no-meta"], indirect=True)
+def test_load_data_from_file_votes(polis_convo_data):
+    fixture = polis_convo_data
+    loader = Loader(filepaths=[f"{fixture.data_dir}/votes.json"])
+
+    assert loader.votes_data != []
+    assert len(loader.votes_data) > 0
+
+@pytest.mark.parametrize("polis_convo_data", ["small-no-meta"], indirect=True)
+def test_load_data_from_file_comments(polis_convo_data):
+    fixture = polis_convo_data
+    loader = Loader(filepaths=[f"{fixture.data_dir}/comments.json"])
+
+    assert loader.comments_data != []
+    assert len(loader.comments_data) > 0
+
+@pytest.mark.parametrize("polis_convo_data", ["small-no-meta"], indirect=True)
+def test_load_data_from_file_conversation(polis_convo_data):
+    fixture = polis_convo_data
+    loader = Loader(filepaths=[f"{fixture.data_dir}/conversation.json"])
+
+    assert loader.conversation_data != {}
+    assert len(loader.conversation_data) > 0
+
+@pytest.mark.parametrize("polis_convo_data", ["small-no-meta"], indirect=True)
+def test_load_data_from_file_math(polis_convo_data):
+    fixture = polis_convo_data
+    loader = Loader(filepaths=[f"{fixture.data_dir}/math-pca2.json"])
+
+    assert loader.math_data != {}
+    assert len(loader.math_data) > 0
 
 def test_load_data_from_api_report():
     loader = Loader(report_id=SMALL_CONVO_REPORT_ID)

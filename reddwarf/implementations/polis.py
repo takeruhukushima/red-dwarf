@@ -3,8 +3,17 @@ from numpy.typing import NDArray
 from pandas import DataFrame
 from reddwarf.utils.matrix import generate_raw_matrix, simple_filter_matrix, get_participant_ids
 from reddwarf.utils.pca import run_pca
-from reddwarf.utils.clustering import find_optimal_k, run_kmeans
+from reddwarf.utils.clustering import find_optimal_k, run_kmeans, pad_centroid_list_to_length
+from dataclasses import dataclass
 
+@dataclass
+class PolisClusteringResult:
+    projected_participants: DataFrame
+    projected_statements: DataFrame
+    components: NDArray
+    eigenvalues: NDArray
+    means: NDArray
+    cluster_centers: NDArray | None
 
 def run_clustering(
     votes: list[dict],
@@ -15,7 +24,7 @@ def run_clustering(
     max_group_count: int = 5,
     force_group_count: Optional[int] = None,
     random_state: Optional[int] = None,
-) -> tuple[DataFrame, NDArray, NDArray, NDArray, NDArray | None]:
+) -> PolisClusteringResult:
     """
     An essentially feature-complete implementation of the Polis clustering algorithm.
 
@@ -35,11 +44,12 @@ def run_clustering(
         random_state (int): If set, will force determinism during k-means clustering
 
     Returns:
-        projected_data (DataFrame): Dataframe of projected participants, with columns "x", "y", "cluster_id"
-        comps (list[list[float]]): List of principal components for each statement
-        eigenvalues (list[float]): List of eigenvalues for each principal component
-        center (list[float]): List of centers/means for each statement
-        cluster_centers (list[list[float]]): List of center xy coordinates for each cluster
+        PolisClusteringResult: A dataclass containing clustering information with fields:
+            - projected_data (DataFrame): Dataframe of projected participants, with columns "x", "y", "cluster_id"
+            - components (list[list[float]]): List of principal components for each statement
+            - eigenvalues (list[float]): List of eigenvalues for each principal component
+            - means (list[float]): List of centers/means for each statement
+            - cluster_centers (list[list[float]]): List of center xy coordinates for each cluster
     """
     vote_matrix = generate_raw_matrix(votes=votes)
     participant_ids_in = get_participant_ids(vote_matrix, vote_threshold=min_user_vote_threshold)
@@ -50,28 +60,39 @@ def run_clustering(
         vote_matrix=vote_matrix,
         mod_out_statement_ids=mod_out_statement_ids,
     )
-    projected_data, comps, eigenvalues, center = run_pca(vote_matrix=vote_matrix)
+    projected_participants, projected_statements, pca = run_pca(vote_matrix=vote_matrix)
+    center = pca.mean_
+    comps = pca.components_
+    eigenvalues = pca.explained_variance_
 
-    projected_data = projected_data.loc[participant_ids_in, :]
+    projected_participants = projected_participants.loc[participant_ids_in, :]
 
-    # To match Polis output, we need to reverse signs for centers and projections
-    # TODO: Investigate why this is. Perhaps related to signs being flipped on agree/disagree back in the day.
-    projected_data, center = -projected_data, -center
+    if init_centers:
+        # When init_center guesses have been seeded, pad them to max_group_count.
+        # TODO: Randomly generate guesses, rather than using the origin.
+        init_centers = pad_centroid_list_to_length(init_centers, max_group_count)
 
     if force_group_count:
         cluster_labels, cluster_centers = run_kmeans(
-            dataframe=projected_data,
+            dataframe=projected_participants,
             n_clusters=force_group_count,
             init_centers=init_centers,
             random_state=random_state,
         )
     else:
         _, _, cluster_labels, cluster_centers = find_optimal_k(
-            projected_data=projected_data,
+            projected_data=projected_participants,
             max_group_count=max_group_count,
             init_centers=init_centers,
             random_state=random_state,
         )
-    projected_data = projected_data.assign(cluster_id=cluster_labels)
+    projected_participants = projected_participants.assign(cluster_id=cluster_labels)
 
-    return projected_data, comps, eigenvalues, center, cluster_centers
+    return PolisClusteringResult(
+        projected_participants=projected_participants,
+        projected_statements=projected_statements,
+        components=comps,
+        eigenvalues=eigenvalues,
+        means=center,
+        cluster_centers=cluster_centers,
+    )

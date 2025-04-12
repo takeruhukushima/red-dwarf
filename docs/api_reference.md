@@ -59,10 +59,6 @@
     options:
         show_root_heading: true
 
-### ::: reddwarf.utils.scale_projected_data
-    options:
-        show_root_heading: true
-
 ### ::: reddwarf.utils.get_unvoted_statement_ids
     options:
         show_root_heading: true

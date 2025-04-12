@@ -1,17 +1,18 @@
 import pytest
 from reddwarf.utils.clustering import run_kmeans, find_optimal_k
 from tests.fixtures import polis_convo_data
-from tests.helpers import pad_to_size, transform_base_clusters_to_participant_coords
+from tests.helpers import transform_base_clusters_to_participant_coords
+from reddwarf.utils.clustering import pad_centroid_list_to_length
 import pandas as pd
 
 @pytest.mark.parametrize("polis_convo_data", ["small"], indirect=True)
 def test_run_kmeans_real_data_reproducible(polis_convo_data):
-    math_data, *_ = polis_convo_data
+    fixture = polis_convo_data
 
-    expected_cluster_centers = [group["center"] for group in math_data["group-clusters"]]
+    expected_cluster_centers = [group["center"] for group in fixture.math_data["group-clusters"]]
     cluster_count = len(expected_cluster_centers)
 
-    projected_participants = transform_base_clusters_to_participant_coords(math_data["base-clusters"])
+    projected_participants = transform_base_clusters_to_participant_coords(fixture.math_data["base-clusters"])
     projected_participants_df = pd.DataFrame([
         {
             "participant_id": item["participant_id"],
@@ -38,13 +39,13 @@ def test_run_kmeans_real_data_reproducible(polis_convo_data):
 # This is likely due to k-smoothing holding back the k value at 3 in polismath, and we're finding the real current one.
 @pytest.mark.parametrize("polis_convo_data", ["small-with-meta"], indirect=True)
 def test_find_optimal_k_real_data(polis_convo_data):
-    math_data, *_ = polis_convo_data
+    fixture = polis_convo_data
     MAX_GROUP_COUNT = 5
 
     # Get centers from polismath.
-    expected_centers = [group["center"] for group in math_data["group-clusters"]]
+    expected_centers = [group["center"] for group in fixture.math_data["group-clusters"]]
 
-    projected_participants = transform_base_clusters_to_participant_coords(math_data["base-clusters"])
+    projected_participants = transform_base_clusters_to_participant_coords(fixture.math_data["base-clusters"])
     projected_participants_df = pd.DataFrame([
         {
             "participant_id": item["participant_id"],
@@ -58,7 +59,7 @@ def test_find_optimal_k_real_data(polis_convo_data):
         projected_data=projected_participants_df,
         max_group_count=MAX_GROUP_COUNT,
         # Pad center guesses to have enough values for testing up to max k groups.
-        init_centers=pad_to_size(expected_centers, MAX_GROUP_COUNT)
+        init_centers=pad_centroid_list_to_length(expected_centers, MAX_GROUP_COUNT)
     )
     optimal_k, silhouette_score, cluster_labels, cluster_centers = results # for documentation
 
@@ -69,3 +70,7 @@ def test_find_optimal_k_real_data(polis_convo_data):
     assert len(expected_centers) == len(calculated_centers)
     for i, _ in enumerate(expected_centers):
         assert expected_centers[i] == pytest.approx(calculated_centers[i])
+
+@pytest.mark.skip
+def test_pad_centroid_list_to_length():
+    raise NotImplementedError

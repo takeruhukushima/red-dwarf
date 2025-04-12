@@ -152,3 +152,34 @@ def create_bidirectional_id_maps(base_clusters):
     }
 
     return participant_to_base_cluster, base_cluster_to_participants
+
+def get_corrected_centroid_guesses(
+    polis_math_data,
+    skip_correction: bool = False,
+):
+    """
+    A helper to extract and correct centroid guesses from polismath data.
+
+    This is helpful to seed new rounds of KMeans locally.
+
+    NOTE: It seems that there's an inversion somewhere in the polis codebase, and so
+    we need to invert their coordinates in relation to ours.
+
+    Given the consistency of this intervention, it's likely not a PCA artifact,
+    and instead relates to using inverting the sign of agree/disagree in
+    varioius places in the Polis codebase.
+
+    Arguments:
+        polis_math_data (object): The polismath data from the Polis API
+        skip_correction (bool): Whether to skip correction (helpful for debugging)
+
+    Returns:
+        centroids: A list of centroid [x,y] coord guesses
+    """
+    extracted_centroids = [group["center"] for group in polis_math_data["group-clusters"]]
+
+    if skip_correction:
+        return extracted_centroids
+    else:
+        corrected_centroids = [[-xy[0], -xy[1]] for xy in extracted_centroids]
+        return corrected_centroids

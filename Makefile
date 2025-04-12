@@ -33,6 +33,8 @@ test-debug: ## Run tests via pytest, optionally filtering (with verbose debuggin
 	# Show full diffs on failure.
 	uv run pytest -p no:nbmake --capture=no -vv -k '$(TEST_FILTER)'
 
+test-all: test test-nb ## Run unit and notebook tests
+
 clear-test-cache: ## Cleak the SQLite database of cached HTTP requests
 	rm -f test_cache.sqlite
 

@@ -1,4 +1,8 @@
+from sklearn.impute import SimpleImputer
 from reddwarf.types.polis import PolisRepness
+from typing import Any, Union, Literal
+import numpy as np
+
 
 def get_grouped_statement_ids(repness: PolisRepness) -> dict[str, list[dict[str, list[int]]]]:
     """A helper to compare only tid in groups, rather than full repness object."""
@@ -9,9 +13,6 @@ def get_grouped_statement_ids(repness: PolisRepness) -> dict[str, list[dict[str,
         groups.append(group)
 
     return {"groups": groups}
-
-def pad_to_size(lst, size):
-    return list(lst) + [[0., 0.]]*(size - len(lst))
 
 def transform_base_clusters_to_participant_coords(base_clusters):
     """
@@ -65,3 +66,121 @@ def groupsort_pids_by_cluster(df):
 
     # Convert each inner list to integers
     return [list(map(int, group)) for group in sorted_groups]
+
+
+NestedValue = Union[int, float, list["NestedValue"], dict[str, "NestedValue"]]
+NestedDict = dict[str, NestedValue]
+
+def flip_signs_by_key(nested_dict: NestedDict, keys: list[str] = []) -> Any:
+    """
+    Flips the signs of numeric values in a nested dict using dot-notation paths.
+    Supports nested arrays, array indexing (like "foo.bar[0].baz[1]"), and array
+    wildcards (like "foo.bar[*].baz).
+
+    This helper is for quickly dealing with real polismath fixture data that has
+    different signs than we calculate ourselves.
+
+    NOTE: The need for this helper may be harmless artifacts of PCA methods, or
+    other reasons related to agree/disagree signs. Consistently adjusting signs
+    at the fixture level should help clarify this.
+
+    Arguments:
+        obj (NestedDict): A nested dict of arbitrary depth, with lists of float
+            values at some keys. keys (list[str]): A list of dot-notation keys to
+            flip signs within.
+
+    Returns:
+        Any: A nested dict with all the same original types, but with
+            specific keys inverted. (Typed as "Any" for convenience.)
+    """
+    import copy
+    import re
+    result: NestedDict = copy.deepcopy(nested_dict)
+
+    def flip_recursive(value: NestedValue) -> NestedValue:
+        if isinstance(value, list):
+            return [flip_recursive(v) for v in value]
+        elif isinstance(value, (int, float)):
+            return -value
+        return value
+
+    def parse_path_segment(segment: str) -> list[Union[str, int, Literal["*"]]]:
+        parts: list[Union[str, int, Literal["*"]]] = []
+        for match in re.finditer(r'([^\[\]]+)|\[(\d+|\*)\]', segment):
+            key, idx = match.groups()
+            if key:
+                parts.append(key)
+            elif idx == "*":
+                parts.append("*")
+            else:
+                parts.append(int(idx))
+        return parts
+
+    def resolve_targets(root: NestedValue, path: str) -> list[tuple[Union[dict, list], Union[str, int]]]:
+        segments = path.split(".")
+        parts: list[Union[str, int, Literal["*"]]] = []
+        for seg in segments:
+            parts.extend(parse_path_segment(seg))
+
+        def recurse(current: NestedValue, remaining: list[Union[str, int, Literal["*"]]]) -> list[tuple[Union[dict, list], Union[str, int]]]:
+            if not remaining:
+                return []
+
+            part, *rest = remaining
+
+            if len(rest) == 0:
+                # Final step: return the parent + final key/index
+                if isinstance(part, (str, int)):
+                    return [(current, part)]
+                elif part == "*":
+                    if isinstance(current, list):
+                        return [(current, i) for i in range(len(current))]
+                return []
+
+            if isinstance(part, str) and isinstance(current, dict) and part in current:
+                return recurse(current[part], rest)
+
+            elif isinstance(part, int) and isinstance(current, list) and 0 <= part < len(current):
+                return recurse(current[part], rest)
+
+            elif part == "*" and isinstance(current, list):
+                results = []
+                for item in current:
+                    results.extend(recurse(item, rest))
+                return results
+
+            return []
+
+        return recurse(root, parts)
+
+    for dot_key in keys:
+        targets = resolve_targets(result, dot_key)
+        for parent, final_key in targets:
+            if isinstance(final_key, str) and isinstance(parent, dict) and final_key in parent:
+                parent[final_key] = flip_recursive(parent[final_key])
+            elif isinstance(final_key, int) and isinstance(parent, list) and 0 <= final_key < len(parent):
+                parent[final_key] = flip_recursive(parent[final_key])
+
+    return result
+
+def calculate_explained_variance(sparse_vote_matrix, means, components):
+    """
+    Derive explained variance from simpler polismath outputs.
+
+    Explained variance is not sign-dependant, so great for unit tests.
+
+    Arguments:
+        sparse_vote_matrix (np.ndarray): Sparse vote_matrix 2D numpy array
+        means (list[float]): List of feature means
+        components (list[list[float]]): List of eigenvectors/components
+
+    Returns:
+        list[float]: Variance explained by each component (n_components,)
+    """
+    X_imputed = SimpleImputer().fit_transform(sparse_vote_matrix)
+    means, comps = [np.asarray(arr) for arr in [means, components]]
+    X_centered = X_imputed - means
+    X_projected = X_centered @ comps.transpose()
+    explained_variance = np.var(X_projected, axis=0, ddof=1)
+
+    return explained_variance

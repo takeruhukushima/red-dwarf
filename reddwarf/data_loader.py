@@ -181,6 +181,8 @@ class Loader():
                 self.load_file_data_comments(file=f)
             elif f.endswith("conversation.json"):
                 self.load_file_data_conversation(file=f)
+            elif f.endswith("math-pca2.json"):
+                self.load_file_data_math(file=f)
             else:
                 raise ValueError("Unknown file type")
 
@@ -203,6 +205,12 @@ class Loader():
             convo_data = json.load(f)
 
         self.conversation_data = convo_data
+
+    def load_file_data_math(self, file=None):
+        with open(file) as f:
+            math_data = json.load(f)
+
+        self.math_data = math_data
 
     def load_api_data(self):
         if self.report_id:

@@ -57,7 +57,6 @@ if True:
     # Generate vote matrix and run clustering
     vote_matrix = client.get_matrix(is_filtered=True)
     client.run_pca()
-    client.scale_projected_data()
 
     if USE_POLISMATH_CLUSTERING:
         # Fake optimal labels from polismath data.

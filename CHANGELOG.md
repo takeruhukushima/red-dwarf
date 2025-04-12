@@ -11,6 +11,16 @@
 - Add simple Polis implementation in `reddwarf.implementations.polis`.
 - Add singular `polis_id` arg as recommended way to download (auto-detect `report_id` vs `converation_id`).
 - Calculate group-aware consensus stats. ([#28](https://github.com/polis-community/red-dwarf/pull/28))
+- Removed `scale_projected_data()` in `PolisClient` (now happens in `run_pca()`).
+- Deprecate `PolisClient()`.
+- Add `inverse_transform()` to `SparsityAwareScaler`.
+- Add data loader support for local math data files.
+- Add support to easily flip signs in `generate_figure()`.
+- Modify `generate_figure()` to accept more effective args.
+    - Use numpy args of `coord_data`, `coord_labels` and `cluster_labels`
+      individually, rather than using DataFrames.
+    - Allow passing extra `coord_data` beyond what's labelled.
+- Add automatic padding to polis implementation when cluster centroid guesses are provided.
 
 ### Chores
 - Moved agora implementation from `reddwarf.agora` to `reddwarf.implementations.agora` (deprecation warning).
@@ -19,6 +29,13 @@
 - Add types to fully describe polismath object. ([#28](https://github.com/polis-community/red-dwarf/pull/28))
 - Add new fixture for large convo without meta statements. ([#28](https://github.com/polis-community/red-dwarf/pull/28))
 - Add ability to filter unit tests and avoid running whole suite. ([#44](https://github.com/polis-community/red-dwarf/pull/44))
+- Improve test fixture to download remote Polis data.
+- Add helper to support simple sign-flips in Polis test data.
+- Remove usage of PolisClient in tests, in favour of [data] Loader.
+- Start storing `keep_participant_ids` in fixtures.
+- Add solid unit test for expected variance, which is stablest measure we can derive.
+- Use dataclasses for `polis_convo_data` test fixture.
+- Add `utils.polismath.get_corrected_centroid_guesses()` to initiate centroid guesses from Polis API.
 
 ## [0.2.0][] (2025-03-24)
 ### Fixed

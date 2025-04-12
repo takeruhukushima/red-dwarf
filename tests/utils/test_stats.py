@@ -4,7 +4,7 @@ from tests.fixtures import polis_convo_data
 from reddwarf.utils import stats
 
 from reddwarf.utils import stats, polismath, matrix
-from reddwarf.polis import PolisClient
+from reddwarf.data_loader import Loader
 
 def test_importance_metric_no_votes():
     expected_importance = [ 1/4,   2/4,   1,     2,      4   ]
@@ -153,16 +153,16 @@ def test_priority_metric_no_votes():
 # TODO: Investigate why "medium-with-meta" and "medium-no-meta" don't pass.
 @pytest.mark.parametrize("polis_convo_data", ["small-no-meta", "small-with-meta"], indirect=True)
 def test_priority_metric_real_data(polis_convo_data):
-    math_data, _, _ = polis_convo_data
-    votes_base = math_data["votes-base"]
+    fixture = polis_convo_data
+    votes_base = fixture.math_data["votes-base"]
     for statement_id, votes in votes_base.items():
-        expected_priority = math_data["comment-priorities"][statement_id]
+        expected_priority = fixture.math_data["comment-priorities"][statement_id]
 
-        is_meta = int(statement_id) in math_data["meta-tids"]
+        is_meta = int(statement_id) in fixture.math_data["meta-tids"]
         n_agree = (np.asarray(votes["A"]) == 1).sum()
         n_disagree = (np.asarray(votes["D"]) == 1).sum()
         n_total = (np.asarray(votes["S"]) == 1).sum()
-        comment_extremity = math_data["pca"]["comment-extremity"][int(statement_id)]
+        comment_extremity = fixture.math_data["pca"]["comment-extremity"][int(statement_id)]
 
         calculated_priority = stats.priority_metric(
             is_meta=is_meta,
@@ -308,15 +308,14 @@ def test_priority_metric_array():
 # TODO: Investigate why "medium-with-meta" doesn't work. (59/60 mismatched)
 @pytest.mark.parametrize("polis_convo_data", ["small-no-meta", "small-with-meta", "medium-no-meta"], indirect=True)
 def test_group_aware_consensus_real_data(polis_convo_data):
-    math_data, path, _ = polis_convo_data
-    client = PolisClient()
-    client.load_data(filepaths=[
-        f'{path}/votes.json',
-        f'{path}/comments.json',
-        f'{path}/conversation.json',
+    fixture = polis_convo_data
+    loader = Loader(filepaths=[
+        f'{fixture.data_dir}/votes.json',
+        f'{fixture.data_dir}/comments.json',
+        f'{fixture.data_dir}/conversation.json',
     ])
-    VOTES = client.data_loader.votes_data
-    # STATEMENTS = client.data_loader.comments_data
+    VOTES = loader.votes_data
+    # STATEMENTS = loader.comments_data
 
     # _, _, mod_out, _ = stmnts.process_statements(statement_data=STATEMENTS)
     # print(mod_out)
@@ -330,7 +329,7 @@ def test_group_aware_consensus_real_data(polis_convo_data):
 
     # Get list of all active participant ids, since Polis has some edge-cases
     # that keep specific participants, and we need to keep them from being filtered out.
-    all_clustered_participant_ids, cluster_labels = polismath.extract_data_from_polismath(math_data)
+    all_clustered_participant_ids, cluster_labels = polismath.extract_data_from_polismath(fixture.math_data)
     vote_matrix = vote_matrix.loc[all_clustered_participant_ids, :]
 
     # Generate stats all groups and all statements.
@@ -344,4 +343,4 @@ def test_group_aware_consensus_real_data(polis_convo_data):
         for pid, row in gac_df.iterrows()
     }
 
-    assert calculated_gac == pytest.approx(math_data["group-aware-consensus"])
+    assert calculated_gac == pytest.approx(fixture.math_data["group-aware-consensus"])
