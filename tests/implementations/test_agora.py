@@ -11,26 +11,15 @@ def build_votes(data_fixture):
 
     return loader.votes_data
 
-@pytest.mark.parametrize("polis_convo_data", ["small"], indirect=True)
-def test_run_clustering_real_data_small(polis_convo_data):
-    expected_cluster_sizes = [4, 10, 5]
-    votes = build_votes(polis_convo_data)
-
-    convo: agora.Conversation = {
-        "id": "dummy",
-        "votes": votes, # type:ignore
+@pytest.mark.parametrize("polis_convo_data", ["small", "medium-with-meta"], indirect=True)
+def test_run_clustering_real_data(polis_convo_data, request):
+    CLUSTER_SIZES = {
+        "small": [4, 10, 5],
+        "medium-with-meta": [60, 39, 37, 37, 3],
     }
-    results = agora.run_clustering_v1(conversation=convo)
+    fixture_name = request.node._param
 
-    assert len(expected_cluster_sizes) == len(results["clusters"])
-
-    for cluster_id, expected_cluster_size in enumerate(expected_cluster_sizes):
-        actual_cluster_size = len(results["clusters"][cluster_id]["participants"])
-        assert actual_cluster_size == expected_cluster_size
-
-@pytest.mark.parametrize("polis_convo_data", ["medium-with-meta"], indirect=True)
-def test_run_clustering_real_data_medium(polis_convo_data):
-    expected_cluster_sizes = [60, 39, 37, 37, 3]
+    expected_cluster_sizes = CLUSTER_SIZES[fixture_name]
     votes = build_votes(polis_convo_data)
 
     convo: agora.Conversation = {
