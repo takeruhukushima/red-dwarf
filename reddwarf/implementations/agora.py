@@ -44,15 +44,16 @@ def run_clustering_v1(
     )
     projected_data, *_ = utils.run_pca(vote_matrix=vote_matrix)
 
-    _, _, cluster_labels, _ = utils.find_optimal_k(
+    _, _, optimal_kmeans = utils.find_optimal_k(
         projected_data=projected_data,
         max_group_count=options.get("max_clusters", DEFAULT_MAX_CLUSTERS),
+        init="k-means++",
         # Ensure reproducible kmeans calculation between runs.
         random_state=DEFAULT_KMEANS_RANDOM_STATE,
     )
 
     # Add cluster label column to dataframe.
-    projected_data = projected_data.assign(cluster_id=cluster_labels)
+    projected_data = projected_data.assign(cluster_id=optimal_kmeans.labels_ if optimal_kmeans else None)
     # Convert participant_id index into regular column, for ease of transformation.
     projected_data = projected_data.reset_index()
 

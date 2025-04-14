@@ -1,9 +1,10 @@
 from typing import Optional
 from numpy.typing import NDArray
 from pandas import DataFrame
+from reddwarf.sklearn.cluster import PolisKMeans
 from reddwarf.utils.matrix import generate_raw_matrix, simple_filter_matrix, get_participant_ids
 from reddwarf.utils.pca import run_pca
-from reddwarf.utils.clustering import find_optimal_k, run_kmeans, pad_centroid_list_to_length
+from reddwarf.utils.clustering import find_optimal_k, run_kmeans
 from dataclasses import dataclass
 
 @dataclass
@@ -14,6 +15,7 @@ class PolisClusteringResult:
     eigenvalues: NDArray
     means: NDArray
     cluster_centers: NDArray | None
+    kmeans: PolisKMeans | None
 
 def run_clustering(
     votes: list[dict],
@@ -67,26 +69,25 @@ def run_clustering(
 
     projected_participants = projected_participants.loc[participant_ids_in, :]
 
-    if init_centers:
-        # When init_center guesses have been seeded, pad them to max_group_count.
-        # TODO: Randomly generate guesses, rather than using the origin.
-        init_centers = pad_centroid_list_to_length(init_centers, max_group_count)
-
     if force_group_count:
-        cluster_labels, cluster_centers = run_kmeans(
+        kmeans = run_kmeans(
             dataframe=projected_participants,
             n_clusters=force_group_count,
+            # Force polis strategy of initiating cluster centers. See: PolisKMeans.
+            init="polis",
             init_centers=init_centers,
             random_state=random_state,
         )
     else:
-        _, _, cluster_labels, cluster_centers = find_optimal_k(
+        _, _, kmeans = find_optimal_k(
             projected_data=projected_participants,
             max_group_count=max_group_count,
+            # Force polis strategy of initiating cluster centers. See: PolisKMeans.
+            init="polis",
             init_centers=init_centers,
             random_state=random_state,
         )
-    projected_participants = projected_participants.assign(cluster_id=cluster_labels)
+    projected_participants = projected_participants.assign(cluster_id=kmeans.labels_ if kmeans else None)
 
     return PolisClusteringResult(
         projected_participants=projected_participants,
@@ -94,5 +95,6 @@ def run_clustering(
         components=comps,
         eigenvalues=eigenvalues,
         means=center,
-        cluster_centers=cluster_centers,
+        cluster_centers=kmeans.cluster_centers_ if kmeans else None,
+        kmeans=kmeans,
     )

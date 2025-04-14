@@ -21,6 +21,12 @@
       individually, rather than using DataFrames.
     - Allow passing extra `coord_data` beyond what's labelled.
 - Add automatic padding to polis implementation when cluster centroid guesses are provided.
+- Add `PolisKMeans` scikit-learn estimator with:
+    - cluster initialization strategy matching Polis,
+    - new `init_centers` argument with more versatility for being given more/less guesses than needed, and
+    - new instance variable `init_centers_used_` to allow inspection of guesses used.
+- Allow passing KMeans `init` strategy into `find_optimal_k()`.
+- Remove `pad_centroid_list_to_length` helper function.
 
 ### Chores
 - Moved agora implementation from `reddwarf.agora` to `reddwarf.implementations.agora` (deprecation warning).

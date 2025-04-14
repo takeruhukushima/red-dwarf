@@ -4,7 +4,6 @@ from reddwarf.implementations.polis import run_clustering
 from reddwarf.data_loader import Loader
 from reddwarf.utils.statements import process_statements
 from reddwarf.utils.polismath import extract_data_from_polismath
-from reddwarf.utils.clustering import pad_centroid_list_to_length
 from numpy.testing import assert_array_equal, assert_array_almost_equal
 from pandas.testing import assert_frame_equal
 from tests import helpers
@@ -36,7 +35,6 @@ def test_run_clustering_real_data(polis_convo_data):
 
     max_group_count = 5
     init_centers = [group["center"] for group in math_data["group-clusters"]]
-    init_centers = pad_centroid_list_to_length(init_centers, max_group_count)
 
     loader = Loader(filepaths=[
         f"{fixture.data_dir}/votes.json",
@@ -106,12 +104,12 @@ def test_run_clustering_is_reproducible(polis_convo_data):
     )
 
     max_group_count = 5
-    padded_cluster_centers = pad_centroid_list_to_length(cluster_run_1.cluster_centers, max_group_count)
+    last_cluster_centers = cluster_run_1.cluster_centers
 
     cluster_run_2 = run_clustering(
         votes=loader.votes_data,
         mod_out_statement_ids=mod_out_statement_ids,
-        init_centers=padded_cluster_centers,
+        init_centers=last_cluster_centers,
     )
 
     # same number of clusters

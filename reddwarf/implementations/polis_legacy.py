@@ -196,14 +196,14 @@ class PolisClient():
         self.base_clusters = self.data_loader.math_data["base-clusters"]
 
     def find_optimal_k(self):
-        best_k, silhouette_score, cluster_labels, _ = utils.find_optimal_k(
+        best_k, silhouette_score, best_kmeans = utils.find_optimal_k(
             projected_data=self.projected_data,
             max_group_count=self.max_group_count,
             debug=True,
         )
         self.optimal_k = best_k
         self.optimal_silhouette = silhouette_score
-        self.optimal_cluster_labels = cluster_labels
+        self.optimal_cluster_labels = best_kmeans.labels_
 
     def load_data(self, filepaths=[], polis_id=None, conversation_id=None, report_id=None, directory_url=None, data_source="api"):
         if conversation_id or report_id or polis_id or filepaths or directory_url:
