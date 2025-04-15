@@ -120,3 +120,40 @@ class PolisKMeans(KMeans):
         super().set_params(init=self.init_centers_used_)
 
         return super().fit(X, y=y, sample_weight=sample_weight)
+
+from sklearn.base import BaseEstimator, TransformerMixin
+
+class PolisKMeansDownsampler(BaseEstimator, TransformerMixin):
+    """
+    A transformer that fits PolisKMeans and returns the cluster centers as the
+    downsampled dataset.
+
+    This will support mimicking "base clusters" from the Polis platform.
+
+    This enables use in sklearn pipelines, where intermediate steps
+    are expected to implement both `fit` and `transform`.
+    """
+    def __init__(self,
+        n_clusters=100,
+        random_state=None,
+        init="k-means++",
+        init_centers=None,
+    ):
+        self.n_clusters = n_clusters
+        self.random_state = random_state
+        self.init = init
+        self.init_centers = init_centers
+        self.kmeans_ = None
+
+    def fit(self, X, y=None):
+        self.kmeans_ = PolisKMeans(
+            n_clusters=self.n_clusters,
+            random_state=self.random_state,
+            init=self.init,
+            init_centers=self.init_centers,
+        )
+        self.kmeans_.fit(X)
+        return self
+
+    def transform(self, X, y=None):
+        return self.kmeans_.cluster_centers_ if self.kmeans_ else None
