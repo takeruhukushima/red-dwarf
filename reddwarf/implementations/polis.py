@@ -13,13 +13,9 @@ class PolisClusteringResult:
     raw_vote_matrix: DataFrame
     filtered_vote_matrix: DataFrame
     pca: PCA
-    components: NDArray
-    eigenvalues: NDArray
-    means: NDArray
     projected_participants: DataFrame
     projected_statements: DataFrame
     kmeans: PolisKMeans | None
-    cluster_centers: NDArray | None
 
 def run_clustering(
     votes: list[dict],
@@ -53,14 +49,10 @@ def run_clustering(
         PolisClusteringResult: A dataclass containing clustering information with fields:
             - raw_vote_matrix (DataFrame): Raw sparse vote matrix before any processing.
             - filtered_vote_matrix (DataFrame): Raw sparse vote matrix with moderated statements zero'd out.
-            - pca (PCA): PCA model fitted to vote matrix.
+            - pca (PCA): PCA model fitted to vote matrix, including `mean_`, `expected_variance_` (eigenvalues) and `components_` (eigenvectors).
             - projected_participants (DataFrame): Dataframe of projected participants, with columns "x", "y", "cluster_id"
             - projected_statements (DataFrame): Dataframe of projected statements, with columns "x", "y".
-            - components (list[list[float]]): List of principal components for each statement
-            - eigenvalues (list[float]): List of eigenvalues for each principal component
-            - means (list[float]): List of centers/means for each statement
-            - cluster_centers (list[list[float]]): List of center xy coordinates for each cluster
-            - kmeans (PolisKMeans): Scikit-Learn KMeans object for selected group count. See `PolisKMeans`.
+            - kmeans (PolisKMeans): Scikit-Learn KMeans object for selected group count, including `labels_` and `cluster_centers_`. See `PolisKMeans`.
     """
     raw_vote_matrix = generate_raw_matrix(votes=votes)
     participant_ids_in = get_participant_ids(raw_vote_matrix, vote_threshold=min_user_vote_threshold)
@@ -96,11 +88,7 @@ def run_clustering(
         raw_vote_matrix=raw_vote_matrix,
         filtered_vote_matrix=filtered_vote_matrix,
         pca=pca,
-        components=pca.components_,
-        eigenvalues=pca.explained_variance_,
-        means=pca.mean_,
         projected_participants=projected_participants,
         projected_statements=projected_statements,
         kmeans=kmeans,
-        cluster_centers=kmeans.cluster_centers_ if kmeans else None,
     )

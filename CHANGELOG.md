@@ -31,6 +31,7 @@
 - For interal util functions, replace `max_group_count` args with `k_bounds` for upper and lower k bounds.
 - Add `PolisKMeansDownsampler` transformer to support base clustering.
 - Update `get_corrected_centroid_guesses()` to also extract from base clusters.
+- Remove extraneous return values from `PolisClusteringResult`.
 
 ### Chores
 - Moved agora implementation from `reddwarf.agora` to `reddwarf.implementations.agora` (deprecation warning).

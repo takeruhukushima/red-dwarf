@@ -54,9 +54,9 @@ def test_run_clustering_real_data(polis_convo_data):
         force_group_count=force_group_count,
     )
 
-    assert pytest.approx(result.components[0]) == math_data["pca"]["comps"][0]
-    assert pytest.approx(result.components[1]) == math_data["pca"]["comps"][1]
-    assert pytest.approx(result.means) == math_data["pca"]["center"]
+    assert pytest.approx(result.pca.components_[0]) == math_data["pca"]["comps"][0]
+    assert pytest.approx(result.pca.components_[1]) == math_data["pca"]["comps"][1]
+    assert pytest.approx(result.pca.mean_) == math_data["pca"]["center"]
 
     # Test projected statements
     # Convert [[x_1, y_1], [x_2, y_2], ...] into [[x_1, x_2, ...], list[y_1, y_2, ...]]
@@ -103,25 +103,23 @@ def test_run_clustering_is_reproducible(polis_convo_data):
         mod_out_statement_ids=mod_out_statement_ids,
     )
 
-    last_cluster_centers = cluster_run_1.cluster_centers
+    centers_1 = cluster_run_1.kmeans.cluster_centers_ if cluster_run_1.kmeans else None
 
     cluster_run_2 = run_clustering(
         votes=loader.votes_data,
         mod_out_statement_ids=mod_out_statement_ids,
-        init_centers=last_cluster_centers,
+        init_centers=centers_1,
     )
 
     # same number of clusters
-    assert len(cluster_run_1.cluster_centers) == len(cluster_run_2.cluster_centers) # type:ignore
+    centers_1 = cluster_run_1.kmeans.cluster_centers_ if cluster_run_1.kmeans else []
+    centers_2 = cluster_run_2.kmeans.cluster_centers_ if cluster_run_2.kmeans else []
+    assert len(centers_1) == len(centers_2)
+    assert_array_equal(centers_1, centers_2)
 
     # projected statements and cluster IDs
     assert_frame_equal(cluster_run_1.projected_participants, cluster_run_2.projected_participants)
     # components/eigenvectors
-    assert cluster_run_1.components.tolist() == cluster_run_2.components.tolist()
-    # statement centers/means
-    assert cluster_run_1.means.tolist() == cluster_run_2.means.tolist()
-    assert cluster_run_1.cluster_centers.tolist() == cluster_run_2.cluster_centers.tolist()
-
-@pytest.mark.skip
-def test_init_cluster_padding():
-    raise NotImplementedError
+    assert cluster_run_1.pca.components_.tolist() == cluster_run_2.pca.components_.tolist()
+    # statement means
+    assert cluster_run_1.pca.mean_.tolist() == cluster_run_2.pca.mean_.tolist()
