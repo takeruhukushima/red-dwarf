@@ -27,6 +27,7 @@
     - new instance variable `init_centers_used_` to allow inspection of guesses used.
 - Allow passing KMeans `init` strategy into `find_optimal_k()`.
 - Remove `pad_centroid_list_to_length` helper function.
+- Add `GridSearchNonCV` to find optimal K via silhouette scores.
 
 ### Chores
 - Moved agora implementation from `reddwarf.agora` to `reddwarf.implementations.agora` (deprecation warning).

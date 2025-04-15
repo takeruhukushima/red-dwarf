@@ -1,8 +1,9 @@
 import pandas as pd
 import numpy as np
+from reddwarf.sklearn.model_selection import GridSearchNonCV
 from reddwarf.sklearn.cluster import PolisKMeans
 from sklearn.metrics import silhouette_score
-from typing import Any, List, Tuple, Optional
+from typing import List, Tuple, Optional
 
 # TODO: Start passing init_centers based on /math/pca2 endpoint data,
 # and see how often we get the same clusters.
@@ -62,32 +63,24 @@ def find_optimal_k(
         optimal_silhouette_score (float): Silhouette score for this K value.
         optimal_kmeans (PolisKMeans | None): The optimal fitted estimator returned from PolisKMeans.
     """
-    K_RANGE = range(2, max_group_count+1)
-    k_best = 0 # Best K so far.
-    best_silhouette_score = -np.inf
-    best_kmeans = None
+    param_grid = {"n_clusters": list(range(2, max_group_count+1))}
 
-    for k_test in K_RANGE:
-        kmeans_test = run_kmeans(
-            dataframe=projected_data,
-            n_clusters=k_test,
+    search = GridSearchNonCV(
+        estimator=PolisKMeans(
+            random_state=random_state,
             init=init,
             init_centers=init_centers,
-            random_state=random_state,
-        )
-        this_silhouette_score = silhouette_score(projected_data, kmeans_test.labels_)
-        if debug:
-            print(f"{k_test=}, {this_silhouette_score=}")
-        if this_silhouette_score >= best_silhouette_score:
-            k_best = k_test
-            best_silhouette_score = this_silhouette_score
-            best_kmeans = kmeans_test
+        ),
+        param_grid=param_grid,
+        scoring=lambda estimator, X: silhouette_score(X, estimator.fit_predict(X)),
+    )
 
-    optimal_k = k_best
-    optimal_silhouette = best_silhouette_score
-    optimal_kmeans = best_kmeans
+    search.fit(projected_data)
+    best_k = search.best_params_['n_clusters']
+    best_silhouette_score = search.best_score_
+    best_kmeans = search.best_estimator_
 
-    return optimal_k, optimal_silhouette, optimal_kmeans
+    return best_k, best_silhouette_score, best_kmeans
 
 def init_clusters(data: np.ndarray, k: int):
     """

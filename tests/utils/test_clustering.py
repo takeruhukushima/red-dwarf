@@ -63,8 +63,6 @@ def test_find_optimal_k_real_data(polis_convo_data):
     _, _, optimal_kmeans = results # for documentation
 
     calculated_centers = optimal_kmeans.cluster_centers_.tolist() if optimal_kmeans else []
-    print(expected_centers)
-    print(calculated_centers)
 
     assert len(expected_centers) == len(calculated_centers)
     for i, _ in enumerate(expected_centers):
