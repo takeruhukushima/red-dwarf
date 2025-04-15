@@ -16,13 +16,15 @@ class PolisKMeans(KMeans):
 
     Parameters
     ----------
-    init : {'k-means++', 'random', 'polis'} or ndarray of shape (n_clusters, n_features), default='k-means++'
+    init : {'k-means++', 'random', 'polis'}, default='k-means++'
         Strategy to initialize any missing cluster centers if `init_centers` is not fully specified.
         - 'k-means++': Smart centroid initialization (same as scikit-learn default)
         - 'random': Random selection of initial centers from the data
         - 'polis': Selects the first unique data points in `X` as initial centers.
           This strategy is deterministic for any stable set of `X`, while
           determinism in the other strategies depends on `random_state`.
+        - We prevent passing of ndarray of shape (n_clusters, n_features), and
+          expect `init_centers` to handle that use-case.
 
     init_centers : array-like of shape (n_clusters, n_features), optional
         Initial cluster centers to use. May contain fewer (or more) than `n_clusters`:
@@ -54,7 +56,7 @@ class PolisKMeans(KMeans):
     ):
         super().__init__(
             n_clusters=n_clusters,
-            init=None,  # will override with our center selection logic below
+            init=init,  # will override via set_params, with our center selection logic below
             n_init=n_init,
             max_iter=max_iter,
             tol=tol,
@@ -63,27 +65,30 @@ class PolisKMeans(KMeans):
             copy_x=copy_x,
             algorithm=algorithm,
         )
-        self.init = init  # store original string or array
+        self._init_strategy = init
         self.init_centers = init_centers
         self.init_centers_used_ = None
 
     def _generate_centers(self, X, x_squared_norms, n_to_generate, random_state):
-        if self.init == "k-means++":
+        if not isinstance(self._init_strategy, str):
+            raise ValueError("Internal error: _strategy must be a string.")
+
+        if self._init_strategy == "k-means++":
             centers, _ = kmeans_plusplus(
                 X, n_clusters=n_to_generate,
                 random_state=random_state,
                 x_squared_norms=x_squared_norms
             )
-        elif self.init == "random":
+        elif self._init_strategy == "random":
             indices = random_state.choice(X.shape[0], n_to_generate, replace=False)
             centers = X[indices]
-        elif self.init == "polis":
+        elif self._init_strategy == "polis":
             unique_X = np.unique(X, axis=0)
             if len(unique_X) < n_to_generate:
                 raise ValueError("Not enough unique rows in X for 'polis' strategy.")
             centers = unique_X[:n_to_generate]
         else:
-            raise ValueError(f"Unsupported init strategy: {self.init}")
+            raise ValueError(f"Unsupported init strategy: {self._init_strategy}")
         return centers
 
     def fit(self, X, y=None, sample_weight=None):
