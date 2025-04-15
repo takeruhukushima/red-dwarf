@@ -70,23 +70,18 @@ def run_clustering(
     projected_participants = projected_participants.loc[participant_ids_in, :]
 
     if force_group_count:
-        kmeans = run_kmeans(
-            dataframe=projected_participants,
-            n_clusters=force_group_count,
-            # Force polis strategy of initiating cluster centers. See: PolisKMeans.
-            init="polis",
-            init_centers=init_centers,
-            random_state=random_state,
-        )
+        k_bounds = [force_group_count, force_group_count]
     else:
-        _, _, kmeans = find_optimal_k(
-            projected_data=projected_participants,
-            max_group_count=max_group_count,
-            # Force polis strategy of initiating cluster centers. See: PolisKMeans.
-            init="polis",
-            init_centers=init_centers,
-            random_state=random_state,
-        )
+        k_bounds = [2, max_group_count]
+
+    _, _, kmeans = find_optimal_k(
+        projected_data=projected_participants,
+        k_bounds=k_bounds,
+        # Force polis strategy of initiating cluster centers. See: PolisKMeans.
+        init="polis",
+        init_centers=init_centers,
+        random_state=random_state,
+    )
     projected_participants = projected_participants.assign(cluster_id=kmeans.labels_ if kmeans else None)
 
     return PolisClusteringResult(

@@ -56,7 +56,7 @@ def test_find_optimal_k_real_data(polis_convo_data):
 
     results = find_optimal_k(
         projected_data=projected_participants_df,
-        max_group_count=MAX_GROUP_COUNT,
+        k_bounds=[2, MAX_GROUP_COUNT],
         # Pad center guesses to have enough values for testing up to max k groups.
         init_centers=expected_centers
     )

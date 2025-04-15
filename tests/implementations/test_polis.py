@@ -103,7 +103,6 @@ def test_run_clustering_is_reproducible(polis_convo_data):
         mod_out_statement_ids=mod_out_statement_ids,
     )
 
-    max_group_count = 5
     last_cluster_centers = cluster_run_1.cluster_centers
 
     cluster_run_2 = run_clustering(

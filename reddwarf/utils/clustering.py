@@ -3,7 +3,29 @@ import numpy as np
 from reddwarf.sklearn.model_selection import GridSearchNonCV
 from reddwarf.sklearn.cluster import PolisKMeans
 from sklearn.metrics import silhouette_score
-from typing import List, Tuple, Optional
+from typing import List, Optional
+
+RangeLike = int | tuple[int, int] | list[int]
+
+def to_range(r: RangeLike) -> range:
+    """
+    Creates an inclusive range from a list, tuple, or int.
+
+    Examples:
+        ```
+        to_range(2) # [2, 3]
+        to_range([2, 5]) # [2, 3, 4, 5]
+        to_range((2, 5)) # [2, 3, 4, 5]
+        ```
+    """
+    if isinstance(r, int):
+        start = end = r
+    elif isinstance(r, (tuple, list)) and len(r) == 2:
+        start, end = r
+    else:
+        raise ValueError("Expected int or a 2-element tuple/list")
+
+    return range(start, end + 1)  # inclusive
 
 # TODO: Start passing init_centers based on /math/pca2 endpoint data,
 # and see how often we get the same clusters.
@@ -42,17 +64,17 @@ def run_kmeans(
 
 def find_optimal_k(
         projected_data: pd.DataFrame,
-        max_group_count: int = 5,
+        k_bounds: RangeLike = [2, 5],
         init="k-means++",
         init_centers: Optional[List] = None,
         random_state: Optional[int] = None,
-) -> Tuple[int, float, PolisKMeans | None]:
+) -> tuple[int, float, PolisKMeans | None]:
     """
     Use silhouette scores to find the best number of clusters k to assume to fit the data.
 
     Args:
         projected_data (pd.DataFrame): A dataframe with two columns (assumed `x` and `y`).
-        max_group_count (int): The max K number of groups to test for. (Default: 5)
+        k_bounds (RangeLike): An upper and low bound on n_clusters to test for. (Default: [2, 5])
         init_centers (List): A list of xy coordinates to use as initial center guesses.
         random_state (int): Determines random number generation for centroid initialization. Use an int to make the randomness deterministic.
         debug (bool): Whether to print debug output. (Default: False)
@@ -62,19 +84,26 @@ def find_optimal_k(
         optimal_silhouette_score (float): Silhouette score for this K value.
         optimal_kmeans (PolisKMeans | None): The optimal fitted estimator returned from PolisKMeans.
     """
-    param_grid = {"n_clusters": list(range(2, max_group_count+1))}
+    param_grid = {
+        "n_clusters": to_range(k_bounds),
+    }
+
+    def scoring_function(estimator, X):
+        labels = estimator.fit_predict(X)
+        return silhouette_score(X, labels)
 
     search = GridSearchNonCV(
-        estimator=PolisKMeans(
-            random_state=random_state,
-            init=init,
-            init_centers=init_centers,
-        ),
         param_grid=param_grid,
-        scoring=lambda estimator, X: silhouette_score(X, estimator.fit_predict(X)),
+        scoring=scoring_function,
+        estimator=PolisKMeans(
+            init=init, # strategy
+            init_centers=init_centers, # guesses
+            random_state=random_state,
+        ),
     )
 
     search.fit(projected_data)
+
     best_k = search.best_params_['n_clusters']
     best_silhouette_score = search.best_score_
     best_kmeans = search.best_estimator_
