@@ -81,18 +81,3 @@ def find_optimal_k(
     best_kmeans = search.best_estimator_
 
     return best_k, best_silhouette_score, best_kmeans
-
-def init_clusters(data: np.ndarray, k: int):
-    """
-    Initializes k cluster centers from distinct rows in a 2D NumPy array.
-    Each row is assumed to be an [x, y] coordinate.
-
-    Ref: https://github.com/compdemocracy/polis/blob/61b8a18b962d0278e70bb92960e643ea937a4d6a/math/src/polismath/math/clusters.clj#L55-L65
-    """
-    # Remove duplicate rows
-    unique_rows = np.unique(data, axis=0)
-
-    # Take the first k unique rows as cluster centers
-    centers = unique_rows[:k]
-
-    return centers
