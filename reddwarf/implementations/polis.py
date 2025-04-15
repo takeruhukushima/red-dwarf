@@ -52,6 +52,7 @@ def run_clustering(
             - eigenvalues (list[float]): List of eigenvalues for each principal component
             - means (list[float]): List of centers/means for each statement
             - cluster_centers (list[list[float]]): List of center xy coordinates for each cluster
+            - kmeans (PolisKMeans): Scikit-Learn KMeans object for selected group count. See `PolisKMeans`.
     """
     vote_matrix = generate_raw_matrix(votes=votes)
     participant_ids_in = get_participant_ids(vote_matrix, vote_threshold=min_user_vote_threshold)
