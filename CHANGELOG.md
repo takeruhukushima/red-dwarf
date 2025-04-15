@@ -32,6 +32,7 @@
 - Add `PolisKMeansDownsampler` transformer to support base clustering.
 - Update `get_corrected_centroid_guesses()` to also extract from base clusters.
 - Remove extraneous return values from `PolisClusteringResult`.
+- Add `data_presenter.generate_figure_polis()` for making graphs from PolisClusteringResult.
 
 ### Chores
 - Moved agora implementation from `reddwarf.agora` to `reddwarf.implementations.agora` (deprecation warning).

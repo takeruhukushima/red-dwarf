@@ -7,6 +7,31 @@ import numpy as np
 import seaborn as sns
 import pandas as pd
 
+from reddwarf.implementations.polis import PolisClusteringResult
+
+def generate_figure_polis(result: PolisClusteringResult, show_guesses=False, flip_x=True, flip_y=False):
+    cluster_labels = result.projected_participants["cluster_id"].values
+
+    coord_data = result.projected_participants.loc[:, ["x", "y"]].values
+    # Add the init center guesses to the bottom of the coord stack. Internally, they
+    # will be give a fake "-1" colored label that won't be used to draw clusters.
+    # This is for illustration purpose to see the centroid guesses.
+    if show_guesses:
+        coord_data = np.vstack([
+            coord_data,
+            np.asarray(result.kmeans.init_centers_used_ if result.kmeans else []),
+        ])
+
+    generate_figure(
+        coord_data=coord_data,
+        coord_labels=[f"p{pid}" for pid in result.projected_participants.index],
+        cluster_labels=cluster_labels,
+        # Always needs flipping to look like Polis interface.
+        flip_x=flip_x,
+        # Sometimes needs flipping to look like Polis interface.
+        flip_y=flip_y,
+    )
+
 def generate_figure(
         coord_data,
         coord_labels = None,
