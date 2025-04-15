@@ -2,8 +2,7 @@ from typing import Optional
 import numpy as np
 from numpy.typing import ArrayLike
 from sklearn.cluster import KMeans, kmeans_plusplus
-from sklearn.utils.validation import check_array
-from sklearn.utils import check_random_state
+from sklearn.utils.validation import check_random_state, check_array
 
 class PolisKMeans(KMeans):
     """
@@ -92,7 +91,7 @@ class PolisKMeans(KMeans):
         return centers
 
     def fit(self, X, y=None, sample_weight=None):
-        X = check_array(X, accept_sparse='csr', dtype=[np.float64, np.float32])
+        X = check_array(X, accept_sparse="csr", dtype=[np.float64, np.float32]) # type:ignore
         random_state = check_random_state(self.random_state)
         x_squared_norms = np.sum(X ** 2, axis=1)
 
