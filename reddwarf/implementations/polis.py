@@ -1,21 +1,25 @@
 from typing import Optional
 from numpy.typing import NDArray
 from pandas import DataFrame
+from sklearn.decomposition import PCA
 from reddwarf.sklearn.cluster import PolisKMeans
 from reddwarf.utils.matrix import generate_raw_matrix, simple_filter_matrix, get_participant_ids
 from reddwarf.utils.pca import run_pca
-from reddwarf.utils.clustering import find_optimal_k, run_kmeans
+from reddwarf.utils.clustering import find_optimal_k
 from dataclasses import dataclass
 
 @dataclass
 class PolisClusteringResult:
-    projected_participants: DataFrame
-    projected_statements: DataFrame
+    raw_vote_matrix: DataFrame
+    filtered_vote_matrix: DataFrame
+    pca: PCA
     components: NDArray
     eigenvalues: NDArray
     means: NDArray
-    cluster_centers: NDArray | None
+    projected_participants: DataFrame
+    projected_statements: DataFrame
     kmeans: PolisKMeans | None
+    cluster_centers: NDArray | None
 
 def run_clustering(
     votes: list[dict],
@@ -47,26 +51,27 @@ def run_clustering(
 
     Returns:
         PolisClusteringResult: A dataclass containing clustering information with fields:
-            - projected_data (DataFrame): Dataframe of projected participants, with columns "x", "y", "cluster_id"
+            - raw_vote_matrix (DataFrame): Raw sparse vote matrix before any processing.
+            - filtered_vote_matrix (DataFrame): Raw sparse vote matrix with moderated statements zero'd out.
+            - pca (PCA): PCA model fitted to vote matrix.
+            - projected_participants (DataFrame): Dataframe of projected participants, with columns "x", "y", "cluster_id"
+            - projected_statements (DataFrame): Dataframe of projected statements, with columns "x", "y".
             - components (list[list[float]]): List of principal components for each statement
             - eigenvalues (list[float]): List of eigenvalues for each principal component
             - means (list[float]): List of centers/means for each statement
             - cluster_centers (list[list[float]]): List of center xy coordinates for each cluster
             - kmeans (PolisKMeans): Scikit-Learn KMeans object for selected group count. See `PolisKMeans`.
     """
-    vote_matrix = generate_raw_matrix(votes=votes)
-    participant_ids_in = get_participant_ids(vote_matrix, vote_threshold=min_user_vote_threshold)
+    raw_vote_matrix = generate_raw_matrix(votes=votes)
+    participant_ids_in = get_participant_ids(raw_vote_matrix, vote_threshold=min_user_vote_threshold)
     if keep_participant_ids:
         participant_ids_in = list(set(participant_ids_in + keep_participant_ids))
 
-    vote_matrix = simple_filter_matrix(
-        vote_matrix=vote_matrix,
+    filtered_vote_matrix = simple_filter_matrix(
+        vote_matrix=raw_vote_matrix,
         mod_out_statement_ids=mod_out_statement_ids,
     )
-    projected_participants, projected_statements, pca = run_pca(vote_matrix=vote_matrix)
-    center = pca.mean_
-    comps = pca.components_
-    eigenvalues = pca.explained_variance_
+    projected_participants, projected_statements, pca = run_pca(vote_matrix=filtered_vote_matrix)
 
     projected_participants = projected_participants.loc[participant_ids_in, :]
 
@@ -83,14 +88,19 @@ def run_clustering(
         init_centers=init_centers,
         random_state=random_state,
     )
-    projected_participants = projected_participants.assign(cluster_id=kmeans.labels_ if kmeans else None)
+    projected_participants = projected_participants.assign(
+        cluster_id=kmeans.labels_ if kmeans else None,
+    )
 
     return PolisClusteringResult(
+        raw_vote_matrix=raw_vote_matrix,
+        filtered_vote_matrix=filtered_vote_matrix,
+        pca=pca,
+        components=pca.components_,
+        eigenvalues=pca.explained_variance_,
+        means=pca.mean_,
         projected_participants=projected_participants,
         projected_statements=projected_statements,
-        components=comps,
-        eigenvalues=eigenvalues,
-        means=center,
-        cluster_centers=kmeans.cluster_centers_ if kmeans else None,
         kmeans=kmeans,
+        cluster_centers=kmeans.cluster_centers_ if kmeans else None,
     )
