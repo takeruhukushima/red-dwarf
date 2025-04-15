@@ -46,7 +46,6 @@ def find_optimal_k(
         init="k-means++",
         init_centers: Optional[List] = None,
         random_state: Optional[int] = None,
-        debug: bool = False,
 ) -> Tuple[int, float, PolisKMeans | None]:
     """
     Use silhouette scores to find the best number of clusters k to assume to fit the data.

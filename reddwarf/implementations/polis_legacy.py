@@ -199,7 +199,6 @@ class PolisClient():
         best_k, silhouette_score, best_kmeans = utils.find_optimal_k(
             projected_data=self.projected_data,
             max_group_count=self.max_group_count,
-            debug=True,
         )
         self.optimal_k = best_k
         self.optimal_silhouette = silhouette_score
