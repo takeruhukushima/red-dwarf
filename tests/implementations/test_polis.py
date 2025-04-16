@@ -6,6 +6,7 @@ from reddwarf.utils.statements import process_statements
 from reddwarf.utils.polismath import extract_data_from_polismath
 from numpy.testing import assert_array_equal, assert_array_almost_equal
 from pandas.testing import assert_frame_equal
+from pandas._testing import assert_dict_equal
 from tests import helpers
 
 # This test will only match polismath for sub-100 participant convos.
@@ -54,16 +55,26 @@ def test_run_clustering_real_data(polis_convo_data):
         force_group_count=force_group_count,
     )
 
+    # Check group-aware-consensus calculations.
+    calculated_gac = {
+        str(pid): float(row["consensus"])
+        for pid, row in result.group_aware_consensus.iterrows()
+    }
+    expected_gac = math_data["group-aware-consensus"]
+    assert_dict_equal(calculated_gac, expected_gac)
+
+    # Check PCA components and means
     assert pytest.approx(result.pca.components_[0]) == math_data["pca"]["comps"][0]
     assert pytest.approx(result.pca.components_[1]) == math_data["pca"]["comps"][1]
     assert pytest.approx(result.pca.mean_) == math_data["pca"]["center"]
 
-    # Test projected statements
+    # Check projected statements
     # Convert [[x_1, y_1], [x_2, y_2], ...] into [[x_1, x_2, ...], list[y_1, y_2, ...]]
     actual = result.projected_statements.values.transpose()
     expected = math_data["pca"]["comment-projection"]
     assert_array_almost_equal(actual, expected)
 
+    # Check projected participants
     # Ensure we have as many expected coords as calculated coords.
     assert len(result.projected_participants.index) == len(expected_projected_ptpts)
 
@@ -77,13 +88,6 @@ def test_run_clustering_real_data(polis_convo_data):
     _, expected_cluster_labels = extract_data_from_polismath(math_data)
     calculated_cluster_labels = result.projected_participants["cluster_id"].values
     assert_array_equal(calculated_cluster_labels, expected_cluster_labels) # type:ignore
-
-    # from reddwarf.data_presenter import generate_figure
-    # print(projected_ptpts)
-    # # Flip these to render figure properly.
-    # projected_ptpts[["x", "y"]] = -projected_ptpts[["x", "y"]]
-    # labels = projected_ptpts["cluster_id"].values
-    # generate_figure(projected_ptpts, labels)
 
 @pytest.mark.parametrize("polis_convo_data", ["small-no-meta"], indirect=True)
 def test_run_clustering_is_reproducible(polis_convo_data):

@@ -8,6 +8,8 @@ from reddwarf.utils.pca import run_pca
 from reddwarf.utils.clustering import find_optimal_k
 from dataclasses import dataclass
 
+from reddwarf.utils.stats import calculate_comment_statistics_dataframes
+
 @dataclass
 class PolisClusteringResult:
     raw_vote_matrix: DataFrame
@@ -16,6 +18,7 @@ class PolisClusteringResult:
     projected_participants: DataFrame
     projected_statements: DataFrame
     kmeans: PolisKMeans | None
+    group_aware_consensus: DataFrame
 
 def run_clustering(
     votes: list[dict],
@@ -85,6 +88,11 @@ def run_clustering(
         cluster_id=kmeans.labels_ if kmeans else None,
     )
 
+    group_stats_df, gac_df = calculate_comment_statistics_dataframes(
+        vote_matrix=raw_vote_matrix.loc[participant_ids_clusterable, :],
+        cluster_labels=kmeans.labels_,
+    )
+
     return PolisClusteringResult(
         raw_vote_matrix=raw_vote_matrix,
         filtered_vote_matrix=filtered_vote_matrix,
@@ -92,4 +100,5 @@ def run_clustering(
         projected_participants=projected_participants_clusterable,
         projected_statements=projected_statements,
         kmeans=kmeans,
+        group_aware_consensus=gac_df,
     )
