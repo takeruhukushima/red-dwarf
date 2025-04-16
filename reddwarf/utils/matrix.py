@@ -151,11 +151,13 @@ def simple_filter_matrix(
         mod_out_statement_ids (list): A list of moderated-out participant IDs to zero out.
 
     Returns:
-        VoteMatrix: Another vote_matrix with statements zero'd out
+        VoteMatrix: Copy of vote_matrix with statements zero'd out
     """
+    vote_matrix = vote_matrix.copy()
     for tid in mod_out_statement_ids:
         # Zero out column only if already exists (ie. has votes)
         if tid in vote_matrix.columns:
+            # TODO: Add a flag to try np.nan instead of zero.
             vote_matrix.loc[:, tid] = 0
 
     return vote_matrix

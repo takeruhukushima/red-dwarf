@@ -5,6 +5,7 @@
 ### Fixes
 - Allow `is_strict_moderation` to be inferred from not just API data, but file data.
 - Better handle numpy divide-by-zero edge-cases in two-property test. ([#28](https://github.com/polis-community/red-dwarf/pull/28))
+- Fix bug where `vote_matrix` was modified directly, leading to subtle side-effects.
 
 ### Changes
 - Fixed participant projections to map more closely to Polis with `utils.pca.sparsity_aware_project_ptpt()`.
