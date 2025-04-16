@@ -4,7 +4,6 @@ from numpy.typing import ArrayLike, NDArray
 from typing import Tuple, Optional
 from types import SimpleNamespace
 from scipy.stats import norm
-from reddwarf.utils import stats
 from reddwarf.utils.matrix import VoteMatrix
 from reddwarf.types.polis import (
     PolisRepness,
@@ -330,7 +329,10 @@ def calculate_comment_statistics_dataframes(
             'rdt': R_v_g_c_test[votes.D, group_id, :], # repress of disagree test z-score
         }, index=vote_matrix.columns)
 
-    group_aware_consensus_df = pd.DataFrame(C_v_c[votes.A, :], index=vote_matrix.columns)
+    group_aware_consensus_df = pd.DataFrame(
+        { "consensus": C_v_c[votes.A, :] },
+        index=vote_matrix.columns,
+    )
 
     return group_stats, group_aware_consensus_df
 
