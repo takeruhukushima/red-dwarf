@@ -3,7 +3,7 @@ from numpy.typing import NDArray
 from pandas import DataFrame
 from sklearn.decomposition import PCA
 from reddwarf.sklearn.cluster import PolisKMeans
-from reddwarf.utils.matrix import generate_raw_matrix, simple_filter_matrix, get_participant_ids
+from reddwarf.utils.matrix import generate_raw_matrix, simple_filter_matrix, get_clusterable_participant_ids
 from reddwarf.utils.pca import run_pca
 from reddwarf.utils.clustering import find_optimal_k
 from dataclasses import dataclass
@@ -55,32 +55,33 @@ def run_clustering(
             - kmeans (PolisKMeans): Scikit-Learn KMeans object for selected group count, including `labels_` and `cluster_centers_`. See `PolisKMeans`.
     """
     raw_vote_matrix = generate_raw_matrix(votes=votes)
-    participant_ids_in = get_participant_ids(raw_vote_matrix, vote_threshold=min_user_vote_threshold)
-    if keep_participant_ids:
-        participant_ids_in = list(set(participant_ids_in + keep_participant_ids))
 
     filtered_vote_matrix = simple_filter_matrix(
         vote_matrix=raw_vote_matrix,
         mod_out_statement_ids=mod_out_statement_ids,
     )
+
     projected_participants, projected_statements, pca = run_pca(vote_matrix=filtered_vote_matrix)
 
-    projected_participants = projected_participants.loc[participant_ids_in, :]
+    participant_ids_clusterable = get_clusterable_participant_ids(raw_vote_matrix, vote_threshold=min_user_vote_threshold)
+    if keep_participant_ids:
+        participant_ids_clusterable = list(set(participant_ids_clusterable + keep_participant_ids))
 
     if force_group_count:
         k_bounds = [force_group_count, force_group_count]
     else:
         k_bounds = [2, max_group_count]
 
+    projected_participants_clusterable = projected_participants.loc[participant_ids_clusterable, :]
     _, _, kmeans = find_optimal_k(
-        projected_data=projected_participants,
+        projected_data=projected_participants_clusterable,
         k_bounds=k_bounds,
         # Force polis strategy of initiating cluster centers. See: PolisKMeans.
         init="polis",
         init_centers=init_centers,
         random_state=random_state,
     )
-    projected_participants = projected_participants.assign(
+    projected_participants_clusterable = projected_participants_clusterable.assign(
         cluster_id=kmeans.labels_ if kmeans else None,
     )
 
@@ -88,7 +89,7 @@ def run_clustering(
         raw_vote_matrix=raw_vote_matrix,
         filtered_vote_matrix=filtered_vote_matrix,
         pca=pca,
-        projected_participants=projected_participants,
+        projected_participants=projected_participants_clusterable,
         projected_statements=projected_statements,
         kmeans=kmeans,
     )
