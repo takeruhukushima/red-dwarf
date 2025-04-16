@@ -339,7 +339,7 @@ def test_group_aware_consensus_real_data(polis_convo_data):
     )
 
     calculated_gac = {
-        str(pid): float(row[0])
+        str(pid): float(row.iloc[0])
         for pid, row in gac_df.iterrows()
     }
 
