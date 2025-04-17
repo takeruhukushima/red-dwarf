@@ -12,6 +12,17 @@ from reddwarf.utils.stats import calculate_comment_statistics_dataframes
 
 @dataclass
 class PolisClusteringResult:
+    """
+    Attributes:
+        raw_vote_matrix (DataFrame): Raw sparse vote matrix before any processing.
+        filtered_vote_matrix (DataFrame): Raw sparse vote matrix with moderated statements zero'd out.
+        pca (PCA): PCA model fitted to vote matrix, including `mean_`, `expected_variance_` (eigenvalues) and `components_` (eigenvectors).
+        projected_participants (DataFrame): Dataframe of projected participants, with columns "x", "y", "cluster_id"
+        projected_statements (DataFrame): Dataframe of projected statements, with columns "x", "y".
+        kmeans (PolisKMeans): Scikit-Learn KMeans object for selected group count, including `labels_` and `cluster_centers_`. See `PolisKMeans`.
+        group_aware_consensus (DataFrame): Group-aware consensus scores for each statement.
+        group_comment_stats (list[DataFrame]): A list of dataframes for each statement, indexed by group ID.
+    """
     raw_vote_matrix: DataFrame
     filtered_vote_matrix: DataFrame
     pca: PCA
@@ -49,13 +60,7 @@ def run_clustering(
         random_state (int): If set, will force determinism during k-means clustering
 
     Returns:
-        PolisClusteringResult: A dataclass containing clustering information with fields:
-            - raw_vote_matrix (DataFrame): Raw sparse vote matrix before any processing.
-            - filtered_vote_matrix (DataFrame): Raw sparse vote matrix with moderated statements zero'd out.
-            - pca (PCA): PCA model fitted to vote matrix, including `mean_`, `expected_variance_` (eigenvalues) and `components_` (eigenvectors).
-            - projected_participants (DataFrame): Dataframe of projected participants, with columns "x", "y", "cluster_id"
-            - projected_statements (DataFrame): Dataframe of projected statements, with columns "x", "y".
-            - kmeans (PolisKMeans): Scikit-Learn KMeans object for selected group count, including `labels_` and `cluster_centers_`. See `PolisKMeans`.
+        PolisClusteringResult: A dataclass containing clustering results, including intermediate calculations.
     """
     raw_vote_matrix = generate_raw_matrix(votes=votes)
 

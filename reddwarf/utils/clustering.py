@@ -77,7 +77,6 @@ def find_optimal_k(
         k_bounds (RangeLike): An upper and low bound on n_clusters to test for. (Default: [2, 5])
         init_centers (List): A list of xy coordinates to use as initial center guesses.
         random_state (int): Determines random number generation for centroid initialization. Use an int to make the randomness deterministic.
-        debug (bool): Whether to print debug output. (Default: False)
 
     Returns:
         optimal_k (int): Ideal number of clusters.

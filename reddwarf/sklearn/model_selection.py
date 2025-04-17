@@ -3,9 +3,10 @@ import numpy as np
 
 class GridSearchNonCV(GridSearchCV):
     """
-    GridSearchCV, but modified to score against the full dataset (ie. not cross-validated).
+    `sklearn.model_selection.GridSearchCV`, but modified to score against the
+    full dataset (ie. not cross-validated).
 
-    Normally, GridSearchCV splits up the X data and scores each "fold" of data.
+    Normally, `GridSearchCV` splits up the `X` data and scores each "fold" of data.
     This is identical, but we automatically use the full dataset in each fold.
     """
     def __init__(self, estimator, param_grid, scoring=None, refit=True, **kwargs):

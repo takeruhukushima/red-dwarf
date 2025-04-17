@@ -50,7 +50,7 @@ def generate_figure(
     visualizations.
 
     Args:
-        coord_dataframe (pd.DataFrame): A dataframe of coordinates with columns named `x` and `y`, indexed by `participant_id`.
+        coord_data (pd.DataFrame): A dataframe of coordinates with columns named `x` and `y`, indexed by `participant_id`.
         cluster_labels (List[int]): A list of group labels, one for each row in `coord_dataframe`.
         flip_x (bool): Flip the presentation of the X-axis so it descends left-to-right
         flip_y (bool): Flip the presentation of the Y-axis so it descends top-to-bottom

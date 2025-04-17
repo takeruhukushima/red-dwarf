@@ -9,36 +9,44 @@ class PolisKMeans(KMeans):
     A modified version of scikit-learn's KMeans that allows partial initialization
     with user-supplied cluster centers and custom fallback strategies.
 
-    This subclass extends `sklearn.cluster.KMeans` with additional flexibility
-    around centroid initialization. It retains all other parameters and behavior
-    from the base KMeans implementation.
+    This subclass extends `sklearn.cluster.KMeans` with additional features
+    around centroid initialization. Outside the behavior documented, it retains
+    all other parameters and behavior from the base KMeans implementation.
 
     Parameters
     ----------
-    init : {'k-means++', 'random', 'polis'}, default='k-means++'
-        Strategy to initialize any missing cluster centers if `init_centers` is not fully specified.
-        - 'k-means++': Smart centroid initialization (same as scikit-learn default)
-        - 'random': Random selection of initial centers from the data
-        - 'polis': Selects the first unique data points in `X` as initial centers.
-          This strategy is deterministic for any stable set of `X`, while
-          determinism in the other strategies depends on `random_state`.
-        - We prevent passing of ndarray of shape (n_clusters, n_features), and
-          expect `init_centers` to handle that use-case.
 
-    init_centers : array-like of shape (n_clusters, n_features), optional
+    init : {'k-means++', 'random', 'polis'}, default='k-means++'
+        Strategy to initialize any missing cluster centers if `init_centers` is
+        not fully specified. The strategies are:
+
+        - 'k-means++': Smart centroid initialization (same as scikit-learn default)
+        - 'random': Random selection of initial centers from the data (same as scikit-learn)
+        - 'polis': Selects the first unique data points in `X` as initial centers.
+            - This strategy is deterministic for any stable set of `X`, while
+            determinism in the other strategies depends on `random_state`.
+
+        !!! note
+            Unlike `KMeans` parent class, we prevent passing `ndarray` args
+            here, and expect `init_centers` to handle that use-case.
+
+    init_centers : ndarray of shape (n_clusters, n_features), optional
         Initial cluster centers to use. May contain fewer (or more) than `n_clusters`:
+
         - If more, the extras will be trimmed
         - If fewer, the remaining will be filled using the `init` strategy
 
     Attributes
     ----------
+
     init_centers_used_ : ndarray of shape (n_clusters, n_features)
         The full array of initial cluster centers actually used to initialize the algorithm,
         including both `init_centers` and any centers generated from the `init` strategy.
 
     See Also
     --------
-    sklearn.cluster.KMeans : Original implementation with full parameter list.
+
+    `sklearn.cluster.KMeans` : Original implementation with full parameter list.
     """
     def __init__(
         self,
@@ -125,7 +133,7 @@ from sklearn.base import BaseEstimator, TransformerMixin
 
 class PolisKMeansDownsampler(BaseEstimator, TransformerMixin):
     """
-    A transformer that fits PolisKMeans and returns the cluster centers as the
+    A transformer that fits `PolisKMeans` and returns the cluster centers as the
     downsampled dataset.
 
     This will support mimicking "base clusters" from the Polis platform.
