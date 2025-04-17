@@ -150,12 +150,13 @@ def test_run_pca_real_data_below_100(polis_convo_data):
     # print(PcaUtils.pca_project_cmnts(expected_pca["comps"], np.asarray(expected_pca["center"])).transpose())
     assert_array_almost_equal(actual_projected_statements.values.transpose(), expected_pca["comment-projection"])
 
+# TODO: Accomodate sign flips in "medium-no-meta".
 @pytest.mark.parametrize("polis_convo_data", ["medium-with-meta"], indirect=True)
 def test_run_pca_real_data_above_100(polis_convo_data):
     fixture = polis_convo_data
     # Some signs are flipped for the "medium-with-meta" fixture data, because signs are arbitrary in PCA.
     # If we initialize differently later on, it should flip and match.
-    math_data = helpers.flip_signs_by_key(nested_dict=fixture.math_data, keys=["pca.comps[0]"])
+    math_data = helpers.flip_signs_by_key(nested_dict=fixture.math_data, keys=["pca.comps[0]", "pca.center"])
     expected_pca = math_data["pca"]
 
     # Just fetch the moderated out statements from polismath (no need to recalculate here)
