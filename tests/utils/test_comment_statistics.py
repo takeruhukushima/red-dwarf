@@ -14,12 +14,11 @@ def setup_test(fixture):
         f'{fixture.data_dir}/conversation.json',
     ])
     VOTES = loader.votes_data
-    STATEMENTS = loader.comments_data
-
-    _, _, mod_out, _ = stmnts.process_statements(statement_data=STATEMENTS)
 
     raw_vote_matrix = matrix.generate_raw_matrix(votes=VOTES)
     # We don't actuall need this outside PCA?
+    # STATEMENTS = loader.comments_data
+    # _, _, mod_out, _ = stmnts.process_statements(statement_data=STATEMENTS)
     # filtered_vote_matrix = matrix.simple_filter_matrix(
     #     vote_matrix=raw_vote_matrix,
     #     mod_out_statement_ids=mod_out,
