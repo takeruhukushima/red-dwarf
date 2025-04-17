@@ -151,16 +151,18 @@ def simple_filter_matrix(
         mod_out_statement_ids (list): A list of moderated-out participant IDs to zero out.
 
     Returns:
-        VoteMatrix: Another vote_matrix with statements zero'd out
+        VoteMatrix: Copy of vote_matrix with statements zero'd out
     """
+    vote_matrix = vote_matrix.copy()
     for tid in mod_out_statement_ids:
         # Zero out column only if already exists (ie. has votes)
         if tid in vote_matrix.columns:
+            # TODO: Add a flag to try np.nan instead of zero.
             vote_matrix.loc[:, tid] = 0
 
     return vote_matrix
 
-def get_participant_ids(vote_matrix: VoteMatrix, vote_threshold: int) -> list:
+def get_clusterable_participant_ids(vote_matrix: VoteMatrix, vote_threshold: int) -> list:
     """
     Find participant IDs that meet a vote threshold in a vote_matrix.
 
@@ -171,7 +173,10 @@ def get_participant_ids(vote_matrix: VoteMatrix, vote_threshold: int) -> list:
     Returns:
         participation_ids (list): A list of participant IDs that meet the threshold
     """
-    return vote_matrix[vote_matrix.count(axis="columns") >= vote_threshold].index.to_list()
+    # TODO: Make this available outside this function? To match polismath output.
+    user_vote_counts = vote_matrix.count(axis="columns")
+    participant_ids = list(vote_matrix[user_vote_counts >= vote_threshold].index)
+    return participant_ids
 
 
 def filter_matrix(
@@ -204,7 +209,7 @@ def filter_matrix(
     vote_matrix = vote_matrix.filter(active_statement_ids, axis='columns')
     # Filter out participants with less than 7 votes (keeping IDs we're forced to)
     # Ref: https://hyp.is/JbNMus5gEe-cQpfc6eVIlg/gwern.net/doc/sociology/2021-small.pdf
-    participant_ids_in = get_participant_ids(vote_matrix, min_user_vote_threshold)
+    participant_ids_in = get_clusterable_participant_ids(vote_matrix, min_user_vote_threshold)
     # Add in some specific participant IDs for Polismath edge-cases.
     # See: https://github.com/compdemocracy/polis/pull/1893#issuecomment-2654666421
     participant_ids_in = list(set(participant_ids_in + keep_participant_ids))

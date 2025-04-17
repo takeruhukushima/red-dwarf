@@ -1,5 +1,5 @@
 import numpy as np
-from typing import Any, Tuple
+from typing import Any, Literal, Tuple
 
 from numpy.typing import NDArray
 from reddwarf.types.polis import (
@@ -154,7 +154,8 @@ def create_bidirectional_id_maps(base_clusters):
     return participant_to_base_cluster, base_cluster_to_participants
 
 def get_corrected_centroid_guesses(
-    polis_math_data,
+    polis_math_data: dict,
+    source: Literal["group-clusters", "base-clusters"] = "group-clusters",
     skip_correction: bool = False,
 ):
     """
@@ -169,14 +170,32 @@ def get_corrected_centroid_guesses(
     and instead relates to using inverting the sign of agree/disagree in
     varioius places in the Polis codebase.
 
+    This function supports multiple sources of centroid guesses:
+    - "group-clusters": Uses the `center` field of each group
+    - "base-clusters": Uses the parallel `x` and `y` fields to reconstruct [x, y] coords
+
     Arguments:
-        polis_math_data (object): The polismath data from the Polis API
+        polis_math_data (dict): The polismath data from the Polis API
+        source (str): Where to extract centroid data from. One of "group-clusters" or "base-clusters".
         skip_correction (bool): Whether to skip correction (helpful for debugging)
 
     Returns:
         centroids: A list of centroid [x,y] coord guesses
     """
-    extracted_centroids = [group["center"] for group in polis_math_data["group-clusters"]]
+    if source == "group-clusters":
+        extracted_centroids = [group["center"] for group in polis_math_data["group-clusters"]]
+    elif source == "base-clusters":
+        base = polis_math_data["base-clusters"]
+        x_vals = base.get("x", [])
+        y_vals = base.get("y", [])
+
+        if len(x_vals) != len(y_vals):
+            raise ValueError("Mismatched lengths between 'x' and 'y' values in base-clusters")
+
+        extracted_centroids = [[x, y] for x, y in zip(x_vals, y_vals)]
+    else:
+        # Defensive fallback in case `source` comes from dynamic or untyped input
+        raise ValueError(f"Unknown source '{source}'. Must be 'group-clusters' or 'base-clusters'.")
 
     if skip_correction:
         return extracted_centroids

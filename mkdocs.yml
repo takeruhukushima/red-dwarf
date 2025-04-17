@@ -15,6 +15,9 @@ nav:
   - "API Reference": docs/api_reference.md
   - Changelog: CHANGELOG.md
 
+markdown_extensions:
+- admonition
+
 plugins:
 - search
 - same-dir

@@ -5,6 +5,7 @@
 ### Fixes
 - Allow `is_strict_moderation` to be inferred from not just API data, but file data.
 - Better handle numpy divide-by-zero edge-cases in two-property test. ([#28](https://github.com/polis-community/red-dwarf/pull/28))
+- Fix bug where `vote_matrix` was modified directly, leading to subtle side-effects.
 
 ### Changes
 - Fixed participant projections to map more closely to Polis with `utils.pca.sparsity_aware_project_ptpt()`.
@@ -21,6 +22,20 @@
       individually, rather than using DataFrames.
     - Allow passing extra `coord_data` beyond what's labelled.
 - Add automatic padding to polis implementation when cluster centroid guesses are provided.
+- Add `PolisKMeans` scikit-learn estimator with:
+    - cluster initialization strategy matching Polis,
+    - new `init_centers` argument with more versatility for being given more/less guesses than needed, and
+    - new instance variable `init_centers_used_` to allow inspection of guesses used.
+- Allow passing KMeans `init` strategy into `find_optimal_k()`.
+- Remove `pad_centroid_list_to_length` helper function.
+- Add `GridSearchNonCV` to find optimal K via silhouette scores.
+- For interal util functions, replace `max_group_count` args with `k_bounds` for upper and lower k bounds.
+- Add `PolisKMeansDownsampler` transformer to support base clustering.
+- Update `get_corrected_centroid_guesses()` to also extract from base clusters.
+- Remove extraneous return values from `PolisClusteringResult`.
+- Add `data_presenter.generate_figure_polis()` for making graphs from PolisClusteringResult.
+- Add `group_aware_consensus` dataframe to PolisClusteringResult of polis implementation.
+
 
 ### Chores
 - Moved agora implementation from `reddwarf.agora` to `reddwarf.implementations.agora` (deprecation warning).
@@ -36,6 +51,7 @@
 - Add solid unit test for expected variance, which is stablest measure we can derive.
 - Use dataclasses for `polis_convo_data` test fixture.
 - Add `utils.polismath.get_corrected_centroid_guesses()` to initiate centroid guesses from Polis API.
+- Remove unused `init_cluster()` helper.
 
 ## [0.2.0][] (2025-03-24)
 ### Fixed

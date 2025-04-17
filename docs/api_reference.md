@@ -13,6 +13,28 @@
     options:
         show_root_heading: true
 
+## `reddwarf.sklearn`
+
+Various custom Scikit-Learn estimators to mimick aspects of Polis, suitable for
+use in Scikit-Learn workflows, pipelines, and APIs.
+
+### ::: reddwarf.sklearn.cluster.PolisKMeans
+    options:
+        show_root_heading: true
+        docstring_style: numpy
+
+### ::: reddwarf.sklearn.cluster.PolisKMeansDownsampler
+    options:
+        show_root_heading: true
+
+### ::: reddwarf.sklearn.model_selection.GridSearchNonCV
+    options:
+        show_root_heading: true
+
+### ::: reddwarf.sklearn.transformers.SparsityAwareScaler
+    options:
+        show_root_heading: true
+
 ## `reddwarf.utils.matrix`
 
 ### ::: reddwarf.utils.matrix.generate_raw_matrix
@@ -23,7 +45,7 @@
     options:
         show_root_heading: true
 
-### ::: reddwarf.utils.matrix.get_participant_ids
+### ::: reddwarf.utils.matrix.get_clusterable_participant_ids
     options:
         show_root_heading: true
 
@@ -71,6 +93,10 @@
 
 
 ## Types
+
+### ::: reddwarf.implementations.polis.PolisClusteringResult
+    options:
+        show_root_heading: true
 
 ### ::: reddwarf.types.agora.Conversation
     options:

@@ -4,9 +4,9 @@ from reddwarf.implementations.polis import run_clustering
 from reddwarf.data_loader import Loader
 from reddwarf.utils.statements import process_statements
 from reddwarf.utils.polismath import extract_data_from_polismath
-from reddwarf.utils.clustering import pad_centroid_list_to_length
 from numpy.testing import assert_array_equal, assert_array_almost_equal
 from pandas.testing import assert_frame_equal
+from pandas._testing import assert_dict_equal
 from tests import helpers
 
 # This test will only match polismath for sub-100 participant convos.
@@ -36,7 +36,6 @@ def test_run_clustering_real_data(polis_convo_data):
 
     max_group_count = 5
     init_centers = [group["center"] for group in math_data["group-clusters"]]
-    init_centers = pad_centroid_list_to_length(init_centers, max_group_count)
 
     loader = Loader(filepaths=[
         f"{fixture.data_dir}/votes.json",
@@ -56,16 +55,26 @@ def test_run_clustering_real_data(polis_convo_data):
         force_group_count=force_group_count,
     )
 
-    assert pytest.approx(result.components[0]) == math_data["pca"]["comps"][0]
-    assert pytest.approx(result.components[1]) == math_data["pca"]["comps"][1]
-    assert pytest.approx(result.means) == math_data["pca"]["center"]
+    # Check group-aware-consensus calculations.
+    calculated_gac = {
+        str(pid): float(row["consensus"])
+        for pid, row in result.group_aware_consensus.iterrows()
+    }
+    expected_gac = math_data["group-aware-consensus"]
+    assert_dict_equal(calculated_gac, expected_gac)
 
-    # Test projected statements
+    # Check PCA components and means
+    assert pytest.approx(result.pca.components_[0]) == math_data["pca"]["comps"][0]
+    assert pytest.approx(result.pca.components_[1]) == math_data["pca"]["comps"][1]
+    assert pytest.approx(result.pca.mean_) == math_data["pca"]["center"]
+
+    # Check projected statements
     # Convert [[x_1, y_1], [x_2, y_2], ...] into [[x_1, x_2, ...], list[y_1, y_2, ...]]
     actual = result.projected_statements.values.transpose()
     expected = math_data["pca"]["comment-projection"]
     assert_array_almost_equal(actual, expected)
 
+    # Check projected participants
     # Ensure we have as many expected coords as calculated coords.
     assert len(result.projected_participants.index) == len(expected_projected_ptpts)
 
@@ -79,13 +88,6 @@ def test_run_clustering_real_data(polis_convo_data):
     _, expected_cluster_labels = extract_data_from_polismath(math_data)
     calculated_cluster_labels = result.projected_participants["cluster_id"].values
     assert_array_equal(calculated_cluster_labels, expected_cluster_labels) # type:ignore
-
-    # from reddwarf.data_presenter import generate_figure
-    # print(projected_ptpts)
-    # # Flip these to render figure properly.
-    # projected_ptpts[["x", "y"]] = -projected_ptpts[["x", "y"]]
-    # labels = projected_ptpts["cluster_id"].values
-    # generate_figure(projected_ptpts, labels)
 
 @pytest.mark.parametrize("polis_convo_data", ["small-no-meta"], indirect=True)
 def test_run_clustering_is_reproducible(polis_convo_data):
@@ -105,26 +107,23 @@ def test_run_clustering_is_reproducible(polis_convo_data):
         mod_out_statement_ids=mod_out_statement_ids,
     )
 
-    max_group_count = 5
-    padded_cluster_centers = pad_centroid_list_to_length(cluster_run_1.cluster_centers, max_group_count)
+    centers_1 = cluster_run_1.kmeans.cluster_centers_ if cluster_run_1.kmeans else None
 
     cluster_run_2 = run_clustering(
         votes=loader.votes_data,
         mod_out_statement_ids=mod_out_statement_ids,
-        init_centers=padded_cluster_centers,
+        init_centers=centers_1,
     )
 
     # same number of clusters
-    assert len(cluster_run_1.cluster_centers) == len(cluster_run_2.cluster_centers) # type:ignore
+    centers_1 = cluster_run_1.kmeans.cluster_centers_ if cluster_run_1.kmeans else []
+    centers_2 = cluster_run_2.kmeans.cluster_centers_ if cluster_run_2.kmeans else []
+    assert len(centers_1) == len(centers_2)
+    assert_array_equal(centers_1, centers_2)
 
     # projected statements and cluster IDs
     assert_frame_equal(cluster_run_1.projected_participants, cluster_run_2.projected_participants)
     # components/eigenvectors
-    assert cluster_run_1.components.tolist() == cluster_run_2.components.tolist()
-    # statement centers/means
-    assert cluster_run_1.means.tolist() == cluster_run_2.means.tolist()
-    assert cluster_run_1.cluster_centers.tolist() == cluster_run_2.cluster_centers.tolist()
-
-@pytest.mark.skip
-def test_init_cluster_padding():
-    raise NotImplementedError
+    assert cluster_run_1.pca.components_.tolist() == cluster_run_2.pca.components_.tolist()
+    # statement means
+    assert cluster_run_1.pca.mean_.tolist() == cluster_run_2.pca.mean_.tolist()

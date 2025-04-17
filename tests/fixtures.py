@@ -25,6 +25,10 @@ def polis_convo_data(request):
     report ID or (2) conversation ID on the Polis platform, this fixture will
     try to download that conversation's data for testing.
     """
+    # We make this available to parametrized tests with indirect=True can still
+    # make decisions based on what fixture is running.
+    request.node._param = request.param
+
     path = None
     keep_participant_ids = []
 

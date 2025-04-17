@@ -1,19 +1,36 @@
 from typing import Optional
 from numpy.typing import NDArray
 from pandas import DataFrame
-from reddwarf.utils.matrix import generate_raw_matrix, simple_filter_matrix, get_participant_ids
+from sklearn.decomposition import PCA
+from reddwarf.sklearn.cluster import PolisKMeans
+from reddwarf.utils.matrix import generate_raw_matrix, simple_filter_matrix, get_clusterable_participant_ids
 from reddwarf.utils.pca import run_pca
-from reddwarf.utils.clustering import find_optimal_k, run_kmeans, pad_centroid_list_to_length
+from reddwarf.utils.clustering import find_optimal_k
 from dataclasses import dataclass
+
+from reddwarf.utils.stats import calculate_comment_statistics_dataframes
 
 @dataclass
 class PolisClusteringResult:
+    """
+    Attributes:
+        raw_vote_matrix (DataFrame): Raw sparse vote matrix before any processing.
+        filtered_vote_matrix (DataFrame): Raw sparse vote matrix with moderated statements zero'd out.
+        pca (PCA): PCA model fitted to vote matrix, including `mean_`, `expected_variance_` (eigenvalues) and `components_` (eigenvectors).
+        projected_participants (DataFrame): Dataframe of projected participants, with columns "x", "y", "cluster_id"
+        projected_statements (DataFrame): Dataframe of projected statements, with columns "x", "y".
+        kmeans (PolisKMeans): Scikit-Learn KMeans object for selected group count, including `labels_` and `cluster_centers_`. See `PolisKMeans`.
+        group_aware_consensus (DataFrame): Group-aware consensus scores for each statement.
+        group_comment_stats (list[DataFrame]): A list of dataframes for each statement, indexed by group ID.
+    """
+    raw_vote_matrix: DataFrame
+    filtered_vote_matrix: DataFrame
+    pca: PCA
     projected_participants: DataFrame
     projected_statements: DataFrame
-    components: NDArray
-    eigenvalues: NDArray
-    means: NDArray
-    cluster_centers: NDArray | None
+    kmeans: PolisKMeans | None
+    group_aware_consensus: DataFrame
+    group_comment_stats: list[DataFrame]
 
 def run_clustering(
     votes: list[dict],
@@ -44,55 +61,51 @@ def run_clustering(
         random_state (int): If set, will force determinism during k-means clustering
 
     Returns:
-        PolisClusteringResult: A dataclass containing clustering information with fields:
-            - projected_data (DataFrame): Dataframe of projected participants, with columns "x", "y", "cluster_id"
-            - components (list[list[float]]): List of principal components for each statement
-            - eigenvalues (list[float]): List of eigenvalues for each principal component
-            - means (list[float]): List of centers/means for each statement
-            - cluster_centers (list[list[float]]): List of center xy coordinates for each cluster
+        PolisClusteringResult: A dataclass containing clustering results, including intermediate calculations.
     """
-    vote_matrix = generate_raw_matrix(votes=votes)
-    participant_ids_in = get_participant_ids(vote_matrix, vote_threshold=min_user_vote_threshold)
-    if keep_participant_ids:
-        participant_ids_in = list(set(participant_ids_in + keep_participant_ids))
+    raw_vote_matrix = generate_raw_matrix(votes=votes)
 
-    vote_matrix = simple_filter_matrix(
-        vote_matrix=vote_matrix,
+    filtered_vote_matrix = simple_filter_matrix(
+        vote_matrix=raw_vote_matrix,
         mod_out_statement_ids=mod_out_statement_ids,
     )
-    projected_participants, projected_statements, pca = run_pca(vote_matrix=vote_matrix)
-    center = pca.mean_
-    comps = pca.components_
-    eigenvalues = pca.explained_variance_
 
-    projected_participants = projected_participants.loc[participant_ids_in, :]
+    projected_participants, projected_statements, pca = run_pca(vote_matrix=filtered_vote_matrix)
 
-    if init_centers:
-        # When init_center guesses have been seeded, pad them to max_group_count.
-        # TODO: Randomly generate guesses, rather than using the origin.
-        init_centers = pad_centroid_list_to_length(init_centers, max_group_count)
+    participant_ids_clusterable = get_clusterable_participant_ids(raw_vote_matrix, vote_threshold=min_user_vote_threshold)
+    if keep_participant_ids:
+        participant_ids_clusterable = list(set(participant_ids_clusterable + keep_participant_ids))
 
     if force_group_count:
-        cluster_labels, cluster_centers = run_kmeans(
-            dataframe=projected_participants,
-            n_clusters=force_group_count,
-            init_centers=init_centers,
-            random_state=random_state,
-        )
+        k_bounds = [force_group_count, force_group_count]
     else:
-        _, _, cluster_labels, cluster_centers = find_optimal_k(
-            projected_data=projected_participants,
-            max_group_count=max_group_count,
-            init_centers=init_centers,
-            random_state=random_state,
-        )
-    projected_participants = projected_participants.assign(cluster_id=cluster_labels)
+        k_bounds = [2, max_group_count]
+
+    projected_participants_clusterable = projected_participants.loc[participant_ids_clusterable, :]
+    _, _, kmeans = find_optimal_k(
+        projected_data=projected_participants_clusterable,
+        k_bounds=k_bounds,
+        # Force polis strategy of initiating cluster centers. See: PolisKMeans.
+        init="polis",
+        init_centers=init_centers,
+        random_state=random_state,
+    )
+    projected_participants_clusterable = projected_participants_clusterable.assign(
+        cluster_id=kmeans.labels_ if kmeans else None,
+    )
+
+    group_stats_df, gac_df = calculate_comment_statistics_dataframes(
+        vote_matrix=raw_vote_matrix.loc[participant_ids_clusterable, :],
+        cluster_labels=kmeans.labels_,
+    )
 
     return PolisClusteringResult(
-        projected_participants=projected_participants,
+        raw_vote_matrix=raw_vote_matrix,
+        filtered_vote_matrix=filtered_vote_matrix,
+        pca=pca,
+        projected_participants=projected_participants_clusterable,
         projected_statements=projected_statements,
-        components=comps,
-        eigenvalues=eigenvalues,
-        means=center,
-        cluster_centers=cluster_centers,
+        kmeans=kmeans,
+        group_aware_consensus=gac_df,
+        group_comment_stats=group_stats_df,
     )
