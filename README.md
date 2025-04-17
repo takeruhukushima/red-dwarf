@@ -42,7 +42,7 @@ Are you or your organization eager to see more platforms and community built aro
 
 ## Usage
 
-See [`docs/notebooks/example-usage.ipynb`][notebook] or [`docs/notebooks/`][notebooks] for other examples.
+See [`docs/notebooks/polis-implementation-demo.ipynb`][notebook] or [`docs/notebooks/`][notebooks] for other examples.
 
 [![screen of the sample jupyter notebook](docs/notebook-screenshot.png)][notebook]
 
@@ -126,7 +126,7 @@ See [`CHANGELOG.md`][changelog].
 <!-- Links -->
    [pypi]: https://pypi.org/project/red-dwarf/
    [stellarpunk]: https://www.youtube.com/watch?v=opnkQVZrhAw
-   [notebook]: https://github.com/polis-community/red-dwarf/blob/main/docs/notebooks/example-usage.ipynb
+   [notebook]: https://github.com/polis-community/red-dwarf/blob/main/docs/notebooks/polis-implementation-demo.ipynb
    [notebooks]: https://github.com/polis-community/red-dwarf/tree/main/docs/notebooks/
    [ZKorum]: https://github.com/zkorum
    [agora]: https://agoracitizen.network/
