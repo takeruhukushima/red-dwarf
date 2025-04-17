@@ -30,6 +30,7 @@ class PolisClusteringResult:
     projected_statements: DataFrame
     kmeans: PolisKMeans | None
     group_aware_consensus: DataFrame
+    group_comment_stats: list[DataFrame]
 
 def run_clustering(
     votes: list[dict],
@@ -106,4 +107,5 @@ def run_clustering(
         projected_statements=projected_statements,
         kmeans=kmeans,
         group_aware_consensus=gac_df,
+        group_comment_stats=group_stats_df,
     )
