@@ -26,8 +26,14 @@ class GridSearchNonCV(GridSearchCV):
 
     def fit(self, X, y=None, **fit_params):
         if not self._user_provided_cv:
-            # Create full-fold CV only if user didn’t specify their own.
-            # This score the full dataset for each branch of grid.
-            full_fold = [(np.arange(len(X)), np.arange(len(X)))]
+            # Create full-fold cross-validation only if user didn’t specify their own.
+            # This scores the full dataset for each branch of grid.
+            # See: https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.GridSearchCV.html#:~:text=An%20iterable%20yielding%20(train%2C%20test)%20splits%20as%20arrays%20of%20indices.
+            n_samples = len(X)
+            full_idx = np.arange(n_samples)
+            train_idx = full_idx
+            test_idx = full_idx
+            # Use full dataset for training/testing
+            full_fold = [(train_idx, test_idx)]
             self.cv = full_fold
         return super().fit(X, y, **fit_params)
