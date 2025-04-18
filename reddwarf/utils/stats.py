@@ -290,7 +290,7 @@ def calculate_comment_statistics_dataframes(
     vote_matrix: VoteMatrix,
     cluster_labels: list[int] | NDArray[np.integer],
     pseudo_count: int = 1,
-) -> Tuple[list[pd.DataFrame], pd.DataFrame]:
+) -> Tuple[pd.DataFrame, pd.DataFrame]:
     """
     Calculates comparative statement statistics across all votes and groups, generating dataframes.
 
@@ -303,7 +303,7 @@ def calculate_comment_statistics_dataframes(
         pseudo_count (int): Smoothing parameter to avoid division by zero. Default is 1.
 
     Returns:
-        list[pd.DataFrame]: DataFrames containing verbose statistics for each statement, keyed to group ID.
+        pd.DataFrame: DataFrame (MultiIndex on group/statement) containing verbose statistics for each statement per group.
         pd.DataFrame: DataFrame containing group-aware consensus scores for each statement.
     """
     N_g_c, N_v_g_c, P_v_g_c, R_v_g_c, P_v_g_c_test, R_v_g_c_test, C_v_c = calculate_comment_statistics(
@@ -313,9 +313,9 @@ def calculate_comment_statistics_dataframes(
     )
 
     group_count = len(set(cluster_labels))
-    group_stats = [pd.DataFrame()] * group_count
+    group_frames = []
     for group_id in range(group_count):
-        group_stats[group_id] = pd.DataFrame({
+        group_df = pd.DataFrame({
             'na':  N_v_g_c[votes.A, group_id, :],      # number agree votes
             'nd':  N_v_g_c[votes.D, group_id, :],      # number disagree votes
             'ns':  N_g_c[group_id, :],                 # number seen/total/non-missing votes
@@ -328,13 +328,21 @@ def calculate_comment_statistics_dataframes(
             'rat': R_v_g_c_test[votes.A, group_id, :], # repress of agree test z-score
             'rdt': R_v_g_c_test[votes.D, group_id, :], # repress of disagree test z-score
         }, index=vote_matrix.columns)
+        group_df['group_id'] = group_id
+        group_df['statement_id'] = vote_matrix.columns
+        group_frames.append(group_df)
+    # Create a MultiIndex dataframe
+    grouped_stats_df = (
+        pd.concat(group_frames, ignore_index=True)
+          .set_index(['group_id', 'statement_id'])
+    )
 
     group_aware_consensus_df = pd.DataFrame(
         { "consensus": C_v_c[votes.A, :] },
         index=vote_matrix.columns,
     )
 
-    return group_stats, group_aware_consensus_df
+    return grouped_stats_df, group_aware_consensus_df
 
 def repness_metric(df: pd.DataFrame) -> pd.Series:
     metric = df["repness"] * df["repness-test"] * df["p-success"] * df["p-test"]
@@ -411,7 +419,7 @@ def priority_metric(
 # See: https://github.com/compdemocracy/polis/blob/7bf9eccc287586e51d96fdf519ae6da98e0f4a70/math/src/polismath/math/repness.clj#L209C7-L209C26
 # TODO: omg please clean this up.
 def select_representative_statements(
-    grouped_stats_df: list[pd.DataFrame],
+    grouped_stats_df: pd.DataFrame,
     pick_max: int = 5,
     confidence: float = 0.90,
 ) -> PolisRepness:
@@ -421,7 +429,7 @@ def select_representative_statements(
     This is expected to match the Polis outputs when all defaults are set.
 
     Args:
-        grouped_stats_df (list[pd.DataFrame]): Dataframes of statement statistics, keyed to group ID
+        grouped_stats_df (pd.DataFrame): MultiIndex Dataframe of statement statistics, indexed by group and statement.
         pick_max (int): The max number of statements that will be returned per group
         confidence (float): A decimal percentage representing confidence interval
 
@@ -429,23 +437,23 @@ def select_representative_statements(
         PolisRepness: A dict object with lists of statements keyed to groups, matching Polis format.
     """
     repness = {}
-    for gid, stats_df in enumerate(grouped_stats_df):
-        stats_df = stats_df.reset_index()
+    for gid, group_df in grouped_stats_df.groupby(level="group_id"):
+        group_df = group_df.reset_index()
 
         best_agree = None
         # Track the best-agree, to bring to top if exists.
-        for _, row in stats_df.iterrows():
+        for _, row in group_df.iterrows():
             if beats_best_of_agrees(row, best_agree, confidence):
                 best_agree = row
 
         sig_filter = lambda row: is_statement_significant(row, confidence)
-        sufficient_statements_row_mask = stats_df.apply(sig_filter, axis="columns")
-        sufficient_statements = stats_df[sufficient_statements_row_mask].reset_index()
+        sufficient_statements_row_mask = group_df.apply(sig_filter, axis="columns")
+        sufficient_statements = group_df[sufficient_statements_row_mask].reset_index()
 
         # Track the best, even if doesn't meet sufficient minimum, to have at least one.
         best_overall = None
         if len(sufficient_statements) == 0:
-            for _, row in stats_df.iterrows():
+            for _, row in group_df.iterrows():
                 if beats_best_by_repness_test(row, best_overall):
                     best_overall = row
         else:

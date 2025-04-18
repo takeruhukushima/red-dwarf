@@ -71,7 +71,7 @@ def test_calculate_comment_statistics_dataframes_grouped_stats_df_real_data(poli
                 key_map = dict(zip(keys, ["pd", "pdt", "rd", "rdt"]))
 
             actual = {
-                k: grouped_stats_df[group_id].loc[st["tid"], v]
+                k: grouped_stats_df.loc[(group_id, st["tid"]), v]
                 for k,v in key_map.items()
             }
 

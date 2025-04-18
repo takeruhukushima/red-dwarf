@@ -21,7 +21,7 @@ class PolisClusteringResult:
         projected_statements (DataFrame): Dataframe of projected statements, with columns "x", "y".
         kmeans (PolisKMeans): Scikit-Learn KMeans object for selected group count, including `labels_` and `cluster_centers_`. See `PolisKMeans`.
         group_aware_consensus (DataFrame): Group-aware consensus scores for each statement.
-        group_comment_stats (list[DataFrame]): A list of dataframes for each statement, indexed by group ID.
+        group_comment_stats (DataFrame): A multi-index dataframes for each statement, indexed by group ID and statement.
     """
     raw_vote_matrix: DataFrame
     filtered_vote_matrix: DataFrame
@@ -30,7 +30,7 @@ class PolisClusteringResult:
     projected_statements: DataFrame
     kmeans: PolisKMeans | None
     group_aware_consensus: DataFrame
-    group_comment_stats: list[DataFrame]
+    group_comment_stats: DataFrame
 
 def run_clustering(
     votes: list[dict],
@@ -94,7 +94,7 @@ def run_clustering(
         cluster_id=kmeans.labels_ if kmeans else None,
     )
 
-    group_stats_df, gac_df = calculate_comment_statistics_dataframes(
+    grouped_stats_df, gac_df = calculate_comment_statistics_dataframes(
         vote_matrix=raw_vote_matrix.loc[participant_ids_clusterable, :],
         cluster_labels=kmeans.labels_,
     )
@@ -107,5 +107,5 @@ def run_clustering(
         projected_statements=projected_statements,
         kmeans=kmeans,
         group_aware_consensus=gac_df,
-        group_comment_stats=group_stats_df,
+        group_comment_stats=grouped_stats_df,
     )

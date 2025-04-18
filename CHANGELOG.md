@@ -35,6 +35,7 @@
 - Remove extraneous return values from `PolisClusteringResult`.
 - Add `data_presenter.generate_figure_polis()` for making graphs from PolisClusteringResult.
 - Add `group_aware_consensus` dataframe to PolisClusteringResult of polis implementation.
+- Add group statement stats to MultiIndex DataFrame.
 
 
 ### Chores
