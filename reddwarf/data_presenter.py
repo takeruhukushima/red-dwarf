@@ -9,6 +9,8 @@ import seaborn as sns
 
 from reddwarf.implementations.polis import PolisClusteringResult
 
+GROUP_LABEL_NAMES = ["A", "B", "C", "D", "E", "F", "G", "H"]
+
 def generate_figure_polis(result: PolisClusteringResult, show_guesses=False, flip_x=True, flip_y=False):
     cluster_labels = result.projected_participants["cluster_id"].values
 
@@ -128,13 +130,15 @@ def generate_figure(
 
     # Add a legend if labels are provided
     if cluster_labels is not None:
-        plt.colorbar(scatter, label="Cluster", ticks=cluster_labels)
+        cbar = plt.colorbar(scatter, label="Cluster", ticks=cluster_labels)
+
+        UNGROUPED_LABEL_NAME = "[Center Guess]"
+        tick_labels = [UNGROUPED_LABEL_NAME if lbl == -1 else GROUP_LABEL_NAMES[lbl] for lbl in cluster_labels]
+        cbar.ax.set_yticklabels(tick_labels)
 
     plt.show()
 
     return None
-
-GROUP_LABELS = ["A", "B", "C", "D", "E", "F", "G", "H"]
 
 def print_repness(
     repness: PolisRepness,
@@ -152,7 +156,7 @@ def print_repness(
     """
     for gid, repful_statements in repness.items():
         gid = int(gid)
-        group_label = GROUP_LABELS[gid]
+        group_label = GROUP_LABEL_NAMES[gid]
         print("GROUP {group_label}".format(group_label=group_label))
 
         for rep_st in repful_statements:
