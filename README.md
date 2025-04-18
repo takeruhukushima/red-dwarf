@@ -44,7 +44,10 @@ Are you or your organization eager to see more platforms and community built aro
 
 See [`docs/notebooks/polis-implementation-demo.ipynb`][notebook] or [`docs/notebooks/`][notebooks] for other examples.
 
-[![screen of the sample jupyter notebook](docs/notebook-screenshot.png)][notebook]
+
+| screenshot of library-generated notebook | screenshot of Polis-generated report |
+|---|---|
+| [![screen of the sample jupyter notebook](docs/notebook-screenshot.png)][notebook] | ![screenshot of the polis report](https://imgur.com/blkIEtW.png) |
 
 ### Loading Data
 
