@@ -3,9 +3,9 @@ import matplotlib.patches as patches
 from collections import defaultdict
 from concave_hull import concave_hull_indexes
 from typing import List, Optional
+from reddwarf.types.polis import PolisRepness
 import numpy as np
 import seaborn as sns
-import pandas as pd
 
 from reddwarf.implementations.polis import PolisClusteringResult
 
@@ -133,6 +133,48 @@ def generate_figure(
     plt.show()
 
     return None
+
+GROUP_LABELS = ["A", "B", "C", "D", "E", "F", "G", "H"]
+
+def print_repness(
+    repness: PolisRepness,
+    statements_data: list[dict],
+) -> None:
+    """
+    Helper function to format printed output of Polis repness object.
+
+    Arguments:
+        repness (dict): Repness dict that matches structure from polismath API
+        statements_data (list[dict]): Statement data with keys `statement_id` and `txt`
+
+    Returns:
+        None
+    """
+    for gid, repful_statements in repness.items():
+        gid = int(gid)
+        group_label = GROUP_LABELS[gid]
+        print("GROUP {group_label}".format(group_label=group_label))
+
+        for rep_st in repful_statements:
+            st_data = [st for st in statements_data if st["statement_id"] == rep_st["tid"]][0]
+            print(f"* {st_data['txt']}")
+            if rep_st["repful-for"] == "agree":
+                tmpl = "   {percent}% of those in group {group_label} who voted on statement {statement_id} agreed."
+                print(tmpl.format(
+                    group_label=group_label,
+                    statement_id=rep_st["tid"],
+                    percent=int((rep_st["n-success"]/rep_st["n-trials"])*100),
+                ))
+            else:
+                tmpl = "   {percent}% of those in group {group_label} who voted on statement {statement_id} disagreed."
+                print(tmpl.format(
+                    percent=int((rep_st["n-success"]/rep_st["n-trials"])*100),
+                    group_label=group_label,
+                    statement_id=rep_st["tid"],
+                ))
+            print("")
+
+        print("")
 
 class DataPresenter():
     def __init__(self, client):

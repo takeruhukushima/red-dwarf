@@ -36,7 +36,7 @@
 - Add `data_presenter.generate_figure_polis()` for making graphs from PolisClusteringResult.
 - Add `group_aware_consensus` dataframe to PolisClusteringResult of polis implementation.
 - Add group statement stats to MultiIndex DataFrame.
-
+- Add `reddwarf.data_presenter.print_repress()` for printing representative statements.
 
 ### Chores
 - Moved agora implementation from `reddwarf.agora` to `reddwarf.implementations.agora` (deprecation warning).
