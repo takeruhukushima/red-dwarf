@@ -438,6 +438,7 @@ def select_representative_statements(
     """
     repness = {}
     for gid, group_df in grouped_stats_df.groupby(level="group_id"):
+        # Bring statement_id into regular column.
         group_df = group_df.reset_index()
 
         best_agree = None
@@ -448,7 +449,7 @@ def select_representative_statements(
 
         sig_filter = lambda row: is_statement_significant(row, confidence)
         sufficient_statements_row_mask = group_df.apply(sig_filter, axis="columns")
-        sufficient_statements = group_df[sufficient_statements_row_mask].reset_index()
+        sufficient_statements = group_df[sufficient_statements_row_mask]
 
         # Track the best, even if doesn't meet sufficient minimum, to have at least one.
         best_overall = None
