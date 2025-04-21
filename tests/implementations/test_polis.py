@@ -44,11 +44,12 @@ def test_run_clustering_real_data(polis_convo_data):
         f"{fixture.data_dir}/conversation.json",
     ])
 
-    _, _, mod_out_statement_ids, _ = process_statements(statement_data=loader.comments_data)
+    _, _, mod_out_statement_ids, meta_statement_ids = process_statements(statement_data=loader.comments_data)
 
     result = run_clustering(
         votes=loader.votes_data,
         mod_out_statement_ids=mod_out_statement_ids,
+        meta_statement_ids=meta_statement_ids,
         keep_participant_ids=fixture.keep_participant_ids,
         max_group_count=max_group_count,
         init_centers=init_centers,
@@ -88,6 +89,17 @@ def test_run_clustering_real_data(polis_convo_data):
     _, expected_cluster_labels = extract_data_from_polismath(math_data)
     calculated_cluster_labels = result.projected_participants["cluster_id"].values
     assert_array_equal(calculated_cluster_labels, expected_cluster_labels) # type:ignore
+
+    # Check extremity calculation
+    expected = math_data["pca"]["comment-extremity"]
+    calculated = result.statements_df["extremity"].tolist()
+    assert_array_almost_equal(expected, calculated)
+
+    # Check comment-priority calculcation
+    expected = math_data["comment-priorities"]
+    calculated = {str(k): v for k, v in result.statements_df["priority"].items()}
+    assert_dict_equal(expected, calculated)
+
 
 @pytest.mark.parametrize("polis_convo_data", ["small-no-meta"], indirect=True)
 def test_run_clustering_is_reproducible(polis_convo_data):
