@@ -37,6 +37,7 @@
 - Add `group_aware_consensus` dataframe to PolisClusteringResult of polis implementation.
 - Add group statement stats to MultiIndex DataFrame.
 - Add `reddwarf.data_presenter.print_repress()` for printing representative statements.
+- Add support for `Loader()` importing data from alternative Polis instances via `polis_instance_url` arg.
 
 ### Chores
 - Moved agora implementation from `reddwarf.agora` to `reddwarf.implementations.agora` (deprecation warning).

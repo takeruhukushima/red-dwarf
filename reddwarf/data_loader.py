@@ -11,8 +11,8 @@ from reddwarf.helpers import CachedLimiterSession, CloudflareBypassHTTPAdapter
 ua = UserAgent()
 
 class Loader():
-    def __init__(self, filepaths=[], polis_id=None, conversation_id=None, report_id=None, is_cache_enabled=True, output_dir=None, data_source="api", directory_url=None):
-        self.polis_instance_url = "https://pol.is"
+    def __init__(self, polis_instance_url=None, filepaths=[], polis_id=None, conversation_id=None, report_id=None, is_cache_enabled=True, output_dir=None, data_source="api", directory_url=None):
+        self.polis_instance_url = polis_instance_url or "https://pol.is"
         self.polis_id = report_id or conversation_id or polis_id
         self.conversation_id = conversation_id
         self.report_id = report_id
