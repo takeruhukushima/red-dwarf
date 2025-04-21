@@ -9,6 +9,7 @@ from reddwarf.types.polis import (
     PolisRepness,
     PolisRepnessStatement,
 )
+from reddwarf.utils.pca import calculate_extremity
 
 
 def one_prop_test(
@@ -494,3 +495,27 @@ def select_representative_statements(
         repness[str(gid)] = selected
 
     return repness # type:ignore
+
+def populate_extremity_to_statements_df(
+    statements_df: pd.DataFrame,
+    vote_matrix: VoteMatrix,
+) -> pd.DataFrame:
+    statements_df = statements_df.copy()
+    statements_df["extremity"] = calculate_extremity(statements_df.loc[:, ["x", "y"]].transpose())
+
+    n_agree = (vote_matrix == 1).sum(axis=0)
+    n_disagree = (vote_matrix == -1).sum(axis=0)
+    n_total = vote_matrix.notna().sum(axis=0)
+
+    statements_df["n_agree"] = n_agree.reindex(statements_df.index).astype("Int64")
+    statements_df["n_disagree"] = n_disagree.reindex(statements_df.index).astype("Int64")
+    statements_df["n_total"] = n_total.reindex(statements_df.index).astype("Int64")
+
+    statements_df["priority"] = priority_metric(
+        is_meta=statements_df["is_meta"],
+        n_agree=statements_df["n_agree"],
+        n_disagree=statements_df["n_disagree"],
+        n_total=statements_df["n_total"],
+        extremity=statements_df["extremity"],
+    )
+    return statements_df
