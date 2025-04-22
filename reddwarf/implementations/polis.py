@@ -22,6 +22,8 @@ class PolisClusteringResult:
         kmeans (PolisKMeans): Scikit-Learn KMeans object for selected group count, including `labels_` and `cluster_centers_`. See `PolisKMeans`.
         group_aware_consensus (DataFrame): Group-aware consensus scores for each statement.
         group_comment_stats (DataFrame): A multi-index dataframes for each statement, indexed by group ID and statement.
+        statements_df (DataFrame): A dataframe with all intermediary and final statement data/calculations/metadata.
+        participants_df (DataFrame): A dataframe with all intermediary and final participant data/calculations/metadata.
     """
     raw_vote_matrix: DataFrame
     filtered_vote_matrix: DataFrame
@@ -32,6 +34,7 @@ class PolisClusteringResult:
     group_aware_consensus: DataFrame
     group_comment_stats: DataFrame
     statements_df: DataFrame
+    participants_df: DataFrame
 
 def run_clustering(
     votes: list[dict],
@@ -148,4 +151,5 @@ def run_clustering(
         group_aware_consensus=gac_df,
         group_comment_stats=grouped_stats_df,
         statements_df=statements_df,
+        participants_df=participants_df,
     )
