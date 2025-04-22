@@ -307,8 +307,7 @@ def test_priority_metric_array():
     )
     assert calculated_priority == pytest.approx(expected_priorities, abs=0.001)
 
-# TODO: Investigate why "medium-with-meta" doesn't work. (59/60 mismatched)
-@pytest.mark.parametrize("polis_convo_data", ["small-no-meta", "small-with-meta", "medium-no-meta"], indirect=True)
+@pytest.mark.parametrize("polis_convo_data", ["small-no-meta", "small-with-meta", "medium-no-meta", "medium-with-meta"], indirect=True)
 def test_group_aware_consensus_real_data(polis_convo_data):
     fixture = polis_convo_data
     loader = Loader(filepaths=[
@@ -317,13 +316,11 @@ def test_group_aware_consensus_real_data(polis_convo_data):
         f'{fixture.data_dir}/conversation.json',
     ])
     VOTES = loader.votes_data
-    # STATEMENTS = loader.comments_data
-
-    # _, _, mod_out, _ = stmnts.process_statements(statement_data=STATEMENTS)
-    # print(mod_out)
-
     vote_matrix = matrix.generate_raw_matrix(votes=VOTES)
+
     # TODO: Why do moderated out statements not plug into comment stats? BUG?
+    # STATEMENTS = loader.comments_data
+    # _, _, mod_out, _ = stmnts.process_statements(statement_data=STATEMENTS)
     # vote_matrix = matrix.simple_filter_matrix(
     #     vote_matrix=vote_matrix,
     #     mod_out_statement_ids=mod_out,
