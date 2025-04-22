@@ -421,6 +421,7 @@ def priority_metric(
 # TODO: omg please clean this up.
 def select_representative_statements(
     grouped_stats_df: pd.DataFrame,
+    mod_out_statement_ids: list[int] = [],
     pick_max: int = 5,
     confidence: float = 0.90,
 ) -> PolisRepness:
@@ -431,6 +432,7 @@ def select_representative_statements(
 
     Args:
         grouped_stats_df (pd.DataFrame): MultiIndex Dataframe of statement statistics, indexed by group and statement.
+        mod_out_statement_ids (list[int]): A list of statements to ignore from selection algorithm
         pick_max (int): The max number of statements that will be returned per group
         confidence (float): A decimal percentage representing confidence interval
 
@@ -438,6 +440,9 @@ def select_representative_statements(
         PolisRepness: A dict object with lists of statements keyed to groups, matching Polis format.
     """
     repness = {}
+    # TODO: Should this be done elsewhere? A column in MultiIndex dataframe?
+    mod_out_mask = grouped_stats_df.index.get_level_values('statement_id').isin(mod_out_statement_ids)
+    grouped_stats_df = grouped_stats_df[~mod_out_mask] # type: ignore
     for gid, group_df in grouped_stats_df.groupby(level="group_id"):
         # Bring statement_id into regular column.
         group_df = group_df.reset_index()
