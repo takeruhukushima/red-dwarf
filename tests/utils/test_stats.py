@@ -151,18 +151,20 @@ def test_priority_metric_no_votes():
     assert expected_priority == calculated_priority.tolist()
 
 # TODO: Investigate why "medium-with-meta" and "medium-no-meta" don't pass.
-@pytest.mark.parametrize("polis_convo_data", ["small-no-meta", "small-with-meta"], indirect=True)
+@pytest.mark.parametrize("polis_convo_data", ["small-no-meta", "small-with-meta", "medium-no-meta", "medium-with-meta"], indirect=True)
 def test_priority_metric_real_data(polis_convo_data):
     fixture = polis_convo_data
     votes_base = fixture.math_data["votes-base"]
-    for statement_id, votes in votes_base.items():
+    # Get index and statement_id because polismath lists (like pca sub-keys) are
+    # indexed, and polismath objects (like priorities) are keyed to statement_id
+    for idx, (statement_id, votes) in enumerate(votes_base.items()):
         expected_priority = fixture.math_data["comment-priorities"][statement_id]
 
         is_meta = int(statement_id) in fixture.math_data["meta-tids"]
-        n_agree = (np.asarray(votes["A"]) == 1).sum()
-        n_disagree = (np.asarray(votes["D"]) == 1).sum()
-        n_total = (np.asarray(votes["S"]) == 1).sum()
-        comment_extremity = fixture.math_data["pca"]["comment-extremity"][int(statement_id)]
+        n_agree = np.asarray(votes["A"]).sum()
+        n_disagree = np.asarray(votes["D"]).sum()
+        n_total = np.asarray(votes["S"]).sum()
+        comment_extremity = fixture.math_data["pca"]["comment-extremity"][idx]
 
         calculated_priority = stats.priority_metric(
             is_meta=is_meta,
