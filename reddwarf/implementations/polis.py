@@ -71,11 +71,6 @@ def run_clustering(
     """
     raw_vote_matrix = generate_raw_matrix(votes=votes)
 
-    statements_df = pd.DataFrame(index=pd.Index(data=raw_vote_matrix.columns, name="statement_id")) # NEW
-    participants_df = pd.DataFrame(index=pd.Index(data=raw_vote_matrix.index, name="participant_id")) # NEW
-    statements_df["to_zero"] = statements_df.index.isin(mod_out_statement_ids) #NEW
-    statements_df["is_meta"] = statements_df.index.isin(meta_statement_ids) #NEW
-
     filtered_vote_matrix = simple_filter_matrix(
         vote_matrix=raw_vote_matrix,
         mod_out_statement_ids=mod_out_statement_ids,
@@ -83,25 +78,9 @@ def run_clustering(
 
     projected_participants, projected_statements, pca = run_pca(vote_matrix=filtered_vote_matrix)
 
-    def get_with_default(lst, idx, default=None):
-        try:
-            return lst[idx]
-        except IndexError:
-            return default
-
-    statements_df["mean"] = pca.mean_
-    statements_df["pc1"] = get_with_default(pca.components_, 0)
-    statements_df["pc2"] = get_with_default(pca.components_, 1)
-    statements_df["pc3"] = get_with_default(pca.components_, 2)
-
-    statements_df = pd.concat([statements_df, projected_statements], axis=1) # NEW
-    participants_df = pd.concat([participants_df, projected_participants], axis=1) #NEW
-
     participant_ids_clusterable = get_clusterable_participant_ids(raw_vote_matrix, vote_threshold=min_user_vote_threshold)
     if keep_participant_ids:
         participant_ids_clusterable = list(set(participant_ids_clusterable + keep_participant_ids))
-
-    participants_df["to_cluster"] = participants_df.index.isin(participant_ids_clusterable) # NEW
 
     if force_group_count:
         k_bounds = [force_group_count, force_group_count]
@@ -116,30 +95,47 @@ def run_clustering(
         init="polis",
         init_centers=init_centers,
         random_state=random_state,
+
     )
     projected_participants_clusterable = projected_participants_clusterable.assign(
         cluster_id=kmeans.labels_ if kmeans else None,
     )
-
-    print("FOOOOO")
-    label_series = pd.Series(
-        kmeans.labels_ if kmeans else None,
-        index=participant_ids_clusterable,
-        dtype="Int64",
-    )
-    participants_df["cluster_id"] = label_series
 
     grouped_stats_df, gac_df = calculate_comment_statistics_dataframes(
         vote_matrix=raw_vote_matrix.loc[participant_ids_clusterable, :],
         cluster_labels=kmeans.labels_,
     )
 
-    statements_df = pd.concat([statements_df, gac_df], axis=1) # NEW
+    def get_with_default(lst, idx, default=None):
+        try:
+            return lst[idx]
+        except IndexError:
+            return default
 
+    statements_df = pd.DataFrame(index=pd.Index(data=raw_vote_matrix.columns, name="statement_id")) # NEW
+    statements_df["to_zero"] = statements_df.index.isin(mod_out_statement_ids) #NEW
+    statements_df["is_meta"] = statements_df.index.isin(meta_statement_ids) #NEW
+    statements_df["mean"] = pca.mean_
+    statements_df["pc1"] = get_with_default(pca.components_, 0)
+    statements_df["pc2"] = get_with_default(pca.components_, 1)
+    statements_df["pc3"] = get_with_default(pca.components_, 2)
+    statements_df = pd.concat([statements_df, projected_statements], axis=1) # NEW
+    statements_df = pd.concat([statements_df, gac_df], axis=1) # NEW
     statements_df = populate_extremity_to_statements_df(
         vote_matrix=raw_vote_matrix.loc[participant_ids_clusterable, :],
         statements_df=statements_df,
     )
+
+    label_series = pd.Series(
+        kmeans.labels_ if kmeans else None,
+        index=participant_ids_clusterable,
+        dtype="Int64",
+    )
+
+    participants_df = pd.DataFrame(index=pd.Index(data=raw_vote_matrix.index, name="participant_id")) # NEW
+    participants_df["to_cluster"] = participants_df.index.isin(participant_ids_clusterable) # NEW
+    participants_df["cluster_id"] = label_series
+    participants_df = pd.concat([participants_df, projected_participants], axis=1) #NEW
 
     return PolisClusteringResult(
         raw_vote_matrix=raw_vote_matrix,
