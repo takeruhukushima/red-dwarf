@@ -37,6 +37,12 @@ def polis_convo_data(request):
         # See: https://pol.is/report/r6bpmcmizi2kyvhzkhfr7
         # 23 ptpts, 2 groups, 0/9 meta, strict=yes
         path = "tests/fixtures/below-100-ptpts"
+        # We hardcode this because Polis has some bespoke rules that keep these IDs in for clustering.
+        # TODO: Try to determine why each pid is kept. Can maybe determine by incrementing through vote history.
+        #  5 -> 1 vote @ statement #26 (participant #2's)
+        # 10 -> 2 vote @ statements #21 (participant #1's) & #29 (their own, moderated in).
+        # 11 -> 1 vote @ statement #29 (participant #10's)
+        # 14 -> 1 vote @ statement #27 (participant #6's)
         keep_participant_ids = [ 5, 10, 11, 14 ]
     elif request.param == "small-no-meta-bad":
         # BUG: DATA INTEGRITY ISSUES.
