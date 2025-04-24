@@ -76,7 +76,9 @@ def run_clustering(
         mod_out_statement_ids=mod_out_statement_ids,
     )
 
-    participants_df, projected_statements, pca = run_pca(vote_matrix=filtered_vote_matrix)
+    # Run PCA and generate participant/statement projections.
+    # DataFrames each have "x" and "y" columns.
+    participants_df, statements_df, pca = run_pca(vote_matrix=filtered_vote_matrix)
 
     participant_ids_to_cluster = get_clusterable_participant_ids(raw_vote_matrix, vote_threshold=min_user_vote_threshold)
     if keep_participant_ids:
@@ -116,15 +118,13 @@ def run_clustering(
         except IndexError:
             return default
 
-    statements_df = pd.DataFrame(index=pd.Index(data=raw_vote_matrix.columns, name="statement_id")) # NEW
-    statements_df["to_zero"] = statements_df.index.isin(mod_out_statement_ids) #NEW
-    statements_df["is_meta"] = statements_df.index.isin(meta_statement_ids) #NEW
+    statements_df["to_zero"] = statements_df.index.isin(mod_out_statement_ids)
+    statements_df["is_meta"] = statements_df.index.isin(meta_statement_ids)
     statements_df["mean"] = pca.mean_
     statements_df["pc1"] = get_with_default(pca.components_, 0)
     statements_df["pc2"] = get_with_default(pca.components_, 1)
     statements_df["pc3"] = get_with_default(pca.components_, 2)
-    statements_df = pd.concat([statements_df, projected_statements], axis=1) # NEW
-    statements_df = pd.concat([statements_df, gac_df], axis=1) # NEW
+    statements_df = pd.concat([statements_df, gac_df], axis=1)
     statements_df = populate_priority_calculations_into_statements_df(
         statements_df=statements_df,
         vote_matrix=raw_vote_matrix.loc[participant_ids_to_cluster, :],
@@ -134,10 +134,10 @@ def run_clustering(
         raw_vote_matrix=raw_vote_matrix,
         filtered_vote_matrix=filtered_vote_matrix,
         pca=pca,
-        projected_participants=participants_df.loc[participant_ids_to_cluster, :],
-        projected_statements=projected_statements,
+        projected_participants=participants_df.loc[participant_ids_to_cluster, ["x", "y", "cluster_id"]], # deprecate?
+        projected_statements=statements_df.loc[:, ["x", "y"]], # deprecate?
         kmeans=kmeans,
-        group_aware_consensus=gac_df,
+        group_aware_consensus=gac_df, # deprecate?
         group_comment_stats=grouped_stats_df,
         statements_df=statements_df,
         participants_df=participants_df,
