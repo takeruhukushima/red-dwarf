@@ -1,13 +1,14 @@
 from numpy.typing import ArrayLike
 import pandas as pd
 import numpy as np
-from reddwarf.utils.matrix import VoteMatrix
-from reddwarf.sklearn.transformers import SparsityAwareScaler, calculate_scaling_factors
+from reddwarf.utils.matrix import VoteMatrix, generate_virtual_vote_matrix
+from reddwarf.sklearn.transformers import SparsityAwareCapturer, SparsityAwareScaler, calculate_scaling_factors
+from reddwarf.sklearn.pipeline import PatchedPipeline
 from typing import Tuple
 
 from sklearn.decomposition import PCA
 from sklearn.impute import SimpleImputer
-from sklearn.pipeline import Pipeline
+
 
 def run_pca(
         vote_matrix: VoteMatrix,
@@ -30,39 +31,22 @@ def run_pca(
             - explained_variance_ (List[float]): Explained variance of each principal component.
             - mean_ (list[float]): Means/centers of each column/statements/features.
     """
-    pipeline = Pipeline([
+    pipeline = PatchedPipeline([
+        ("capture", SparsityAwareCapturer()),
         ("impute", SimpleImputer(missing_values=np.nan, strategy="mean")),
         ("pca", PCA(n_components=n_components)),
-        ("scale", SparsityAwareScaler()),
+        ("scale", SparsityAwareScaler(capture_step="capture")),
     ])
 
     pipeline.fit(vote_matrix.values)
-    pca = pipeline.named_steps["pca"]
 
-    def generate_projections(sparse_vote_matrix, fitted_pipeline):
-        fitted_pipeline.named_steps["scale"].X_sparse = sparse_vote_matrix
-        X_projected = fitted_pipeline.transform(sparse_vote_matrix)
+    # Generate projections of participants.
+    X_participants = pipeline.transform(vote_matrix.values)
 
-        return X_projected
-
-    # Create a matrix of virtual participants that each vote once on a single statement.
-    def generate_virtual_vote_matrix(n_statements: int):
-        # Build an basic identity matrix
-        virtual_vote_matrix = np.eye(n_statements)
-
-        # Replace 1s with +1 and 0s with NaN
-        # TODO: Why does Polis use -1 (disagree) here? is it the same? BUG?
-        AGREE_VAL = 1
-        MISSING_VAL = np.nan
-        virtual_vote_matrix = np.where(virtual_vote_matrix == 1, AGREE_VAL, MISSING_VAL)
-
-        return virtual_vote_matrix
-
-    X_participants = generate_projections(sparse_vote_matrix=vote_matrix.values, fitted_pipeline=pipeline)
-
+    # Generate projections of statements via virtual vote matrix.
     n_statements = len(vote_matrix.columns)
     virtual_vote_matrix = generate_virtual_vote_matrix(n_statements)
-    X_statements = generate_projections(sparse_vote_matrix=virtual_vote_matrix, fitted_pipeline=pipeline)
+    X_statements = pipeline.transform(virtual_vote_matrix)
 
     DEFAULT_DIMENSION_LABELS = ["x", "y", "z"]
     dimension_labels = DEFAULT_DIMENSION_LABELS[:n_components]
@@ -78,6 +62,8 @@ def run_pca(
         index=pd.Index(vote_matrix.columns, name="statement_id"),
         columns=np.asarray(dimension_labels),
     )
+
+    pca = pipeline.named_steps["pca"]
 
     return projected_participants, projected_statements, pca
 

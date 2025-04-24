@@ -233,3 +233,20 @@ def filter_matrix(
         vote_matrix[unvoted_statement_ids] = 0
 
     return vote_matrix
+
+def generate_virtual_vote_matrix(n_statements: int):
+    """
+    Creates a matrix of virtual participants, each of whom vote agree on a
+    single statement, with no other votes. (This is a variation of an "identity
+    matrix", with votes going across the diagonal of a full NaN matrix.)
+    """
+    # Build an basic identity matrix
+    virtual_vote_matrix = np.eye(n_statements)
+
+    # Replace 1s with +1 and 0s with NaN
+    # TODO: Why does Polis use -1 (disagree) here? is it the same? BUG?
+    AGREE_VAL = 1
+    MISSING_VAL = np.nan
+    virtual_vote_matrix = np.where(virtual_vote_matrix == 1, AGREE_VAL, MISSING_VAL)
+
+    return virtual_vote_matrix
