@@ -2,7 +2,7 @@ from numpy.typing import ArrayLike
 import pandas as pd
 import numpy as np
 from reddwarf.utils.matrix import VoteMatrix, generate_virtual_vote_matrix
-from reddwarf.sklearn.transformers import SparsityAwareCapturer, SparsityAwareScaler, calculate_scaling_factors
+from reddwarf.sklearn.transformers import SparsityAwareCapturer, SparsityAwareScaler
 from reddwarf.sklearn.pipeline import PatchedPipeline
 from typing import Tuple
 
@@ -67,99 +67,7 @@ def run_pca(
 
     return projected_participants, projected_statements, pca
 
-# TODO: Clean up variables and docs.
-def sparsity_aware_project_ptpt(participant_votes, statement_components, statement_means):
-    """
-    Projects a sparse vote vector into PCA space while adjusting for sparsity.
-
-    Args:
-        participant_votes (list): List of participant votes on each statement
-        statement_components (list[list[float]]): Two lists of floats corresponding to the two principal components
-        statement_means (list[float]): List of floats corresponding to the centers/means of each statement
-
-    Returns:
-        projected_coords (list[list[float]]): Two lists corresponding to projected xy coordinates.
-    """
-    statement_components = np.array(statement_components)  # Shape: (2, n_features)
-    statement_means = np.array(statement_means)  # Shape: (n_features,)
-
-    participant_votes = np.array(participant_votes)
-    mask = ~np.isnan(participant_votes)  # Only consider non-null values
-
-    # Extract relevant values
-    x_vals = participant_votes[mask] - statement_means[mask]  # Centered values
-    # TODO: Extend this to work in 3D
-    pc1_vals, pc2_vals = statement_components[:, mask]  # Select only used components
-
-    # Compute dot product projection
-    p1 = np.dot(x_vals, pc1_vals)
-    p2 = np.dot(x_vals, pc2_vals)
-
-    scaling_factor = calculate_scaling_factors(participant_votes)
-
-    coord_projected = np.array([p1, p2])
-    coord_scaled = coord_projected * scaling_factor
-
-    return coord_scaled
-
-# TODO: Clean up variables and docs.
-def sparsity_aware_project_ptpts(vote_matrix, statement_components, statement_means):
-    """
-    Apply sparsity-aware projection to multiple vote vectors.
-    """
-    return np.array([
-        sparsity_aware_project_ptpt(participant_votes, statement_components, statement_means)
-        for participant_votes in vote_matrix]
-    )
-
-# TODO: Clean up variables and docs.
-def pca_project_cmnts(statement_components, statement_means):
-    """
-    Projects unit vectors for each feature into PCA space to understand their placement.
-    """
-
-    # Create a matrix of virtual participants that each vote once on a single statement.
-
-    # Build an basic identity matrix
-    n_statements = len(statement_means)
-    virtual_vote_matrix = np.eye(n_statements)
-
-    # Replace 1s with -1 and 0s with NaN
-    # TODO: Why does Polis use -1 (disagree) here? is it the same? BUG?
-    AGREE_VAL = 1
-    MISSING_VAL = np.nan
-    virtual_vote_matrix = np.where(virtual_vote_matrix == 1, AGREE_VAL, MISSING_VAL)
-
-    statement_projections = sparsity_aware_project_ptpts(
-        virtual_vote_matrix,
-        statement_components,
-        statement_means,
-    )
-
-    return statement_projections
-
 def calculate_extremity(projections: ArrayLike):
     # Compute extremity as vector magnitude on rows.
     # vector magnitude = Euclidean norm = hypotenuse of xy
     return np.linalg.norm(projections, axis=0)
-
-# TODO: Clean up variables and docs.
-def with_proj_and_extremity(pca):
-    """
-    Compute projection and extremity, then merge into PCA results.
-    """
-    statement_projections = pca_project_cmnts(
-        statement_components=pca["comps"],
-        statement_means=pca["center"],
-    )
-
-    # Flip the axes to get all x together and y together.
-    # 2 sets of 40. shape (2, 40)
-    statement_projections = statement_projections.transpose()
-
-    statement_extremities = calculate_extremity(statement_projections)
-
-    pca["comment-projection"] = statement_projections.tolist()
-    pca["comment-extremity"] = statement_extremities.tolist()
-
-    return pca

@@ -82,21 +82,6 @@ def test_statement_count(polis_convo_data):
 
     assert client.statement_count == expected_data
 
-@pytest.mark.parametrize("polis_convo_data", ["small-no-meta", "small-with-meta", "medium-with-meta", "medium-no-meta"], indirect=True)
-def test_impute_missing_values(polis_convo_data):
-    fixture = polis_convo_data
-    client = PolisClient(is_strict_moderation=False)
-    client.load_data(filepaths=[
-        f'{fixture.data_dir}/votes.json',
-        f'{fixture.data_dir}/comments.json',
-    ])
-    matrix_with_missing = client.get_matrix(is_filtered=True)
-    matrix_without_missing = utils.impute_missing_votes(matrix_with_missing)
-
-    assert matrix_with_missing.isnull().values.sum() > 0
-    assert matrix_without_missing.isnull().values.sum() == 0
-    assert matrix_with_missing.shape == matrix_without_missing.shape
-
 # This test can't be paramtrized without changes.
 @pytest.mark.parametrize("polis_convo_data", ["small"], indirect=True)
 def test_filtered_participants_grouped(polis_convo_data):

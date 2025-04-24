@@ -144,10 +144,6 @@ def test_run_pca_real_data_below_100(polis_convo_data):
         pid = expected["participant_id"]
         assert_array_almost_equal(actual_projected_participants.loc[pid, ["x","y"]].values, expected["xy"])
 
-    # print(actual_projected_statements.values.transpose())
-    # print(expected_pca["comment-projection"])
-    # print(PcaUtils.pca_project_cmnts(actual_pca.components_, actual_pca.mean_).transpose())
-    # print(PcaUtils.pca_project_cmnts(expected_pca["comps"], np.asarray(expected_pca["center"])).transpose())
     assert_array_almost_equal(actual_projected_statements.values.transpose(), expected_pca["comment-projection"])
 
 # TODO: Accomodate sign flips in "medium-no-meta".
@@ -213,20 +209,3 @@ def test_run_pca_real_data_testing():
     assert actual_pca.components_[1] == pytest.approx(expected_pca["comps"][1])
 
     assert actual_pca.mean_ == pytest.approx(expected_pca["center"])
-
-@pytest.mark.parametrize("polis_convo_data", ["small-no-meta", "small-with-meta", "medium-with-meta"], indirect=True)
-def test_with_proj_and_extremity(polis_convo_data):
-    fixture = polis_convo_data
-    # Invert to correct for flipped signs in polismath.
-    math_data = helpers.flip_signs_by_key(nested_dict=fixture.math_data, keys=["pca.center", "pca.comment-projection", "base-clusters.x", "base-clusters.y", "group-clusters[*].center"])
-    expected_pca = math_data["pca"]
-
-    minimal_pca = {
-        "center": expected_pca["center"],
-        "comps": expected_pca["comps"],
-    }
-
-    calculated_pca = PcaUtils.with_proj_and_extremity(pca=minimal_pca)
-
-    assert expected_pca["comment-projection"] == calculated_pca["comment-projection"]
-    assert expected_pca["comment-extremity"] == calculated_pca["comment-extremity"]

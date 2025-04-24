@@ -41,6 +41,8 @@
 - Add support for `Loader()` importing data from alternative Polis instances via `polis_instance_url` arg.
 - Patch sklearn with a simple `PatchedPipeline`, to allow pipeline steps to access other steps.
 - Modify `SparsityAwareScaler` to be able to use captured output from SparsityAware Capture.
+- Remove ported Polis PCA functions that are no longer used.
+- Remove old `impute_missing_votes()` function that's no longer used.
 
 ### Chores
 - Moved agora implementation from `reddwarf.agora` to `reddwarf.implementations.agora` (deprecation warning).
