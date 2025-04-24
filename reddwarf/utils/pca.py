@@ -44,6 +44,8 @@ def run_pca(
     X_participants = pipeline.transform(vote_matrix.values)
 
     # Generate projections of statements via virtual vote matrix.
+    # This projects unit vectors for each feature/statement into PCA space to
+    # understand their placement.
     n_statements = len(vote_matrix.columns)
     virtual_vote_matrix = generate_virtual_vote_matrix(n_statements)
     X_statements = pipeline.transform(virtual_vote_matrix)
