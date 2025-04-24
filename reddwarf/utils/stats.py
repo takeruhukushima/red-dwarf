@@ -501,7 +501,7 @@ def select_representative_statements(
 
     return repness # type:ignore
 
-def populate_extremity_to_statements_df(
+def populate_priority_calculations_into_statements_df(
     statements_df: pd.DataFrame,
     vote_matrix: VoteMatrix,
 ) -> pd.DataFrame:

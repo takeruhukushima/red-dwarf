@@ -8,7 +8,7 @@ from reddwarf.utils.clustering import find_optimal_k
 from dataclasses import dataclass
 import pandas as pd
 
-from reddwarf.utils.stats import calculate_comment_statistics_dataframes, populate_extremity_to_statements_df
+from reddwarf.utils.stats import calculate_comment_statistics_dataframes, populate_priority_calculations_into_statements_df
 
 @dataclass
 class PolisClusteringResult:
@@ -121,9 +121,9 @@ def run_clustering(
     statements_df["pc3"] = get_with_default(pca.components_, 2)
     statements_df = pd.concat([statements_df, projected_statements], axis=1) # NEW
     statements_df = pd.concat([statements_df, gac_df], axis=1) # NEW
-    statements_df = populate_extremity_to_statements_df(
-        vote_matrix=raw_vote_matrix.loc[participant_ids_clusterable, :],
+    statements_df = populate_priority_calculations_into_statements_df(
         statements_df=statements_df,
+        vote_matrix=raw_vote_matrix.loc[participant_ids_to_cluster, :],
     )
 
     label_series = pd.Series(
