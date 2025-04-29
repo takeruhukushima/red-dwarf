@@ -9,6 +9,7 @@ from reddwarf.types.polis import (
     PolisRepness,
     PolisRepnessStatement,
 )
+from reddwarf.utils.pca import calculate_extremity
 
 
 def one_prop_test(
@@ -420,6 +421,7 @@ def priority_metric(
 # TODO: omg please clean this up.
 def select_representative_statements(
     grouped_stats_df: pd.DataFrame,
+    mod_out_statement_ids: list[int] = [],
     pick_max: int = 5,
     confidence: float = 0.90,
 ) -> PolisRepness:
@@ -430,6 +432,7 @@ def select_representative_statements(
 
     Args:
         grouped_stats_df (pd.DataFrame): MultiIndex Dataframe of statement statistics, indexed by group and statement.
+        mod_out_statement_ids (list[int]): A list of statements to ignore from selection algorithm
         pick_max (int): The max number of statements that will be returned per group
         confidence (float): A decimal percentage representing confidence interval
 
@@ -437,6 +440,9 @@ def select_representative_statements(
         PolisRepness: A dict object with lists of statements keyed to groups, matching Polis format.
     """
     repness = {}
+    # TODO: Should this be done elsewhere? A column in MultiIndex dataframe?
+    mod_out_mask = grouped_stats_df.index.get_level_values('statement_id').isin(mod_out_statement_ids)
+    grouped_stats_df = grouped_stats_df[~mod_out_mask] # type: ignore
     for gid, group_df in grouped_stats_df.groupby(level="group_id"):
         # Bring statement_id into regular column.
         group_df = group_df.reset_index()
@@ -494,3 +500,27 @@ def select_representative_statements(
         repness[str(gid)] = selected
 
     return repness # type:ignore
+
+def populate_priority_calculations_into_statements_df(
+    statements_df: pd.DataFrame,
+    vote_matrix: VoteMatrix,
+) -> pd.DataFrame:
+    statements_df = statements_df.copy()
+    statements_df["extremity"] = calculate_extremity(statements_df.loc[:, ["x", "y"]].transpose())
+
+    n_agree = (vote_matrix == 1).sum(axis=0)
+    n_disagree = (vote_matrix == -1).sum(axis=0)
+    n_total = vote_matrix.notna().sum(axis=0)
+
+    statements_df["n_agree"] = n_agree.reindex(statements_df.index).astype("Int64")
+    statements_df["n_disagree"] = n_disagree.reindex(statements_df.index).astype("Int64")
+    statements_df["n_total"] = n_total.reindex(statements_df.index).astype("Int64")
+
+    statements_df["priority"] = priority_metric(
+        is_meta=statements_df["is_meta"],
+        n_agree=statements_df["n_agree"],
+        n_disagree=statements_df["n_disagree"],
+        n_total=statements_df["n_total"],
+        extremity=statements_df["extremity"],
+    )
+    return statements_df

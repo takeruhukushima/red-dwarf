@@ -6,6 +6,7 @@
 - Allow `is_strict_moderation` to be inferred from not just API data, but file data.
 - Better handle numpy divide-by-zero edge-cases in two-property test. ([#28](https://github.com/polis-community/red-dwarf/pull/28))
 - Fix bug where `vote_matrix` was modified directly, leading to subtle side-effects.
+- Fix bug in `select_representative_statements()` where mod-out statements weren't ignored.
 
 ### Changes
 - Fixed participant projections to map more closely to Polis with `utils.pca.sparsity_aware_project_ptpt()`.
@@ -38,6 +39,11 @@
 - Add group statement stats to MultiIndex DataFrame.
 - Add `reddwarf.data_presenter.print_repress()` for printing representative statements.
 - Add support for `Loader()` importing data from alternative Polis instances via `polis_instance_url` arg.
+- Patch sklearn with a simple `PatchedPipeline`, to allow pipeline steps to access other steps.
+- Modify `SparsityAwareScaler` to be able to use captured output from SparsityAware Capture.
+- Remove ported Polis PCA functions that are no longer used.
+- Remove old `impute_missing_votes()` function that's no longer used.
+- In `PolisClusteringResult`, created new `statements_df` and `participants_df` with all raw calculation values.
 
 ### Chores
 - Moved agora implementation from `reddwarf.agora` to `reddwarf.implementations.agora` (deprecation warning).

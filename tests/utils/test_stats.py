@@ -151,18 +151,20 @@ def test_priority_metric_no_votes():
     assert expected_priority == calculated_priority.tolist()
 
 # TODO: Investigate why "medium-with-meta" and "medium-no-meta" don't pass.
-@pytest.mark.parametrize("polis_convo_data", ["small-no-meta", "small-with-meta"], indirect=True)
+@pytest.mark.parametrize("polis_convo_data", ["small-no-meta", "small-with-meta", "medium-no-meta", "medium-with-meta"], indirect=True)
 def test_priority_metric_real_data(polis_convo_data):
     fixture = polis_convo_data
     votes_base = fixture.math_data["votes-base"]
-    for statement_id, votes in votes_base.items():
+    # Get index and statement_id because polismath lists (like pca sub-keys) are
+    # indexed, and polismath objects (like priorities) are keyed to statement_id
+    for idx, (statement_id, votes) in enumerate(votes_base.items()):
         expected_priority = fixture.math_data["comment-priorities"][statement_id]
 
         is_meta = int(statement_id) in fixture.math_data["meta-tids"]
-        n_agree = (np.asarray(votes["A"]) == 1).sum()
-        n_disagree = (np.asarray(votes["D"]) == 1).sum()
-        n_total = (np.asarray(votes["S"]) == 1).sum()
-        comment_extremity = fixture.math_data["pca"]["comment-extremity"][int(statement_id)]
+        n_agree = np.asarray(votes["A"]).sum()
+        n_disagree = np.asarray(votes["D"]).sum()
+        n_total = np.asarray(votes["S"]).sum()
+        comment_extremity = fixture.math_data["pca"]["comment-extremity"][idx]
 
         calculated_priority = stats.priority_metric(
             is_meta=is_meta,
@@ -305,8 +307,7 @@ def test_priority_metric_array():
     )
     assert calculated_priority == pytest.approx(expected_priorities, abs=0.001)
 
-# TODO: Investigate why "medium-with-meta" doesn't work. (59/60 mismatched)
-@pytest.mark.parametrize("polis_convo_data", ["small-no-meta", "small-with-meta", "medium-no-meta"], indirect=True)
+@pytest.mark.parametrize("polis_convo_data", ["small-no-meta", "small-with-meta", "medium-no-meta", "medium-with-meta"], indirect=True)
 def test_group_aware_consensus_real_data(polis_convo_data):
     fixture = polis_convo_data
     loader = Loader(filepaths=[
@@ -315,13 +316,11 @@ def test_group_aware_consensus_real_data(polis_convo_data):
         f'{fixture.data_dir}/conversation.json',
     ])
     VOTES = loader.votes_data
-    # STATEMENTS = loader.comments_data
-
-    # _, _, mod_out, _ = stmnts.process_statements(statement_data=STATEMENTS)
-    # print(mod_out)
-
     vote_matrix = matrix.generate_raw_matrix(votes=VOTES)
+
     # TODO: Why do moderated out statements not plug into comment stats? BUG?
+    # STATEMENTS = loader.comments_data
+    # _, _, mod_out, _ = stmnts.process_statements(statement_data=STATEMENTS)
     # vote_matrix = matrix.simple_filter_matrix(
     #     vote_matrix=vote_matrix,
     #     mod_out_statement_ids=mod_out,

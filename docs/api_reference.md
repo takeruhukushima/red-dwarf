@@ -77,10 +77,6 @@ use in Scikit-Learn workflows, pipelines, and APIs.
     options:
         show_root_heading: true
 
-### ::: reddwarf.utils.impute_missing_votes
-    options:
-        show_root_heading: true
-
 ### ::: reddwarf.utils.get_unvoted_statement_ids
     options:
         show_root_heading: true

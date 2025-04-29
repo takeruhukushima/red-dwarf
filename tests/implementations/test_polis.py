@@ -9,23 +9,13 @@ from pandas.testing import assert_frame_equal
 from pandas._testing import assert_dict_equal
 from tests import helpers
 
+
 # This test will only match polismath for sub-100 participant convos.
-# For testing our code agaisnt real data with against larger conversations,
-# we'll need to implement base clustering.
+# TODO: Investigate why this small convo fails: "r5apwkphpuxxhf9wnfemj"
 @pytest.mark.parametrize("polis_convo_data", ["small-no-meta", "small-with-meta"], indirect=True)
-def test_run_clustering_real_data(polis_convo_data):
+def test_run_clustering_real_data_small(polis_convo_data):
     fixture = polis_convo_data
     math_data = helpers.flip_signs_by_key(nested_dict=fixture.math_data, keys=["pca.center", "pca.comment-projection", "base-clusters.x", "base-clusters.y", "group-clusters[*].center"])
-
-    # We hardcode this because Polis has some bespoke rules that keep these IDs in for clustering.
-    # TODO: Try to determine why each pid is kept. Can maybe determine by incrementing through vote history.
-    #  5 -> 1 vote @ statement #26 (participant #2's)
-    # 10 -> 2 vote @ statements #21 (participant #1's) & #29 (their own, moderated in).
-    # 11 -> 1 vote @ statement #29 (participant #10's)
-    # 14 -> 1 vote @ statement #27 (participant #6's)
-
-    # We're moving this into polis_convo_data, for better parametrization.
-    # keep_participant_ids = [ 5, 10, 11, 14 ]
 
     # We force kmeans to find a specific value because Polis does this for something they call k-smoothing.
     # TODO: Get k-smoothing working, and simulate how k is held back.
@@ -44,11 +34,12 @@ def test_run_clustering_real_data(polis_convo_data):
         f"{fixture.data_dir}/conversation.json",
     ])
 
-    _, _, mod_out_statement_ids, _ = process_statements(statement_data=loader.comments_data)
+    _, _, mod_out_statement_ids, meta_statement_ids = process_statements(statement_data=loader.comments_data)
 
     result = run_clustering(
         votes=loader.votes_data,
         mod_out_statement_ids=mod_out_statement_ids,
+        meta_statement_ids=meta_statement_ids,
         keep_participant_ids=fixture.keep_participant_ids,
         max_group_count=max_group_count,
         init_centers=init_centers,
@@ -88,6 +79,23 @@ def test_run_clustering_real_data(polis_convo_data):
     _, expected_cluster_labels = extract_data_from_polismath(math_data)
     calculated_cluster_labels = result.projected_participants["cluster_id"].values
     assert_array_equal(calculated_cluster_labels, expected_cluster_labels) # type:ignore
+
+    # Check extremity calculation
+    expected = math_data["pca"]["comment-extremity"]
+    calculated = result.statements_df["extremity"].tolist()
+    assert_array_almost_equal(expected, calculated)
+
+    # Check comment-priority calculcation
+    expected = math_data["comment-priorities"]
+    calculated = {str(k): v for k, v in result.statements_df["priority"].items()}
+    assert_dict_equal(expected, calculated)
+
+# For testing our code agaisnt real data with against larger conversations,
+# we'll need to implement base clustering.
+@pytest.mark.skip
+@pytest.mark.parametrize("polis_convo_data", ["medium-no-meta", "medium-with-meta"], indirect=True)
+def test_run_clustering_real_data_medium(polis_convo_data):
+    raise NotImplementedError
 
 @pytest.mark.parametrize("polis_convo_data", ["small-no-meta"], indirect=True)
 def test_run_clustering_is_reproducible(polis_convo_data):
