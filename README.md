@@ -49,65 +49,14 @@ See [`docs/notebooks/polis-implementation-demo.ipynb`][notebook] or [`docs/noteb
 |---|---|
 | [![screen of the sample jupyter notebook](docs/notebook-screenshot.png)][notebook] | ![screenshot of the polis report](https://imgur.com/blkIEtW.png) |
 
-### Loading Data
-
-Let's say that you have a conversation for which you know the conversation url, and you may or may not know the report url. This conversation may also have an archived CSV export saved somewhere online.
-
-- conversation url: https://pol.is/4yy3sh84js
-   - `conversation_id`: `4yy3sh84js`
-- report url: https://pol.is/report/r5jsvucnwuuhw7dzjvaim
-   - `report_id`: `r5jsvucnwuuhw7dzjvaim`
-- archived CSV export: https://github.com/compdemocracy/openData/tree/master/scoop-hivemind.ubi
-
-```py
-from reddwarf.polis import PolisClient
-
-# If you only know the conversation ID, you can fetch the live data from the Polis APIs.
-# Note that this may be fresher than a static export hosted elsewhere.
-client = PolisClient()
-client.load_data(polis_id="4yy3sh84js")
-# If you happen to know the report ID, that can be used instead:
-#
-#     client.load_data(polis_id="r5jsvucnwuuhw7dzjvaim")
-
-# All of these are equivalent to the above-mentioned:
-client.load_data(conversation_id="4yy3sh84js")
-client.load_data(conversation_id="4yy3sh84js", data_source="api")
-client.load_data(report_id="r5jsvucnwuuhw7dzjvaim")
-client.load_data(report_id="r5jsvucnwuuhw7dzjvaim", data_source="api")
-
-# If you know the report ID, you can also download from the newer and more official CSV export API endpoint:
-# Example: https://pol.is/api/v3/reportExport/r5jsvucnwuuhw7dzjvaim/participant-votes.csv
-client = PolisClient()
-client.load_data(polis_id="r5jsvucnwuuhw7dzjvaim", data_source="csv_export")
-
-# All of these are equivalent:
-client.load_data(polis_id="r5jsvucnwuuhw7dzjvaim", data_source="csv_export")
-client.load_data(directory_url="https://pol.is/api/v3/reportExport/r5jsvucnwuuhw7dzjvaim/")
-
-
-# If you know a remote directory-like path that contains all the raw export files, you can use that.
-# EXAMPLE
-# Web: https://github.com/compdemocracy/openData/tree/master/scoop-hivemind.ubi
-# Raw: https://raw.githubusercontent.com/compdemocracy/openData/refs/heads/master/scoop-hivemind.ubi/
-#
-# Note: you must tell the loader whether "strict moderation" is being used,
-# as this can't be detected from the export data.
-# The loader will look for files with these names:
-#     - comments.csv
-#     - votes.csv
-client = PolisClient(is_strict_moderation=True)
-client.load_data(directory_url="https://raw.githubusercontent.com/compdemocracy/openData/refs/heads/master/scoop-hivemind.ubi/")
-
-# If you have local CSV files, you can also load them individually.
-# Again, you must hint the moderation type.
-# Filenames must match `*comments.csv` or `*votes.csv`
-client = PolisClient(is_strict_moderation=True)
-client.load_data(filepaths=[
-   "your-data/comments.csv",
-   "your-data/votes.csv",
-])
-```
+- [`docs/notebooks/loading-data.ipynb`](https://github.com/polis-community/red-dwarf/blob/main/docs/notebooks/loading-data.ipynb)
+- [`docs/notebooks/heatmap.ipynb`](https://github.com/polis-community/red-dwarf/blob/main/docs/notebooks/heatmap.ipynb)
+- [`docs/notebooks/polis-implementation-demo.ipynb`](https://github.com/polis-community/red-dwarf/blob/main/docs/notebooks/polis-implementation-demo.ipynb)
+- [`docs/notebooks/dump-downloaded-polis-data.ipynb`](https://github.com/polis-community/red-dwarf/blob/main/docs/notebooks/dump-downloaded-polis-data.ipynb)
+- Advanced
+   - [`docs/notebooks/map-xids.ipynb`](https://github.com/polis-community/red-dwarf/blob/main/docs/notebooks/map-xids.ipynb)
+   - [`docs/notebooks/experiment-pca-pacmap-localmap-comparison.ipynb`](https://github.com/polis-community/red-dwarf/blob/main/docs/notebooks/experiment-pca-pacmap-localmap-comparison.ipynb)
+   - [`docs/notebooks/strip-pass-votes.ipynb`](https://github.com/polis-community/red-dwarf/blob/main/docs/notebooks/strip-pass-votes.ipynb)
 
 ## Get Involved
 
