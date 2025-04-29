@@ -2,6 +2,10 @@
 
 ## [Unreleased][] (YYYY-MM-DD)
 
+_No changes yet._
+
+## [0.3.0][] (2025-04-29)
+
 ### Fixes
 - Allow `is_strict_moderation` to be inferred from not just API data, but file data.
 - Better handle numpy divide-by-zero edge-cases in two-property test. ([#28](https://github.com/polis-community/red-dwarf/pull/28))
@@ -108,7 +112,8 @@
     - Add integration tests.
 
 <!-- Links -->
-   [Unreleased]: https://github.com/polis-community/red-dwarf/compare/v0.2.0...main
+   [Unreleased]: https://github.com/polis-community/red-dwarf/compare/v0.3.0...main
+   [0.3.0]: https://github.com/polis-community/red-dwarf/releases/tag/v0.3.0
    [0.2.0]: https://github.com/polis-community/red-dwarf/releases/tag/v0.2.0
    [0.1.1]: https://github.com/polis-community/red-dwarf/releases/tag/v0.1.1
    [0.1.0]: https://github.com/polis-community/red-dwarf/releases/tag/v0.1.0
