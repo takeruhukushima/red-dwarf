@@ -26,6 +26,7 @@ class Loader():
         self.comments_data = []
         self.math_data = {}
         self.conversation_data = {}
+        self.report_data = {}
 
         if self.filepaths:
             self.load_file_data()
