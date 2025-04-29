@@ -2,7 +2,8 @@
 
 ## [Unreleased][] (YYYY-MM-DD)
 
-_No changes yet._
+### Chores
+- Update the release process instructions.
 
 ## [0.3.0][] (2025-04-29)
 
