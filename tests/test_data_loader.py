@@ -24,7 +24,7 @@ def test_load_data_from_api_conversation():
         'help_color', 'is_data_open', 'is_curated', 'dataset_explanation',
         'write_hint_type', 'subscribe_type', 'org_id', 'need_suzinvite',
         'use_xid_whitelist', 'prioritize_seed', 'importance_enabled',
-        'site_id', 'auth_opt_fb_computed', 'auth_opt_tw_computed', 'translations',
+        'site_id', 'translations',
         'ownername', 'is_mod', 'is_owner', 'conversation_id',
     ]
     assert sorted(loader.conversation_data) == sorted(expected_keys)
