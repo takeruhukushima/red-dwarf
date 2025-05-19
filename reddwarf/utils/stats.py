@@ -154,11 +154,14 @@ def probability(count, total, pseudo_count: ArrayLike = 1):
 
 def calculate_comment_statistics(
     vote_matrix: VoteMatrix,
-    cluster_labels: list[int] | NDArray[np.integer],
+    cluster_labels: Optional[list[int] | NDArray[np.integer]] = None,
     pseudo_count: int = 1,
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """
     Calculates comparative statement statistics across all votes and groups, using only efficient numpy operations.
+
+    Note: when no cluster_labels are supplied, we internally apply the group `0` to each row,
+    and calculated values can be accessed in the first group index.
 
     The representativeness metric is defined as:
     R_v(g,c) = P_v(g,c) / P_v(~g,c)
@@ -172,8 +175,8 @@ def calculate_comment_statistics(
     - N_v(g,c) is the total number of vote v on comment c in group g
 
     Args:
-        vote_matrix (VoteMatrix): ...
-        cluster_labels (list[int]): ...
+        vote_matrix (VoteMatrix): A raw vote_matrix
+        cluster_labels (Optional[list[int]]): An optional list of cluster labels to determine groups.
 
     Returns:
         N_g_c (np.ndarray[int]): numpy matrix with counts of non-missing votes on comments/groups
@@ -184,6 +187,11 @@ def calculate_comment_statistics(
         R_v_g_c_test (np.ndarray[float]): test z-scores for representativeness of votes/comments/groups
         C_v_c (np.ndarray[float]): group-aware consensus scores for each statement.
     """
+    if cluster_labels is None:
+        # Make a single group if no labels supplied.
+        participant_count = len(vote_matrix.index)
+        cluster_labels = [0] * participant_count
+
     # Get the vote matrix values
     X = vote_matrix.values
 
