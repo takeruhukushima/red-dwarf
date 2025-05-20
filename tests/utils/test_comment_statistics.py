@@ -2,8 +2,10 @@ import pytest
 from tests.fixtures import polis_convo_data
 from tests.helpers import get_grouped_statement_ids
 from pandas._testing import assert_dict_equal
+from numpy.testing import assert_array_equal
 
 from reddwarf.utils import stats, polismath, matrix, statements as stmnts
+from tests.test_utils import make_vote_matrix
 from reddwarf.data_loader import Loader
 from reddwarf.types.polis import PolisRepness
 
@@ -96,3 +98,25 @@ def test_calculate_comment_statistics_dataframes_gac_df_real_data(polis_convo_da
     }
     expected_gac = fixture.math_data["group-aware-consensus"]
     assert_dict_equal(calculated_gac, expected_gac)
+
+def test_calculate_comment_statistics_no_group_labels(make_vote_matrix):
+    # Makes this matrix:
+    # [
+    #   [ 0,    1, None],
+    #   [-1,    1,    1],
+    #   [-1, None, None],
+    # ]
+    simple_vote_matrix = make_vote_matrix(id_type='int')
+
+    N_g_c, N_v_g_c, *_ = stats.calculate_comment_statistics(vote_matrix=simple_vote_matrix)
+
+    # When no group cluster labels supplied, calculate_comment_statistics()
+    # internally applies a `0` label.
+    MOCK_GROUP_ID = 0
+    calculated_total_votes = N_g_c[MOCK_GROUP_ID, ]
+    calculated_agree_votes = N_v_g_c[stats.votes.A, MOCK_GROUP_ID, :]
+    calculated_disagree_votes = N_v_g_c[stats.votes.D, MOCK_GROUP_ID, :]
+
+    assert_array_equal(calculated_total_votes, [3, 2, 1])
+    assert_array_equal(calculated_agree_votes, [0, 2, 1])
+    assert_array_equal(calculated_disagree_votes, [2, 0, 0])

@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 import pytest
 from tests.fixtures import polis_convo_data
 from reddwarf.utils import stats
@@ -343,3 +344,83 @@ def test_group_aware_consensus_real_data(polis_convo_data):
     }
 
     assert calculated_gac == pytest.approx(fixture.math_data["group-aware-consensus"])
+
+def test_format_comment_stats_repful_agree():
+    statement = pd.Series({
+        "statement_id": 1,
+        "ns": 100,
+        "na": 60, "pa": 0.6, "pat": 2.0,
+        "nd": 40, "pd": 0.4, "pdt": 1.5,
+        "ra": 0.8, "rat": 3.0,
+        "rd": 0.5, "rdt": 2.0,
+    })
+
+    result = stats.format_comment_stats(statement)
+    assert result == {
+        "tid": 1,
+        "n-success": 60,
+        "n-trials": 100,
+        "p-success": 0.6,
+        "p-test": 2.0,
+        "repness": 0.8,
+        "repness-test": 3.0,
+        "repful-for": "agree",
+    }
+
+def test_format_comment_stats_repful_disagree():
+    statement = pd.Series({
+        "statement_id": 2,
+        "ns": 100,
+        "na": 45, "pa": 0.45, "pat": 1.7,
+        "nd": 55, "pd": 0.55, "pdt": 2.0,
+        "ra": 0.5, "rat": 1.8,
+        "rd": 0.7, "rdt": 2.5,
+    })
+
+    result = stats.format_comment_stats(statement)
+    assert result == {
+        "tid": 2,
+        "n-success": 55,
+        "n-trials": 100,
+        "p-success": 0.55,
+        "p-test": 2.0,
+        "repness": 0.7,
+        "repness-test": 2.5,
+        "repful-for": "disagree",
+    }
+
+def test_format_comment_stats_consensus_agree():
+    statement = pd.Series({
+        "statement_id": 3,
+        "ns": 100,
+        "na": 70, "pa": 0.7, "pat": 2.2,
+        "nd": 30, "pd": 0.3, "pdt": 1.0,
+    })
+
+    result = stats.format_comment_stats(statement)
+    assert result == {
+        "tid": 3,
+        "n-success": 70,
+        "n-trials": 100,
+        "p-success": 0.7,
+        "p-test": 2.2,
+        "cons-for": "agree",
+    }
+
+def test_format_comment_stats_consensus_disagree():
+    statement = pd.Series({
+        "statement_id": 4,
+        "ns": 100,
+        "na": 40, "pa": 0.4, "pat": 1.2,
+        "nd": 60, "pd": 0.6, "pdt": 2.3,
+    })
+
+    result = stats.format_comment_stats(statement)
+    assert result == {
+        "tid": 4,
+        "n-success": 60,
+        "n-trials": 100,
+        "p-success": 0.6,
+        "p-test": 2.3,
+        "cons-for": "disagree",
+    }

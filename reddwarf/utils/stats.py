@@ -154,11 +154,14 @@ def probability(count, total, pseudo_count: ArrayLike = 1):
 
 def calculate_comment_statistics(
     vote_matrix: VoteMatrix,
-    cluster_labels: list[int] | NDArray[np.integer],
+    cluster_labels: Optional[list[int] | NDArray[np.integer]] = None,
     pseudo_count: int = 1,
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """
     Calculates comparative statement statistics across all votes and groups, using only efficient numpy operations.
+
+    Note: when no cluster_labels are supplied, we internally apply the group `0` to each row,
+    and calculated values can be accessed in the first group index.
 
     The representativeness metric is defined as:
     R_v(g,c) = P_v(g,c) / P_v(~g,c)
@@ -172,8 +175,8 @@ def calculate_comment_statistics(
     - N_v(g,c) is the total number of vote v on comment c in group g
 
     Args:
-        vote_matrix (VoteMatrix): ...
-        cluster_labels (list[int]): ...
+        vote_matrix (VoteMatrix): A raw vote_matrix
+        cluster_labels (Optional[list[int]]): An optional list of cluster labels to determine groups.
 
     Returns:
         N_g_c (np.ndarray[int]): numpy matrix with counts of non-missing votes on comments/groups
@@ -184,6 +187,11 @@ def calculate_comment_statistics(
         R_v_g_c_test (np.ndarray[float]): test z-scores for representativeness of votes/comments/groups
         C_v_c (np.ndarray[float]): group-aware consensus scores for each statement.
     """
+    if cluster_labels is None:
+        # Make a single group if no labels supplied.
+        participant_count = len(vote_matrix.index)
+        cluster_labels = [0] * participant_count
+
     # Get the vote matrix values
     X = vote_matrix.values
 
@@ -259,11 +267,11 @@ def calculate_comment_statistics(
         C_v_c, # gac
     )
 
-def finalize_cmt_stats(statement: pd.Series) -> PolisRepnessStatement:
-    """
-    Convert verbose internal statistics into more concise agree/disagree format.
 
-    The most representative of agree/disagree is used.
+def format_comment_stats(statement: pd.Series) -> PolisRepnessStatement:
+    """
+    Format internal statistics into concise agree/disagree format.
+    Uses either consensus style or group-repness style depending on available fields.
 
     Args:
         statement (pd.Series): A dataframe row with statement stats in verbose format.
@@ -271,21 +279,56 @@ def finalize_cmt_stats(statement: pd.Series) -> PolisRepnessStatement:
     Returns:
         PolisRepnessStatement: A dict with keys matching expected Polis format.
     """
-    if statement["rat"] > statement["rdt"]:
-        vals = [statement[k] for k in ["na", "ns", "pa", "pat", "ra", "rat"]] + ["agree"]
-    else:
-        vals = [statement[k] for k in ["nd", "ns", "pd", "pdt", "rd", "rdt"]] + ["disagree"]
+    has_repness = "rat" in statement and "rdt" in statement
+    format_style = (
+        "group-repness" if has_repness else "consensus"
+    )
 
-    return {
-        "tid":          int(statement["statement_id"]),
-        "n-success":    int(vals[0]),
-        "n-trials":     int(vals[1]),
-        "p-success":    float(vals[2]),
-        "p-test":       float(vals[3]),
-        "repness":      float(vals[4]),
-        "repness-test": float(vals[5]),
-        "repful-for":   vals[6], # type:ignore
+    # Define the field mappings
+    agree_fields = {
+        "n-success": "na",
+        "p-success": "pa",
+        "p-test": "pat",
+        "repness": "ra",
+        "repness-test": "rat",
     }
+    disagree_fields = {
+        "n-success": "nd",
+        "p-success": "pd",
+        "p-test": "pdt",
+        "repness": "rd",
+        "repness-test": "rdt",
+    }
+
+    # Select score source
+    if format_style == "group-repness":
+        score_agree = float(statement["rat"])
+        score_disagree = float(statement["rdt"])
+    else:
+        score_agree = float(statement["pat"])
+        score_disagree = float(statement["pdt"])
+
+    use_agree = score_agree > score_disagree
+    fields = agree_fields if use_agree else disagree_fields
+    direction = "agree" if use_agree else "disagree"
+
+    result = {
+        "tid": int(statement["statement_id"]),
+        "n-success": int(statement[fields["n-success"]]),
+        "n-trials": int(statement["ns"]),
+        "p-success": float(statement[fields["p-success"]]),
+        "p-test": float(statement[fields["p-test"]]),
+    }
+
+    if format_style == "group-repness":
+        result["repness"] = float(statement[fields["repness"]])
+        result["repness-test"] = float(statement[fields["repness-test"]])
+        result["repful-for"] = direction
+    else:
+        result["cons-for"] = direction
+
+    return result
+
 
 def calculate_comment_statistics_dataframes(
     vote_matrix: VoteMatrix,
@@ -468,7 +511,7 @@ def select_representative_statements(
             # TODO: Figure out how to finalize only at end in output. Change repness_metric?
             sufficient_statements = (
                 pd.DataFrame([
-                    finalize_cmt_stats(row)
+                    format_comment_stats(row)
                         for _, row in sufficient_statements.iterrows()
                 ])
                     # Create a column to sort repnress, then remove.
@@ -478,11 +521,11 @@ def select_representative_statements(
             )
 
         if best_agree is not None:
-            best_agree = finalize_cmt_stats(best_agree)
+            best_agree = format_comment_stats(best_agree)
             best_agree.update({"n-agree": best_agree["n-success"], "best-agree": True})
             best_head = [best_agree]
         elif best_overall is not None:
-            best_overall = finalize_cmt_stats(best_overall)
+            best_overall = format_comment_stats(best_overall)
             best_head = [best_overall]
         else:
             best_head = []

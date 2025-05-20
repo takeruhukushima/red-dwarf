@@ -2,6 +2,7 @@ from typing import Optional
 from pandas import DataFrame
 from sklearn.decomposition import PCA
 from reddwarf.sklearn.cluster import PolisKMeans
+from reddwarf.utils.consensus import select_consensus_statements, ConsensusResult
 from reddwarf.utils.matrix import generate_raw_matrix, simple_filter_matrix, get_clusterable_participant_ids
 from reddwarf.utils.pca import run_pca
 from reddwarf.utils.clustering import find_optimal_k
@@ -24,6 +25,7 @@ class PolisClusteringResult:
         group_comment_stats (DataFrame): A multi-index dataframes for each statement, indexed by group ID and statement.
         statements_df (DataFrame): A dataframe with all intermediary and final statement data/calculations/metadata.
         participants_df (DataFrame): A dataframe with all intermediary and final participant data/calculations/metadata.
+        consensus (ConsensusResult): A dict of up to top 5 statistically statements for each of agree/disagree.
     """
     raw_vote_matrix: DataFrame
     filtered_vote_matrix: DataFrame
@@ -35,6 +37,7 @@ class PolisClusteringResult:
     group_comment_stats: DataFrame
     statements_df: DataFrame
     participants_df: DataFrame
+    consensus: ConsensusResult
 
 def run_clustering(
     votes: list[dict],
@@ -130,6 +133,14 @@ def run_clustering(
         vote_matrix=raw_vote_matrix.loc[participant_ids_to_cluster, :],
     )
 
+    consensus = select_consensus_statements(
+        vote_matrix=raw_vote_matrix,
+        mod_out_statement_ids=mod_out_statement_ids,
+        pick_n=5,
+        prob_threshold=0.5,
+        confidence=0.9,
+    )
+
     return PolisClusteringResult(
         raw_vote_matrix=raw_vote_matrix,
         filtered_vote_matrix=filtered_vote_matrix,
@@ -141,4 +152,5 @@ def run_clustering(
         group_comment_stats=grouped_stats_df,
         statements_df=statements_df,
         participants_df=participants_df,
+        consensus=consensus,
     )

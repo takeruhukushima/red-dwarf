@@ -24,7 +24,7 @@ def test_load_data_from_api_conversation():
         'help_color', 'is_data_open', 'is_curated', 'dataset_explanation',
         'write_hint_type', 'subscribe_type', 'org_id', 'need_suzinvite',
         'use_xid_whitelist', 'prioritize_seed', 'importance_enabled',
-        'site_id', 'auth_opt_fb_computed', 'auth_opt_tw_computed', 'translations',
+        'site_id', 'translations',
         'ownername', 'is_mod', 'is_owner', 'conversation_id',
     ]
     assert sorted(loader.conversation_data) == sorted(expected_keys)
@@ -195,3 +195,12 @@ def test_load_data_from_api_matches_csv_export():
 
     assert len(api_loader.comments_data) == len(csv_loader.comments_data)
     assert len(api_loader.votes_data) == len(csv_loader.votes_data)
+
+def test_track_skipped():
+    # Should not be dups via API
+    api_loader = Loader(report_id=SMALL_CONVO_REPORT_ID, data_source="api")
+    assert len(api_loader.skipped_dup_votes) == 0
+
+    # Should be dups via CSV export
+    csv_loader = Loader(report_id=SMALL_CONVO_REPORT_ID, data_source="csv_export")
+    assert len(csv_loader.skipped_dup_votes) > 0
