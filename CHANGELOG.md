@@ -5,6 +5,8 @@
 ### Changes
 
 - Add `select_consensus_statements()` function.
+- Allow `calculate_comment_statistics()` to work without groups/labels.
+- Generalize `format_comment_stats()` to work for group and consensus statements.
 
 ### Chores
 
