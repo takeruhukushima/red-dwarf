@@ -106,22 +106,26 @@ def select_consensus_statements(
     if agree_candidates.empty:
         top_agree = []
     else:
-        top_agree = list(
-            agree_candidates.sort_values("consensus_agree_rank")
+        top_agree = [
+            # Drop the cons-for key from final output.
+            {k: v for k, v in st.items() if k != "cons-for"}
+            for st in agree_candidates.sort_values("consensus_agree_rank")
             .head(pick_n)
             .reset_index()
             .apply(format_comment_stats, axis=1)
-        )
+        ]
 
     if disagree_candidates.empty:
         top_disagree = []
     else:
-        top_disagree = list(
-            disagree_candidates.sort_values("consensus_disagree_rank")
+        top_disagree = [
+            # Drop the cons-for key from final output.
+            {k: v for k, v in st.items() if k != "cons-for"}
+            for st in disagree_candidates.sort_values("consensus_disagree_rank")
             .head(pick_n)
             .reset_index()
             .apply(format_comment_stats, axis=1)
-        )
+        ]
 
     return {
         "agree": top_agree,
