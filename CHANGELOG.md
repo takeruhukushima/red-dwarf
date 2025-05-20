@@ -2,6 +2,9 @@
 
 ## [Unreleased][] (YYYY-MM-DD)
 
+### Changes
+- Add `select_consensus_statements()` function.
+
 ### Chores
 - Update the release process instructions.
 

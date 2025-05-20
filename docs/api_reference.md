@@ -65,6 +65,12 @@ use in Scikit-Learn workflows, pipelines, and APIs.
     options:
         show_root_heading: true
 
+## `reddwarf.utils.consensus`
+
+### ::: reddwarf.utils.consensus.select_consensus_statements
+    options:
+        show_root_heading: true
+
 ## `reddwarf.utils`
 
 (These are in the process of being either moved or deprecated.)
