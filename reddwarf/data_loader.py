@@ -27,6 +27,7 @@ class Loader():
         self.math_data = {}
         self.conversation_data = {}
         self.report_data = {}
+        self.skipped_dup_votes = []
 
         if self.filepaths:
             self.load_file_data()
@@ -151,7 +152,8 @@ class Loader():
             if key not in filtered_dict:
                 filtered_dict[key] = v
             else:
-                print("Removing duplicate vote: {}".format(v))
+                # Append skipped votes
+                self.skipped_dup_votes.append(v)
 
         self.votes_data = list(filtered_dict.values())
 

@@ -195,3 +195,12 @@ def test_load_data_from_api_matches_csv_export():
 
     assert len(api_loader.comments_data) == len(csv_loader.comments_data)
     assert len(api_loader.votes_data) == len(csv_loader.votes_data)
+
+def test_track_skipped():
+    # Should not be dups via API
+    api_loader = Loader(report_id=SMALL_CONVO_REPORT_ID, data_source="api")
+    assert len(api_loader.skipped_dup_votes) == 0
+
+    # Should be dups via CSV export
+    csv_loader = Loader(report_id=SMALL_CONVO_REPORT_ID, data_source="csv_export")
+    assert len(csv_loader.skipped_dup_votes) > 0
