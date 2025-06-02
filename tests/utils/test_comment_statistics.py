@@ -44,7 +44,6 @@ def setup_test(fixture):
     return grouped_stats_df, gac_df
 
 
-# TODO: Investigate why "small-with-meta" won't pass.
 @pytest.mark.parametrize(
     "polis_convo_data",
     ["small-no-meta", "small-with-meta", "medium-no-meta", "medium-with-meta"],
