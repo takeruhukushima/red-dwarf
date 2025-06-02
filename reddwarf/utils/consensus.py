@@ -31,12 +31,12 @@ class ConsensusResult(TypedDict):
     disagree: List[ConsensusStatement]
 
 
-# TODO: Allow setting `pick_n`, `prob_threshold`, or `confidence`` to `None` in
+# TODO: Allow setting `pick_max`, `prob_threshold`, or `confidence`` to `None` in
 # order to avoid filtering by that measure.
 def select_consensus_statements(
     vote_matrix: VoteMatrix,
     mod_out_statement_ids: list[int] = [],
-    pick_n=5,
+    pick_max=5,
     prob_threshold: float = 0.5,
     confidence: float = 0.9,
 ) -> ConsensusResult:
@@ -46,7 +46,7 @@ def select_consensus_statements(
     Args:
         vote_matrix (VoteMatrix): The full raw vote matrix (not just clusterable participants)
         mod_out_statement_ids (Optional[list[int]]): Statements to ignore from consensus statement selection
-        pick_n (int): Max number of statements to choose for each direction
+        pick_max (int): Max number of statements to choose for each direction
         prob_threshold (float): The cutoff probability below which statements won't be considered for consensus (Default: 0.5)
         confidence (float): The percent confidence interval in decimal (Default: 0.90 aka 90%)
 
@@ -110,7 +110,7 @@ def select_consensus_statements(
             # Drop the cons-for key from final output.
             {k: v for k, v in st.items() if k != "cons-for"}
             for st in agree_candidates.sort_values("consensus_agree_rank")
-            .head(pick_n)
+            .head(pick_max)
             .reset_index()
             .apply(format_comment_stats, axis=1)
         ]
@@ -122,7 +122,7 @@ def select_consensus_statements(
             # Drop the cons-for key from final output.
             {k: v for k, v in st.items() if k != "cons-for"}
             for st in disagree_candidates.sort_values("consensus_disagree_rank")
-            .head(pick_n)
+            .head(pick_max)
             .reset_index()
             .apply(format_comment_stats, axis=1)
         ]

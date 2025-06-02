@@ -155,7 +155,7 @@ def run_clustering(
     consensus = select_consensus_statements(
         vote_matrix=raw_vote_matrix,
         mod_out_statement_ids=mod_out_statement_ids,
-        pick_n=5,
+        pick_max=5,
         prob_threshold=0.5,
         confidence=0.9,
     )
