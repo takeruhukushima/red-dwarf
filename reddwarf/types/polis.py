@@ -52,7 +52,8 @@ class PolisRepnessStatement(TypedDict):
     n_agree: NotRequired[int]
 
 
-PolisRepness: TypeAlias = dict[str, list[PolisRepnessStatement]]  # str[GroupId]
+# polismath uses str, but int/GroupId probably makes more sense to use.
+PolisRepness: TypeAlias = dict[str | GroupId, list[PolisRepnessStatement]]
 
 PerBaseVoteCounts: TypeAlias = list[int]
 

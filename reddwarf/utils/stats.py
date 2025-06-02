@@ -611,7 +611,7 @@ def select_representative_statements(
         selected = selected[:pick_max]
         # Does the work of agrees-before-disagrees sort in polismath, since "a" before "d".
         selected = sorted(selected, key=lambda row: row["repful-for"])
-        repness[str(gid)] = selected
+        repness[gid] = selected
 
     return repness  # type:ignore
 
