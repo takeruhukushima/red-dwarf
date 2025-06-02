@@ -3,13 +3,21 @@ from pandas import DataFrame
 from sklearn.decomposition import PCA
 from reddwarf.sklearn.cluster import PolisKMeans
 from reddwarf.utils.consensus import select_consensus_statements, ConsensusResult
-from reddwarf.utils.matrix import generate_raw_matrix, simple_filter_matrix, get_clusterable_participant_ids
+from reddwarf.utils.matrix import (
+    generate_raw_matrix,
+    simple_filter_matrix,
+    get_clusterable_participant_ids,
+)
 from reddwarf.utils.pca import run_pca
 from reddwarf.utils.clustering import find_optimal_k
 from dataclasses import dataclass
 import pandas as pd
 
-from reddwarf.utils.stats import calculate_comment_statistics_dataframes, populate_priority_calculations_into_statements_df
+from reddwarf.utils.stats import (
+    calculate_comment_statistics_dataframes,
+    populate_priority_calculations_into_statements_df,
+)
+
 
 @dataclass
 class PolisClusteringResult:
@@ -27,6 +35,7 @@ class PolisClusteringResult:
         participants_df (DataFrame): A dataframe with all intermediary and final participant data/calculations/metadata.
         consensus (ConsensusResult): A dict of up to top 5 statistically statements for each of agree/disagree.
     """
+
     raw_vote_matrix: DataFrame
     filtered_vote_matrix: DataFrame
     pca: PCA
@@ -38,6 +47,7 @@ class PolisClusteringResult:
     statements_df: DataFrame
     participants_df: DataFrame
     consensus: ConsensusResult
+
 
 def run_clustering(
     votes: list[dict],
@@ -83,11 +93,15 @@ def run_clustering(
     # DataFrames each have "x" and "y" columns.
     participants_df, statements_df, pca = run_pca(vote_matrix=filtered_vote_matrix)
 
-    participant_ids_to_cluster = get_clusterable_participant_ids(raw_vote_matrix, vote_threshold=min_user_vote_threshold)
+    participant_ids_to_cluster = get_clusterable_participant_ids(
+        raw_vote_matrix, vote_threshold=min_user_vote_threshold
+    )
     if keep_participant_ids:
         # TODO: Make this an intersection, in case there are members of
         # keep_participant_ids list that aren't represented in vote_matrix.
-        participant_ids_to_cluster = sorted(list(set(participant_ids_to_cluster + keep_participant_ids)))
+        participant_ids_to_cluster = sorted(
+            list(set(participant_ids_to_cluster + keep_participant_ids))
+        )
 
     if force_group_count:
         k_bounds = [force_group_count, force_group_count]
@@ -105,9 +119,11 @@ def run_clustering(
     label_series = pd.Series(
         kmeans.labels_ if kmeans else None,
         index=participant_ids_to_cluster,
-        dtype="Int64", # Allows nullable/NaN values.
+        dtype="Int64",  # Allows nullable/NaN values.
     )
-    participants_df["to_cluster"] = participants_df.index.isin(participant_ids_to_cluster)
+    participants_df["to_cluster"] = participants_df.index.isin(
+        participant_ids_to_cluster
+    )
     participants_df["cluster_id"] = label_series
 
     grouped_stats_df, gac_df = calculate_comment_statistics_dataframes(
@@ -145,10 +161,12 @@ def run_clustering(
         raw_vote_matrix=raw_vote_matrix,
         filtered_vote_matrix=filtered_vote_matrix,
         pca=pca,
-        projected_participants=participants_df.loc[participant_ids_to_cluster, ["x", "y", "cluster_id"]], # deprecate?
-        projected_statements=statements_df.loc[:, ["x", "y"]], # deprecate?
+        projected_participants=participants_df.loc[
+            participant_ids_to_cluster, ["x", "y", "cluster_id"]
+        ],  # deprecate?
+        projected_statements=statements_df.loc[:, ["x", "y"]],  # deprecate?
         kmeans=kmeans,
-        group_aware_consensus=gac_df, # deprecate?
+        group_aware_consensus=gac_df,  # deprecate?
         group_comment_stats=grouped_stats_df,
         statements_df=statements_df,
         participants_df=participants_df,
