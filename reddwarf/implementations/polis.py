@@ -2,6 +2,7 @@ from typing import Optional
 from pandas import DataFrame
 from sklearn.decomposition import PCA
 from reddwarf.sklearn.cluster import PolisKMeans
+from reddwarf.types.polis import PolisRepness
 from reddwarf.utils.consensus import select_consensus_statements, ConsensusResult
 from reddwarf.utils.matrix import (
     generate_raw_matrix,
@@ -16,6 +17,7 @@ import pandas as pd
 from reddwarf.utils.stats import (
     calculate_comment_statistics_dataframes,
     populate_priority_calculations_into_statements_df,
+    select_representative_statements,
 )
 
 
@@ -47,6 +49,7 @@ class PolisClusteringResult:
     statements_df: DataFrame
     participants_df: DataFrame
     consensus: ConsensusResult
+    repness: PolisRepness
 
 
 def run_clustering(
@@ -157,6 +160,13 @@ def run_clustering(
         confidence=0.9,
     )
 
+    repness = select_representative_statements(
+        grouped_stats_df=grouped_stats_df,
+        mod_out_statement_ids=mod_out_statement_ids,
+        pick_max=5,
+        confidence=0.9,
+    )
+
     return PolisClusteringResult(
         raw_vote_matrix=raw_vote_matrix,
         filtered_vote_matrix=filtered_vote_matrix,
@@ -171,4 +181,5 @@ def run_clustering(
         statements_df=statements_df,
         participants_df=participants_df,
         consensus=consensus,
+        repness=repness,
     )
