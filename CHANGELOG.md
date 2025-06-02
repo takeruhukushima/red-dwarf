@@ -7,6 +7,9 @@
 - Add `select_consensus_statements()` function, and wire into Polis implementation.
 - Allow `calculate_comment_statistics()` to work without groups/labels.
 - Generalize `format_comment_stats()` to work for group and consensus statements.
+- Add `select_representative_statements()` to PolisClusteringResult as `repness` key.
+- Rename arg `pick_n` to `pick_max` in `select_consensus_statements()`, for clarity and consistency.
+- Slight change to PolisRepness type, so group IDs now returned as ints.
 
 ### Chores
 
