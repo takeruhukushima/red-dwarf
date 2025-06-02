@@ -10,13 +10,15 @@ GroupId: TypeAlias = IncrementingId
 ParticipantId: TypeAlias = IncrementingId
 StatementId: TypeAlias = IncrementingId
 
-PolisCommentPriorities: TypeAlias = dict[str, float] # str[StatementId]
-PolisUserVoteCounts: TypeAlias = dict[str, int] # str[ParticipantId]
+PolisCommentPriorities: TypeAlias = dict[str, float]  # str[StatementId]
+PolisUserVoteCounts: TypeAlias = dict[str, int]  # str[ParticipantId]
+
 
 class PolisGroupCluster(TypedDict):
     id: GroupId
     members: list[BaseClusterId]
     center: tuple[float, float]
+
 
 # Custom type
 class PolisGroupClusterExpanded(TypedDict):
@@ -24,7 +26,9 @@ class PolisGroupClusterExpanded(TypedDict):
     members: list[ParticipantId]
     center: tuple[float, float]
 
+
 BaseClusterMembership: TypeAlias = list[ParticipantId]
+
 
 class PolisBaseClusters(TypedDict):
     # Each outer list will be the same length, and will be 100 items or less.
@@ -33,6 +37,7 @@ class PolisBaseClusters(TypedDict):
     x: list[float]
     y: list[float]
     count: list[int]
+
 
 class PolisRepnessStatement(TypedDict):
     tid: int
@@ -46,14 +51,17 @@ class PolisRepnessStatement(TypedDict):
     best_agree: NotRequired[bool]
     n_agree: NotRequired[int]
 
-PolisRepness: TypeAlias = dict[str, list[PolisRepnessStatement]] # str[GroupId]
+
+PolisRepness: TypeAlias = dict[str, list[PolisRepnessStatement]]  # str[GroupId]
 
 PerBaseVoteCounts: TypeAlias = list[int]
+
 
 class PolisBaseClusterVoteSummary(TypedDict):
     A: PerBaseVoteCounts
     D: PerBaseVoteCounts
     S: PerBaseVoteCounts
+
 
 class PolisPCA(TypedDict):
     # Each outer list will be the same length, one item for each statement.
@@ -62,6 +70,7 @@ class PolisPCA(TypedDict):
     comment_projection: tuple[list[float], list[float]]
     comment_extremity: list[float]
 
+
 class PolisConsensusStatement(TypedDict):
     tid: StatementId
     n_success: int
@@ -69,21 +78,26 @@ class PolisConsensusStatement(TypedDict):
     p_success: float
     p_test: float
 
+
 class PolisConsensus(TypedDict):
     agree: list[PolisConsensusStatement]
     disagree: list[PolisConsensusStatement]
+
 
 class PolisStatementVoteSummary(TypedDict):
     A: int
     D: int
     S: int
 
+
 class PolisGroupVote(TypedDict):
     n_members: int
-    votes: dict[str, PolisStatementVoteSummary] # str[StatementId]
+    votes: dict[str, PolisStatementVoteSummary]  # str[StatementId]
     id: GroupId
 
-PolisGroupVotes: TypeAlias = dict[str, PolisGroupVote] # str[GroupId]
+
+PolisGroupVotes: TypeAlias = dict[str, PolisGroupVote]  # str[GroupId]
+
 
 class PolisMath(TypedDict):
     tids: list[StatementId]
@@ -107,11 +121,11 @@ class PolisMath(TypedDict):
 
     # Overall statements
     comment_priorities: PolisCommentPriorities
-    group_aware_consensus: dict[str, float] # str[StatementId]
+    group_aware_consensus: dict[str, float]  # str[StatementId]
 
     # Base clusters
     base_clusters: PolisBaseClusters
-    votes_base: dict[str, PolisBaseClusterVoteSummary] # str[StatementId]
+    votes_base: dict[str, PolisBaseClusterVoteSummary]  # str[StatementId]
 
     n: int
     n_cmts: int
