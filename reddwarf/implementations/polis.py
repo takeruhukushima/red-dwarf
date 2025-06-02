@@ -35,7 +35,8 @@ class PolisClusteringResult:
         group_comment_stats (DataFrame): A multi-index dataframes for each statement, indexed by group ID and statement.
         statements_df (DataFrame): A dataframe with all intermediary and final statement data/calculations/metadata.
         participants_df (DataFrame): A dataframe with all intermediary and final participant data/calculations/metadata.
-        consensus (ConsensusResult): A dict of up to top 5 statistically statements for each of agree/disagree.
+        consensus (ConsensusResult): A dict of the most statistically significant statements for each of agree/disagree.
+        repness (PolisRepness): A dict of the most statistically significant statements most representative of each group.
     """
 
     raw_vote_matrix: DataFrame
