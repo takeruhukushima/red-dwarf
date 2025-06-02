@@ -6,6 +6,7 @@ from numpy.testing import assert_array_equal
 
 from reddwarf.utils import stats, polismath, matrix, statements as stmnts
 from tests.test_utils import make_vote_matrix
+from tests import helpers
 from reddwarf.data_loader import Loader
 from reddwarf.types.polis import PolisRepness
 
@@ -115,11 +116,9 @@ def test_calculate_comment_statistics_dataframes_gac_df_real_data(polis_convo_da
     fixture = polis_convo_data
     _, gac_df = setup_test(fixture)
 
-    calculated_gac = {
-        str(pid): float(row["consensus"]) for pid, row in gac_df.iterrows()
-    }
-    expected_gac = fixture.math_data["group-aware-consensus"]
-    assert_dict_equal(calculated_gac, expected_gac)
+    calculated = helpers.simulate_api_response(gac_df["consensus"].items())
+    expected = fixture.math_data["group-aware-consensus"]
+    assert_dict_equal(calculated, expected)
 
 
 def test_calculate_comment_statistics_no_group_labels(make_vote_matrix):

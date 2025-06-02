@@ -14,6 +14,7 @@
 ### Chores
 
 - Update the release process instructions.
+- Added `simulate_api_response()` test helper for easier comparison with polismath output.
 
 ## [0.3.0][] (2025-04-29)
 

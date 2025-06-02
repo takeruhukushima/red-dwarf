@@ -64,12 +64,11 @@ def test_run_clustering_real_data_small(polis_convo_data):
     )
 
     # Check group-aware-consensus calculations.
-    calculated_gac = {
-        str(pid): float(row["consensus"])
-        for pid, row in result.group_aware_consensus.iterrows()
-    }
-    expected_gac = math_data["group-aware-consensus"]
-    assert_dict_equal(calculated_gac, expected_gac)
+    calculated = helpers.simulate_api_response(
+        result.statements_df["consensus"].items()
+    )
+    expected = math_data["group-aware-consensus"]
+    assert_dict_equal(calculated, expected)
 
     # Check PCA components and means
     assert pytest.approx(result.pca.components_[0]) == math_data["pca"]["comps"][0]
@@ -106,7 +105,18 @@ def test_run_clustering_real_data_small(polis_convo_data):
 
     # Check comment-priority calculcation
     expected = math_data["comment-priorities"]
-    calculated = {str(k): v for k, v in result.statements_df["priority"].items()}
+
+    calculated = helpers.simulate_api_response(result.statements_df["priority"].items())
+    assert_dict_equal(expected, calculated)
+
+    # Check representative statements
+    expected = math_data["repness"]
+    calculated = helpers.simulate_api_response(result.repness)
+    assert_dict_equal(expected, calculated)
+
+    # Check consensus statements
+    expected = math_data["consensus"]
+    calculated = result.consensus
     assert_dict_equal(expected, calculated)
 
 

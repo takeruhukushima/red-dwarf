@@ -2,6 +2,7 @@ from sklearn.impute import SimpleImputer
 from reddwarf.types.polis import PolisRepness
 from typing import Any, Union, Literal
 import numpy as np
+import json
 
 
 def get_grouped_statement_ids(
@@ -206,3 +207,13 @@ def calculate_explained_variance(sparse_vote_matrix, means, components):
     explained_variance = np.var(X_projected, axis=0, ddof=1)
 
     return explained_variance
+
+
+def simulate_api_response(data):
+    """
+    Simulates a python object sent through JSON via REST API.
+
+    Main change is that any int keys in python dictionary objects are converted
+    to string keys, because all keys are strings in JSON.
+    """
+    return json.loads(json.dumps(dict(data)))
