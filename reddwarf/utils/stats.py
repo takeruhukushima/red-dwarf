@@ -23,6 +23,7 @@ def one_prop_test(
     # Compute the test statistic
     return 2 * np.sqrt(n) * ((succ / n) - 0.5)
 
+
 # Calculate representativeness two-prop test
 def two_prop_test(
     succ_in: ArrayLike,
@@ -51,9 +52,8 @@ def two_prop_test(
 
     # Compute the test statistic.
     # Suppress divide-by-zero errors, because we correct them below.
-    with np.errstate(divide='ignore', invalid='ignore'):
+    with np.errstate(divide="ignore", invalid="ignore"):
         result = (pi1 - pi2) / denominator
-
 
     return np.where(
         # Handle edge-case when pi_hat == 1 (would be divide-by-zero error)
@@ -64,18 +64,25 @@ def two_prop_test(
         result,
     )
 
+
 def is_significant(z_val: float, confidence: float = 0.90) -> bool:
     """Test whether z-statistic is significant at 90% confidence (one-tailed, right-side)."""
     critical_value = norm.ppf(confidence)  # 90% confidence level, one-tailed
     return z_val > critical_value
 
+
 def is_statement_significant(row: pd.Series, confidence=0.90) -> bool:
     "Decide whether we should count a statement in a group as being representative."
     pat, rat, pdt, rdt = [row[col] for col in ["pat", "rat", "pdt", "rdt"]]
-    is_agreement_significant = is_significant(pat, confidence) and is_significant(rat, confidence)
-    is_disagreement_significant = is_significant(pdt, confidence) and is_significant(rdt, confidence)
+    is_agreement_significant = is_significant(pat, confidence) and is_significant(
+        rat, confidence
+    )
+    is_disagreement_significant = is_significant(pdt, confidence) and is_significant(
+        rdt, confidence
+    )
 
     return is_agreement_significant or is_disagreement_significant
+
 
 def beats_best_by_repness_test(
     this_row: pd.Series,
@@ -112,7 +119,9 @@ def beats_best_of_agrees(
     if best_row is not None:
         if best_row["ra"] > 1.0:
             # If we have a current_best by representativeness estimate, use the more robust measurement
-            repness_metric_agr = lambda row: row["ra"] * row["rat"] * row["pa"] * row["pat"]
+            repness_metric_agr = (
+                lambda row: row["ra"] * row["rat"] * row["pa"] * row["pat"]
+            )
             return repness_metric_agr(this_row) > repness_metric_agr(best_row)
         else:
             # If we have current_best, but only by probability estimate, just shoot for something generally agreed upon
@@ -121,11 +130,14 @@ def beats_best_of_agrees(
 
     # Otherwise, accept if either repness or probability look generally good.
     # TODO: Hardcode significance at 90%, so lways one statement for group?
-    return (is_significant(this_row["pat"], confidence) or
-        (this_row["ra"] > 1.0 and this_row["pa"] > 0.5))
+    return is_significant(this_row["pat"], confidence) or (
+        this_row["ra"] > 1.0 and this_row["pa"] > 0.5
+    )
+
 
 # For making it more legible to get index of agree/disagree votes in numpy array.
 votes = SimpleNamespace(A=0, D=1)
+
 
 def count_votes(
     values: ArrayLike,
@@ -139,24 +151,31 @@ def count_votes(
         # Count any non-missing values.
         return np.sum(np.isfinite(values), axis=0)
 
+
 def count_disagree(values: ArrayLike) -> np.int64 | NDArray[np.int64]:
     return count_votes(values, -1)
+
 
 def count_agree(values: ArrayLike) -> np.int64 | NDArray[np.int64]:
     return count_votes(values, 1)
 
+
 def count_all_votes(values: ArrayLike) -> np.int64 | NDArray[np.int64]:
     return count_votes(values)
 
+
 def probability(count, total, pseudo_count: ArrayLike = 1):
     """Probability with Laplace smoothing"""
-    return (pseudo_count + count ) / (np.multiply(pseudo_count, 2) + total)
+    return (pseudo_count + count) / (np.multiply(pseudo_count, 2) + total)
+
 
 def calculate_comment_statistics(
     vote_matrix: VoteMatrix,
     cluster_labels: Optional[list[int] | NDArray[np.integer]] = None,
     pseudo_count: int = 1,
-) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+) -> Tuple[
+    np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray
+]:
     """
     Calculates comparative statement statistics across all votes and groups, using only efficient numpy operations.
 
@@ -199,8 +218,10 @@ def calculate_comment_statistics(
     statement_ids = vote_matrix.columns
 
     # Set up all the variables to be populated.
-    N_g_c = np.empty([group_count, len(statement_ids)], dtype='int32')
-    N_v_g_c = np.empty([len(votes.__dict__), group_count, len(statement_ids)], dtype='int32')
+    N_g_c = np.empty([group_count, len(statement_ids)], dtype="int32")
+    N_v_g_c = np.empty(
+        [len(votes.__dict__), group_count, len(statement_ids)], dtype="int32"
+    )
     P_v_g_c = np.empty([len(votes.__dict__), group_count, len(statement_ids)])
     R_v_g_c = np.empty([len(votes.__dict__), group_count, len(statement_ids)])
     P_v_g_c_test = np.empty([len(votes.__dict__), group_count, len(statement_ids)])
@@ -209,7 +230,7 @@ def calculate_comment_statistics(
 
     for gid in range(group_count):
         # Create mask for the participants in target group
-        in_group_mask = (np.asarray(cluster_labels) == gid)
+        in_group_mask = np.asarray(cluster_labels) == gid
         X_in_group = X[in_group_mask]
 
         # Count any votes [-1, 0, 1] for all statements/features at once
@@ -217,17 +238,27 @@ def calculate_comment_statistics(
         # NON-GROUP STATS
 
         # For in-group
-        n_agree_in_group    = N_v_g_c[votes.A, gid, :] = count_agree(X_in_group)    # na
-        n_disagree_in_group = N_v_g_c[votes.D, gid, :] = count_disagree(X_in_group) # nd
-        n_votes_in_group    = N_g_c[gid, :] = count_all_votes(X_in_group)           # ns
+        n_agree_in_group = N_v_g_c[votes.A, gid, :] = count_agree(X_in_group)  # na
+        n_disagree_in_group = N_v_g_c[votes.D, gid, :] = count_disagree(
+            X_in_group
+        )  # nd
+        n_votes_in_group = N_g_c[gid, :] = count_all_votes(X_in_group)  # ns
 
         # Calculate probabilities
-        p_agree_in_group    = P_v_g_c[votes.A, gid, :] = probability(n_agree_in_group, n_votes_in_group, pseudo_count)    # pa
-        p_disagree_in_group = P_v_g_c[votes.D, gid, :] = probability(n_disagree_in_group, n_votes_in_group, pseudo_count) # pd
+        p_agree_in_group = P_v_g_c[votes.A, gid, :] = probability(
+            n_agree_in_group, n_votes_in_group, pseudo_count
+        )  # pa
+        p_disagree_in_group = P_v_g_c[votes.D, gid, :] = probability(
+            n_disagree_in_group, n_votes_in_group, pseudo_count
+        )  # pd
 
         # Calculate probability test z-scores
-        P_v_g_c_test[votes.A, gid, :] = one_prop_test(n_agree_in_group, n_votes_in_group)    # pat
-        P_v_g_c_test[votes.D, gid, :] = one_prop_test(n_disagree_in_group, n_votes_in_group) # pdt
+        P_v_g_c_test[votes.A, gid, :] = one_prop_test(
+            n_agree_in_group, n_votes_in_group
+        )  # pat
+        P_v_g_c_test[votes.D, gid, :] = one_prop_test(
+            n_disagree_in_group, n_votes_in_group
+        )  # pdt
 
         # GROUP COMPARISON STATS
 
@@ -240,16 +271,27 @@ def calculate_comment_statistics(
         n_votes_out_group = count_all_votes(X_out_group)
 
         # Calculate out-group probabilities
-        p_agree_out_group    = probability(n_agree_out_group, n_votes_out_group, pseudo_count)
-        p_disagree_out_group = probability(n_disagree_out_group, n_votes_out_group, pseudo_count)
+        p_agree_out_group = probability(
+            n_agree_out_group, n_votes_out_group, pseudo_count
+        )
+        p_disagree_out_group = probability(
+            n_disagree_out_group, n_votes_out_group, pseudo_count
+        )
 
         # Calculate representativeness
-        R_v_g_c[votes.A, gid, :] = p_agree_in_group / p_agree_out_group       # ra
-        R_v_g_c[votes.D, gid, :] = p_disagree_in_group / p_disagree_out_group # rd
+        R_v_g_c[votes.A, gid, :] = p_agree_in_group / p_agree_out_group  # ra
+        R_v_g_c[votes.D, gid, :] = p_disagree_in_group / p_disagree_out_group  # rd
 
         # Calculate representativeness test z-scores
-        R_v_g_c_test[votes.A, gid, :] = two_prop_test(n_agree_in_group, n_agree_out_group, n_votes_in_group, n_votes_out_group)       # rat
-        R_v_g_c_test[votes.D, gid, :] = two_prop_test(n_disagree_in_group, n_disagree_out_group, n_votes_in_group, n_votes_out_group) # rdt
+        R_v_g_c_test[votes.A, gid, :] = two_prop_test(
+            n_agree_in_group, n_agree_out_group, n_votes_in_group, n_votes_out_group
+        )  # rat
+        R_v_g_c_test[votes.D, gid, :] = two_prop_test(
+            n_disagree_in_group,
+            n_disagree_out_group,
+            n_votes_in_group,
+            n_votes_out_group,
+        )  # rdt
 
     # Calculate group-aware consensus
     # For each statement, multiply probabilities across groups (aka the first axis=0)
@@ -258,13 +300,13 @@ def calculate_comment_statistics(
     C_v_c[votes.D, :] = P_v_g_c[votes.D, :, :].prod(axis=0)
 
     return (
-        N_g_c, # ns
-        N_v_g_c, # na / nd
-        P_v_g_c, # pa / pd
-        R_v_g_c, # ra / rd
-        P_v_g_c_test, # pat / pdt
-        R_v_g_c_test, # rat / rdt
-        C_v_c, # gac
+        N_g_c,  # ns
+        N_v_g_c,  # na / nd
+        P_v_g_c,  # pa / pd
+        R_v_g_c,  # ra / rd
+        P_v_g_c_test,  # pat / pdt
+        R_v_g_c_test,  # rat / rdt
+        C_v_c,  # gac
     )
 
 
@@ -280,9 +322,7 @@ def format_comment_stats(statement: pd.Series) -> PolisRepnessStatement:
         PolisRepnessStatement: A dict with keys matching expected Polis format.
     """
     has_repness = "rat" in statement and "rdt" in statement
-    format_style = (
-        "group-repness" if has_repness else "consensus"
-    )
+    format_style = "group-repness" if has_repness else "consensus"
 
     # Define the field mappings
     agree_fields = {
@@ -350,47 +390,65 @@ def calculate_comment_statistics_dataframes(
         pd.DataFrame: DataFrame (MultiIndex on group/statement) containing verbose statistics for each statement per group.
         pd.DataFrame: DataFrame containing group-aware consensus scores for each statement.
     """
-    N_g_c, N_v_g_c, P_v_g_c, R_v_g_c, P_v_g_c_test, R_v_g_c_test, C_v_c = calculate_comment_statistics(
-        vote_matrix=vote_matrix,
-        cluster_labels=cluster_labels,
-        pseudo_count=pseudo_count,
+    N_g_c, N_v_g_c, P_v_g_c, R_v_g_c, P_v_g_c_test, R_v_g_c_test, C_v_c = (
+        calculate_comment_statistics(
+            vote_matrix=vote_matrix,
+            cluster_labels=cluster_labels,
+            pseudo_count=pseudo_count,
+        )
     )
 
     group_count = len(set(cluster_labels))
     group_frames = []
     for group_id in range(group_count):
-        group_df = pd.DataFrame({
-            'na':  N_v_g_c[votes.A, group_id, :],      # number agree votes
-            'nd':  N_v_g_c[votes.D, group_id, :],      # number disagree votes
-            'ns':  N_g_c[group_id, :],                 # number seen/total/non-missing votes
-            'pa':  P_v_g_c[votes.A, group_id, :],      # probability agree
-            'pd':  P_v_g_c[votes.D, group_id, :],      # probability disagree
-            'pat': P_v_g_c_test[votes.A, group_id, :], # probability agree test z-score
-            'pdt': P_v_g_c_test[votes.D, group_id, :], # probability disagree test z-score
-            'ra':  R_v_g_c[votes.A, group_id, :],      # repness of agree (representativeness)
-            'rd':  R_v_g_c[votes.D, group_id, :],      # repness of disagree (representativeness)
-            'rat': R_v_g_c_test[votes.A, group_id, :], # repress of agree test z-score
-            'rdt': R_v_g_c_test[votes.D, group_id, :], # repress of disagree test z-score
-        }, index=vote_matrix.columns)
-        group_df['group_id'] = group_id
-        group_df['statement_id'] = vote_matrix.columns
+        group_df = pd.DataFrame(
+            {
+                "na": N_v_g_c[votes.A, group_id, :],  # number agree votes
+                "nd": N_v_g_c[votes.D, group_id, :],  # number disagree votes
+                "ns": N_g_c[group_id, :],  # number seen/total/non-missing votes
+                "pa": P_v_g_c[votes.A, group_id, :],  # probability agree
+                "pd": P_v_g_c[votes.D, group_id, :],  # probability disagree
+                "pat": P_v_g_c_test[
+                    votes.A, group_id, :
+                ],  # probability agree test z-score
+                "pdt": P_v_g_c_test[
+                    votes.D, group_id, :
+                ],  # probability disagree test z-score
+                "ra": R_v_g_c[
+                    votes.A, group_id, :
+                ],  # repness of agree (representativeness)
+                "rd": R_v_g_c[
+                    votes.D, group_id, :
+                ],  # repness of disagree (representativeness)
+                "rat": R_v_g_c_test[
+                    votes.A, group_id, :
+                ],  # repress of agree test z-score
+                "rdt": R_v_g_c_test[
+                    votes.D, group_id, :
+                ],  # repress of disagree test z-score
+            },
+            index=vote_matrix.columns,
+        )
+        group_df["group_id"] = group_id
+        group_df["statement_id"] = vote_matrix.columns
         group_frames.append(group_df)
     # Create a MultiIndex dataframe
-    grouped_stats_df = (
-        pd.concat(group_frames, ignore_index=True)
-          .set_index(['group_id', 'statement_id'])
+    grouped_stats_df = pd.concat(group_frames, ignore_index=True).set_index(
+        ["group_id", "statement_id"]
     )
 
     group_aware_consensus_df = pd.DataFrame(
-        { "consensus": C_v_c[votes.A, :] },
+        {"consensus": C_v_c[votes.A, :]},
         index=vote_matrix.columns,
     )
 
     return grouped_stats_df, group_aware_consensus_df
 
+
 def repness_metric(df: pd.DataFrame) -> pd.Series:
     metric = df["repness"] * df["repness-test"] * df["p-success"] * df["p-test"]
     return metric
+
 
 # Reference: https://github.com/compdemocracy/polis/blob/fd440c3e3ca302d08ce3cca870fc39b834c96b86/math/src/polismath/math/conversation.clj#L308C1-L312C28
 def importance_metric(
@@ -400,7 +458,9 @@ def importance_metric(
     extremity: ArrayLike,
     pseudo_count: ArrayLike = 1,
 ) -> np.ndarray:
-    n_agree, n_disagree, n_total, extremity = map(np.asarray, (n_agree, n_disagree, n_total, extremity))  # Ensure inputs are NumPy arrays
+    n_agree, n_disagree, n_total, extremity = map(
+        np.asarray, (n_agree, n_disagree, n_total, extremity)
+    )  # Ensure inputs are NumPy arrays
     n_pass = n_total - (n_agree + n_disagree)
     prob_agree = probability(n_agree, n_total, pseudo_count)
     prob_pass = probability(n_pass, n_total, pseudo_count)
@@ -416,6 +476,7 @@ def importance_metric(
     #     (The more a statement contributes to principal components, the more upscaling.)
     importance = prob_agree * prob_engagement * (1 + extremity)
     return importance
+
 
 # Reference: https://github.com/compdemocracy/polis/blob/fd440c3e3ca302d08ce3cca870fc39b834c96b86/math/src/polismath/math/conversation.clj#L318-L327
 def priority_metric(
@@ -443,14 +504,18 @@ def priority_metric(
         float | np.ndarray[float]: A priority metric score between 0 and infinity.
     """
     # Ensure inputs are NumPy arrays
-    n_agree, n_disagree, n_total, extremity = map(np.asarray, (n_agree, n_disagree, n_total, extremity))
-    importance = importance_metric(n_agree, n_disagree, n_total, extremity, pseudo_count)
+    n_agree, n_disagree, n_total, extremity = map(
+        np.asarray, (n_agree, n_disagree, n_total, extremity)
+    )
+    importance = importance_metric(
+        n_agree, n_disagree, n_total, extremity, pseudo_count
+    )
     # Form in the academic paper: (transformed)
     # newness_scale_factor = 1 + 2**(3 - (n_total/5)))
     # newness_scale_factor = 1 + 2**3 * (2**(-(n_total/5)))
     # newness_scale_factor = 1 + 8    * (2**(-(n_total/5)))
     NO_VOTES_SCALE_FACTOR = 9
-    newness_scale_factor = 1 + (NO_VOTES_SCALE_FACTOR - 1) * np.power(2, -(n_total/5))
+    newness_scale_factor = 1 + (NO_VOTES_SCALE_FACTOR - 1) * np.power(2, -(n_total / 5))
     priority = importance * newness_scale_factor
 
     # Assign meta priority where is_meta is True
@@ -458,6 +523,7 @@ def priority_metric(
 
     boosted_bias_priority = np.power(priority, 2)
     return boosted_bias_priority
+
 
 # Figuring out select-rep-comments flow
 # See: https://github.com/compdemocracy/polis/blob/7bf9eccc287586e51d96fdf519ae6da98e0f4a70/math/src/polismath/math/repness.clj#L209C7-L209C26
@@ -484,8 +550,10 @@ def select_representative_statements(
     """
     repness = {}
     # TODO: Should this be done elsewhere? A column in MultiIndex dataframe?
-    mod_out_mask = grouped_stats_df.index.get_level_values('statement_id').isin(mod_out_statement_ids)
-    grouped_stats_df = grouped_stats_df[~mod_out_mask] # type: ignore
+    mod_out_mask = grouped_stats_df.index.get_level_values("statement_id").isin(
+        mod_out_statement_ids
+    )
+    grouped_stats_df = grouped_stats_df[~mod_out_mask]  # type: ignore
     for gid, group_df in grouped_stats_df.groupby(level="group_id"):
         # Bring statement_id into regular column.
         group_df = group_df.reset_index()
@@ -510,14 +578,16 @@ def select_representative_statements(
             # Finalize statements into output format.
             # TODO: Figure out how to finalize only at end in output. Change repness_metric?
             sufficient_statements = (
-                pd.DataFrame([
-                    format_comment_stats(row)
+                pd.DataFrame(
+                    [
+                        format_comment_stats(row)
                         for _, row in sufficient_statements.iterrows()
-                ])
-                    # Create a column to sort repnress, then remove.
-                    .assign(repness_metric=repness_metric)
-                    .sort_values(by="repness_metric", ascending=False)
-                    .drop(columns="repness_metric")
+                    ]
+                )
+                # Create a column to sort repnress, then remove.
+                .assign(repness_metric=repness_metric)
+                .sort_values(by="repness_metric", ascending=False)
+                .drop(columns="repness_metric")
             )
 
         if best_agree is not None:
@@ -532,31 +602,37 @@ def select_representative_statements(
 
         selected = best_head
         selected = selected + [
-            row.to_dict() for _, row in sufficient_statements.iterrows()
+            row.to_dict()
+            for _, row in sufficient_statements.iterrows()
             if best_head
-                # Skip any statements already in best_head
-                and best_head[0]["tid"] != row["tid"]
+            # Skip any statements already in best_head
+            and best_head[0]["tid"] != row["tid"]
         ]
         selected = selected[:pick_max]
         # Does the work of agrees-before-disagrees sort in polismath, since "a" before "d".
         selected = sorted(selected, key=lambda row: row["repful-for"])
         repness[str(gid)] = selected
 
-    return repness # type:ignore
+    return repness  # type:ignore
+
 
 def populate_priority_calculations_into_statements_df(
     statements_df: pd.DataFrame,
     vote_matrix: VoteMatrix,
 ) -> pd.DataFrame:
     statements_df = statements_df.copy()
-    statements_df["extremity"] = calculate_extremity(statements_df.loc[:, ["x", "y"]].transpose())
+    statements_df["extremity"] = calculate_extremity(
+        statements_df.loc[:, ["x", "y"]].transpose()
+    )
 
     n_agree = (vote_matrix == 1).sum(axis=0)
     n_disagree = (vote_matrix == -1).sum(axis=0)
     n_total = vote_matrix.notna().sum(axis=0)
 
     statements_df["n_agree"] = n_agree.reindex(statements_df.index).astype("Int64")
-    statements_df["n_disagree"] = n_disagree.reindex(statements_df.index).astype("Int64")
+    statements_df["n_disagree"] = n_disagree.reindex(statements_df.index).astype(
+        "Int64"
+    )
     statements_df["n_total"] = n_total.reindex(statements_df.index).astype("Int64")
 
     statements_df["priority"] = priority_metric(
