@@ -18,6 +18,7 @@
 ### Fixes
 - Handle when `is-meta` and `is-seed` columns arrive in CSV import.
   [`#55`](https://github.com/polis-community/red-dwarf/issues/55)
+- Handle loading comments data from API when `is_meta` missing in CSV import.
 
 ### Chores
 
