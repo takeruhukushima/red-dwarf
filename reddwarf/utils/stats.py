@@ -542,8 +542,8 @@ def select_representative_statements(
     Args:
         grouped_stats_df (pd.DataFrame): MultiIndex Dataframe of statement statistics, indexed by group and statement.
         mod_out_statement_ids (list[int]): A list of statements to ignore from selection algorithm
-        pick_max (int): The max number of statements that will be returned per group
-        confidence (float): A decimal percentage representing confidence interval
+        pick_max (int): Max number of statements selected per group
+        confidence (float): Percent confidence interval (in decimal), within which selected statements are deemed significant
 
     Returns:
         PolisRepness: A dict object with lists of statements keyed to groups, matching Polis format.

@@ -71,6 +71,20 @@ use in Scikit-Learn workflows, pipelines, and APIs.
     options:
         show_root_heading: true
 
+## `reddwarf.utils.stats`
+
+### ::: reddwarf.utils.stats.select_representative_statements
+    options:
+        show_root_heading: true
+
+### ::: reddwarf.utils.stats.calculate_comment_statistics
+    options:
+        show_root_heading: true
+
+### ::: reddwarf.utils.stats.calculate_comment_statistics_dataframes
+    options:
+        show_root_heading: true
+
 ## `reddwarf.utils`
 
 (These are in the process of being either moved or deprecated.)

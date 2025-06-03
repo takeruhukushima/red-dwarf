@@ -12,6 +12,7 @@
 - Slight change to PolisRepness type, so group IDs now returned as ints.
 - Add `print_selected_statements()` presenter for inspecting `PolisClusteringResult`.
 - Add `print_consensus_statements()` presenter for inspecting `PolisClusteringResult`.
+- Allow `pick_max` and `confidence` interval args to be set in `polis.run_clustering()`.
 
 ### Chores
 

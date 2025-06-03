@@ -46,9 +46,9 @@ def select_consensus_statements(
     Args:
         vote_matrix (VoteMatrix): The full raw vote matrix (not just clusterable participants)
         mod_out_statement_ids (Optional[list[int]]): Statements to ignore from consensus statement selection
-        pick_max (int): Max number of statements to choose for each direction
-        prob_threshold (float): The cutoff probability below which statements won't be considered for consensus (Default: 0.5)
-        confidence (float): The percent confidence interval in decimal (Default: 0.90 aka 90%)
+        pick_max (int): Max number of statements selected per agree/disagree direction
+        prob_threshold (float): The cutoff probability below which statements won't be considered for consensus
+        confidence (float): Percent confidence interval (in decimal), within which selected statements are deemed significant
 
     Returns:
         A dict of agree/disagree formatted statement dicts.

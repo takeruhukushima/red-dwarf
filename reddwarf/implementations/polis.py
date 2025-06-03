@@ -63,6 +63,8 @@ def run_clustering(
     max_group_count: int = 5,
     force_group_count: Optional[int] = None,
     random_state: Optional[int] = None,
+    pick_max: int = 5,
+    confidence: float = 0.9,
 ) -> PolisClusteringResult:
     """
     An essentially feature-complete implementation of the Polis clustering algorithm.
@@ -82,6 +84,9 @@ def run_clustering(
         init_centers (list[list[float]]): Initial guesses of [x,y] coordinates for k-means (Length of list must match max_group_count)
         force_group_count (int): Instead of using silhouette scores, force a specific number of groups (k value)
         random_state (int): If set, will force determinism during k-means clustering
+        confidence (float): Percent confidence interval (in decimal), within which selected statements are deemed significant
+        pick_max (int): Max number of statements selected for consensus (per direction) and representative (per group).
+
 
     Returns:
         PolisClusteringResult: A dataclass containing clustering results, including intermediate calculations.
@@ -156,16 +161,16 @@ def run_clustering(
     consensus = select_consensus_statements(
         vote_matrix=raw_vote_matrix,
         mod_out_statement_ids=mod_out_statement_ids,
-        pick_max=5,
+        pick_max=pick_max,
+        confidence=confidence,
         prob_threshold=0.5,
-        confidence=0.9,
     )
 
     repness = select_representative_statements(
         grouped_stats_df=grouped_stats_df,
         mod_out_statement_ids=mod_out_statement_ids,
-        pick_max=5,
-        confidence=0.9,
+        pick_max=pick_max,
+        confidence=confidence,
     )
 
     return PolisClusteringResult(
