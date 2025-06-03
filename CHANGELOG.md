@@ -15,6 +15,10 @@
 - Allow `pick_max` and `confidence` interval args to be set in `polis.run_clustering()`.
 - Allow `get_corrected_centroid_guesses()` to unflip each axis if correction not needed.
 
+### Fixes
+- Handle when `is-meta` and `is-seed` columns arrive in CSV import.
+  [`#55`](https://github.com/polis-community/red-dwarf/issues/55)
+
 ### Chores
 
 - Update the release process instructions.
