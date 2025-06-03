@@ -127,10 +127,18 @@ class Loader():
         # See: https://github.com/polis-community/red-dwarf/issues/55
         if self._is_statement_meta_field_missing():
             import warnings
-            warnings.warn("CSV import is missing is_meta field. Loading comments data from API instead...")
-            self.load_api_data_report()
-            self.conversation_id = self.report_data["conversation_id"]
-            self.load_api_data_comments()
+            warnings.warn("CSV import is missing is_meta field. Attempting to load comments data from API instead...")
+            try:
+                if self.report_id and not self.conversation_id:
+                    self.load_api_data_report()
+                    self.conversation_id = self.report_data["conversation_id"]
+                self.load_api_data_comments()
+            except Exception:
+                raise ValueError(" ".join([
+                    "Due to an upstream bug, we must patch CSV exports using the API,",
+                    "so conversation_id or report_id is required.",
+                    "See: https://github.com/polis-community/red-dwarf/issues/56",
+                ]))
 
         # When multiple votes (same tid and pid), keep only most recent (vs first).
         self.filter_duplicate_votes(keep="recent")
