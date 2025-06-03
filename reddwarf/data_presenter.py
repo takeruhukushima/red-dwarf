@@ -8,6 +8,7 @@ import numpy as np
 import seaborn as sns
 
 from reddwarf.implementations.polis import PolisClusteringResult
+from reddwarf.utils.consensus import ConsensusResult
 
 GROUP_LABEL_NAMES = ["A", "B", "C", "D", "E", "F", "G", "H"]
 
@@ -154,6 +155,67 @@ def generate_figure(
     return None
 
 
+def print_selected_statements(
+    result: PolisClusteringResult, statements_data: list[dict]
+) -> None:
+    """
+    Print formatted output of consensus and group-representative statements from Polis algorithm.
+
+    Arguments:
+        result (PolisClusteringResult): The result object of the red-dwarf polis implementation.
+
+    Returns:
+        None
+    """
+    print("# CONSENSUS STATEMENTS")
+    print()
+    print_consensus(consensus=result.consensus, statements_data=statements_data)
+
+    print()
+
+    print("# GROUP-REPRESENTATIVE STATEMENTS")
+    print()
+    print_repness(repness=result.repness, statements_data=statements_data)
+
+
+def print_consensus(consensus: ConsensusResult, statements_data: list[dict]) -> None:
+    """
+    Helper function to format printed output of Polis repness object.
+
+    Arguments:
+        consensus (ConsensusResult): Data that matches structure from polismath API
+        statements_data (list[dict]): Statement data with keys `statement_id` and `txt`
+
+    Returns:
+        None
+    """
+    for direction, statements in consensus.items():
+        print(f"## FOR {direction.upper()}MENT")
+        print()
+        if not statements:
+            print("None.")
+            print()
+        else:
+            for cons_st in list(statements):
+                st_data = [
+                    st for st in statements_data if st["statement_id"] == cons_st["tid"]
+                ][0]
+                tmpl = "\n".join(
+                    [
+                        "* {txt}\n"
+                        "    {percent}% of everyone who voted on statement {statement_id} {direction}d.\n"
+                    ]
+                )
+                print(
+                    tmpl.format(
+                        txt=st_data["txt"],
+                        percent=int((cons_st["n-success"] / cons_st["n-trials"]) * 100),
+                        statement_id=cons_st["tid"],
+                        direction=direction,
+                    )
+                )
+
+
 def print_repness(
     repness: PolisRepness,
     statements_data: list[dict],
@@ -162,7 +224,7 @@ def print_repness(
     Helper function to format printed output of Polis repness object.
 
     Arguments:
-        repness (dict): Repness dict that matches structure from polismath API
+        repness (PolisRepness): Data that matches structure from polismath API
         statements_data (list[dict]): Statement data with keys `statement_id` and `txt`
 
     Returns:
@@ -171,7 +233,8 @@ def print_repness(
     for gid, repful_statements in repness.items():
         gid = int(gid)
         group_label = GROUP_LABEL_NAMES[gid]
-        print("GROUP {group_label}".format(group_label=group_label))
+        print("## GROUP {group_label}".format(group_label=group_label))
+        print()
 
         for rep_st in repful_statements:
             st_data = [

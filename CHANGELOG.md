@@ -10,6 +10,8 @@
 - Add `select_representative_statements()` to PolisClusteringResult as `repness` key.
 - Rename arg `pick_n` to `pick_max` in `select_consensus_statements()`, for clarity and consistency.
 - Slight change to PolisRepness type, so group IDs now returned as ints.
+- Add `print_selected_statements()` presenter for inspecting `PolisClusteringResult`.
+- Add `print_consensus_statements()` presenter for inspecting `PolisClusteringResult`.
 
 ### Chores
 
