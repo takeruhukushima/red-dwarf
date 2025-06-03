@@ -156,7 +156,8 @@ def create_bidirectional_id_maps(base_clusters):
 def get_corrected_centroid_guesses(
     polis_math_data: dict,
     source: Literal["group-clusters", "base-clusters"] = "group-clusters",
-    skip_correction: bool = False,
+    flip_x: bool = True,
+    flip_y: bool = True,
 ):
     """
     A helper to extract and correct centroid guesses from polismath data.
@@ -164,7 +165,7 @@ def get_corrected_centroid_guesses(
     This is helpful to seed new rounds of KMeans locally.
 
     NOTE: It seems that there's an inversion somewhere in the polis codebase, and so
-    we need to invert their coordinates in relation to ours.
+    we usually (but not always) need to invert their coordinates in relation to ours.
 
     Given the consistency of this intervention, it's likely not a PCA artifact,
     and instead relates to using inverting the sign of agree/disagree in
@@ -177,7 +178,8 @@ def get_corrected_centroid_guesses(
     Arguments:
         polis_math_data (dict): The polismath data from the Polis API
         source (str): Where to extract centroid data from. One of "group-clusters" or "base-clusters".
-        skip_correction (bool): Whether to skip correction (helpful for debugging)
+        flip_x (bool): Whether to correctively flip X sign (usually helpful)
+        flip_y (bool): Whether to correctively flip Y sign (usually helpful)
 
     Returns:
         centroids: A list of centroid [x,y] coord guesses
@@ -197,8 +199,11 @@ def get_corrected_centroid_guesses(
         # Defensive fallback in case `source` comes from dynamic or untyped input
         raise ValueError(f"Unknown source '{source}'. Must be 'group-clusters' or 'base-clusters'.")
 
-    if skip_correction:
-        return extracted_centroids
-    else:
-        corrected_centroids = [[-xy[0], -xy[1]] for xy in extracted_centroids]
-        return corrected_centroids
+    corrected_centroids = [
+        [
+            -xy[0] if flip_x else xy[0],
+            -xy[1] if flip_y else xy[1],
+        ] for xy in extracted_centroids
+    ]
+
+    return corrected_centroids

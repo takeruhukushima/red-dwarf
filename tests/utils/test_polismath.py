@@ -2,6 +2,7 @@ import pytest
 from reddwarf.utils import polismath
 from tests.fixtures import polis_convo_data
 from reddwarf.utils import matrix as MatrixUtils
+from reddwarf.utils.polismath import get_corrected_centroid_guesses
 from reddwarf.data_loader import Loader
 
 # TODO: Figure out if in-conv is always equivalent. If so, remove this test.
@@ -45,6 +46,43 @@ def test_user_vote_count_sanity_check(polis_convo_data):
 
     assert expected_user_vote_counts == actual_user_vote_counts.to_dict()
 
-@pytest.mark.skip
-def test_get_corrected_centroid_guesses():
-    raise NotImplementedError
+@pytest.fixture
+def mock_math_data():
+    return {
+        "group-clusters": [
+            {"center": [1.0, 2.0]},
+            {"center": [-3.0, 4.0]}
+        ],
+        "base-clusters": {
+            "x": [5.0, -6.0],
+            "y": [7.0, -8.0]
+        }
+    }
+
+def test_get_corrected_centroid_guesses_default_flip(mock_math_data):
+    result = get_corrected_centroid_guesses(mock_math_data)
+    assert result == [[-1.0, -2.0], [3.0, -4.0]]
+
+def test_get_corrected_centroid_guesses_unflip_x(mock_math_data):
+    result = get_corrected_centroid_guesses(mock_math_data, flip_x=False)
+    assert result == [[1.0, -2.0], [-3.0, -4.0]]
+
+def test_get_corrected_centroid_guesses_unflip_y(mock_math_data):
+    result = get_corrected_centroid_guesses(mock_math_data, flip_y=False)
+    assert result == [[-1.0, 2.0], [3.0, 4.0]]
+
+def test_get_corrected_centroid_guesses_group_unflip_both(mock_math_data):
+    result = get_corrected_centroid_guesses(mock_math_data, source="group-clusters", flip_x=False, flip_y=False)
+    assert result == [[1.0, 2.0], [-3.0, 4.0]]
+
+def test_get_corrected_centroid_guesses_base_clusters_unflip_x(mock_math_data):
+    result = get_corrected_centroid_guesses(mock_math_data, source="base-clusters", flip_x=False)
+    assert result == [[5.0, -7.0], [-6.0, 8.0]]
+
+def test_get_corrected_centroid_guesses_base_clusters_unflip_y(mock_math_data):
+    result = get_corrected_centroid_guesses(mock_math_data, source="base-clusters", flip_y=False)
+    assert result == [[-5.0, 7.0], [6.0, -8.0]]
+
+def test_get_corrected_centroid_guesses_unknown_source(mock_math_data):
+    with pytest.raises(ValueError, match="Unknown source 'invalid-source'"):
+        get_corrected_centroid_guesses(mock_math_data, source="invalid-source")
