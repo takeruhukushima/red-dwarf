@@ -12,29 +12,46 @@ from tests import helpers
 
 # This test will only match polismath for sub-100 participant convos.
 # TODO: Investigate why this small convo fails: "r5apwkphpuxxhf9wnfemj"
-@pytest.mark.parametrize("polis_convo_data", ["small-no-meta", "small-with-meta"], indirect=True)
+@pytest.mark.parametrize(
+    "polis_convo_data", ["small-no-meta", "small-with-meta"], indirect=True
+)
 def test_run_clustering_real_data_small(polis_convo_data):
     fixture = polis_convo_data
-    math_data = helpers.flip_signs_by_key(nested_dict=fixture.math_data, keys=["pca.center", "pca.comment-projection", "base-clusters.x", "base-clusters.y", "group-clusters[*].center"])
+    math_data = helpers.flip_signs_by_key(
+        nested_dict=fixture.math_data,
+        keys=[
+            "pca.center",
+            "pca.comment-projection",
+            "base-clusters.x",
+            "base-clusters.y",
+            "group-clusters[*].center",
+        ],
+    )
 
     # We force kmeans to find a specific value because Polis does this for something they call k-smoothing.
     # TODO: Get k-smoothing working, and simulate how k is held back.
     force_group_count = len(math_data["group-clusters"])
 
     # Transpose base cluster coords into participant_ids
-    expected_projected_ptpts = helpers.transform_base_clusters_to_participant_coords(math_data["base-clusters"])
+    expected_projected_ptpts = helpers.transform_base_clusters_to_participant_coords(
+        math_data["base-clusters"]
+    )
 
     max_group_count = 5
     init_centers = [group["center"] for group in math_data["group-clusters"]]
 
-    loader = Loader(filepaths=[
-        f"{fixture.data_dir}/votes.json",
-        # Loading these helps generate mod_out_statement_ids
-        f"{fixture.data_dir}/comments.json",
-        f"{fixture.data_dir}/conversation.json",
-    ])
+    loader = Loader(
+        filepaths=[
+            f"{fixture.data_dir}/votes.json",
+            # Loading these helps generate mod_out_statement_ids
+            f"{fixture.data_dir}/comments.json",
+            f"{fixture.data_dir}/conversation.json",
+        ]
+    )
 
-    _, _, mod_out_statement_ids, meta_statement_ids = process_statements(statement_data=loader.comments_data)
+    _, _, mod_out_statement_ids, meta_statement_ids = process_statements(
+        statement_data=loader.comments_data
+    )
 
     result = run_clustering(
         votes=loader.votes_data,
@@ -47,12 +64,11 @@ def test_run_clustering_real_data_small(polis_convo_data):
     )
 
     # Check group-aware-consensus calculations.
-    calculated_gac = {
-        str(pid): float(row["consensus"])
-        for pid, row in result.group_aware_consensus.iterrows()
-    }
-    expected_gac = math_data["group-aware-consensus"]
-    assert_dict_equal(calculated_gac, expected_gac)
+    calculated = helpers.simulate_api_response(
+        result.statements_df["consensus"].items()
+    )
+    expected = math_data["group-aware-consensus"]
+    assert_dict_equal(calculated, expected)
 
     # Check PCA components and means
     assert pytest.approx(result.pca.components_[0]) == math_data["pca"]["comps"][0]
@@ -71,14 +87,16 @@ def test_run_clustering_real_data_small(polis_convo_data):
 
     for projection in expected_projected_ptpts:
         expected_xy = projection["xy"]
-        calculated_xy = result.projected_participants.loc[projection["participant_id"], ["x", "y"]].values
+        calculated_xy = result.projected_participants.loc[
+            projection["participant_id"], ["x", "y"]
+        ].values
 
         assert calculated_xy == pytest.approx(expected_xy)
 
     # Check that the cluster labels all match when K is forced to match.
     _, expected_cluster_labels = extract_data_from_polismath(math_data)
     calculated_cluster_labels = result.projected_participants["cluster_id"].values
-    assert_array_equal(calculated_cluster_labels, expected_cluster_labels) # type:ignore
+    assert_array_equal(calculated_cluster_labels, expected_cluster_labels)  # type:ignore
 
     # Check extremity calculation
     expected = math_data["pca"]["comment-extremity"]
@@ -87,28 +105,47 @@ def test_run_clustering_real_data_small(polis_convo_data):
 
     # Check comment-priority calculcation
     expected = math_data["comment-priorities"]
-    calculated = {str(k): v for k, v in result.statements_df["priority"].items()}
+
+    calculated = helpers.simulate_api_response(result.statements_df["priority"].items())
     assert_dict_equal(expected, calculated)
+
+    # Check representative statements
+    expected = math_data["repness"]
+    calculated = helpers.simulate_api_response(result.repness)
+    assert_dict_equal(expected, calculated)
+
+    # Check consensus statements
+    expected = math_data["consensus"]
+    calculated = result.consensus
+    assert_dict_equal(expected, calculated)
+
 
 # For testing our code agaisnt real data with against larger conversations,
 # we'll need to implement base clustering.
 @pytest.mark.skip
-@pytest.mark.parametrize("polis_convo_data", ["medium-no-meta", "medium-with-meta"], indirect=True)
+@pytest.mark.parametrize(
+    "polis_convo_data", ["medium-no-meta", "medium-with-meta"], indirect=True
+)
 def test_run_clustering_real_data_medium(polis_convo_data):
     raise NotImplementedError
+
 
 @pytest.mark.parametrize("polis_convo_data", ["small-no-meta"], indirect=True)
 def test_run_clustering_is_reproducible(polis_convo_data):
     fixture = polis_convo_data
 
-    loader = Loader(filepaths=[
-        f"{fixture.data_dir}/votes.json",
-        # Loading these helps generate mod_out_statement_ids
-        f"{fixture.data_dir}/comments.json",
-        f"{fixture.data_dir}/conversation.json",
-    ])
+    loader = Loader(
+        filepaths=[
+            f"{fixture.data_dir}/votes.json",
+            # Loading these helps generate mod_out_statement_ids
+            f"{fixture.data_dir}/comments.json",
+            f"{fixture.data_dir}/conversation.json",
+        ]
+    )
 
-    _, _, mod_out_statement_ids, _ = process_statements(statement_data=loader.comments_data)
+    _, _, mod_out_statement_ids, _ = process_statements(
+        statement_data=loader.comments_data
+    )
 
     cluster_run_1 = run_clustering(
         votes=loader.votes_data,
@@ -130,8 +167,12 @@ def test_run_clustering_is_reproducible(polis_convo_data):
     assert_array_equal(centers_1, centers_2)
 
     # projected statements and cluster IDs
-    assert_frame_equal(cluster_run_1.projected_participants, cluster_run_2.projected_participants)
+    assert_frame_equal(
+        cluster_run_1.projected_participants, cluster_run_2.projected_participants
+    )
     # components/eigenvectors
-    assert cluster_run_1.pca.components_.tolist() == cluster_run_2.pca.components_.tolist()
+    assert (
+        cluster_run_1.pca.components_.tolist() == cluster_run_2.pca.components_.tolist()
+    )
     # statement means
     assert cluster_run_1.pca.mean_.tolist() == cluster_run_2.pca.mean_.tolist()

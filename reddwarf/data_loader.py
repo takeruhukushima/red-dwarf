@@ -105,6 +105,13 @@ class Loader():
     def get_polis_export_directory_url(self, report_id):
         return f"{self.polis_instance_url}/api/v3/reportExport/{report_id}/"
 
+    def _is_statement_meta_field_missing(self):
+        if self.comments_data:
+            return self.comments_data[0]["is_meta"] is None
+        else:
+            # No statements loaded, so can't say.
+            return False
+
     def load_remote_export_data(self):
         if self.directory_url:
             directory_url = self.directory_url
@@ -116,6 +123,22 @@ class Loader():
         self.load_remote_export_data_comments(directory_url)
         self.load_remote_export_data_votes(directory_url)
 
+        # Supplement is_meta statement field via API if missing.
+        # See: https://github.com/polis-community/red-dwarf/issues/55
+        if self._is_statement_meta_field_missing():
+            import warnings
+            warnings.warn("CSV import is missing is_meta field. Attempting to load comments data from API instead...")
+            try:
+                if self.report_id and not self.conversation_id:
+                    self.load_api_data_report()
+                    self.conversation_id = self.report_data["conversation_id"]
+                self.load_api_data_comments()
+            except Exception:
+                raise ValueError(" ".join([
+                    "Due to an upstream bug, we must patch CSV exports using the API,",
+                    "so conversation_id or report_id is required.",
+                    "See: https://github.com/polis-community/red-dwarf/issues/56",
+                ]))
 
         # When multiple votes (same tid and pid), keep only most recent (vs first).
         self.filter_duplicate_votes(keep="recent")

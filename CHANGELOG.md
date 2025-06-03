@@ -7,10 +7,23 @@
 - Add `select_consensus_statements()` function, and wire into Polis implementation.
 - Allow `calculate_comment_statistics()` to work without groups/labels.
 - Generalize `format_comment_stats()` to work for group and consensus statements.
+- Add `select_representative_statements()` to PolisClusteringResult as `repness` key.
+- Rename arg `pick_n` to `pick_max` in `select_consensus_statements()`, for clarity and consistency.
+- Slight change to PolisRepness type, so group IDs now returned as ints.
+- Add `print_selected_statements()` presenter for inspecting `PolisClusteringResult`.
+- Add `print_consensus_statements()` presenter for inspecting `PolisClusteringResult`.
+- Allow `pick_max` and `confidence` interval args to be set in `polis.run_clustering()`.
+- Allow `get_corrected_centroid_guesses()` to unflip each axis if correction not needed.
+
+### Fixes
+- Handle when `is-meta` and `is-seed` columns arrive in CSV import.
+  [`#55`](https://github.com/polis-community/red-dwarf/issues/55)
+- Handle loading comments data from API when `is_meta` missing in CSV import.
 
 ### Chores
 
 - Update the release process instructions.
+- Added `simulate_api_response()` test helper for easier comparison with polismath output.
 
 ## [0.3.0][] (2025-04-29)
 

@@ -8,10 +8,14 @@ import numpy as np
 import seaborn as sns
 
 from reddwarf.implementations.polis import PolisClusteringResult
+from reddwarf.utils.consensus import ConsensusResult
 
 GROUP_LABEL_NAMES = ["A", "B", "C", "D", "E", "F", "G", "H"]
 
-def generate_figure_polis(result: PolisClusteringResult, show_guesses=False, flip_x=True, flip_y=False):
+
+def generate_figure_polis(
+    result: PolisClusteringResult, show_guesses=False, flip_x=True, flip_y=False
+):
     cluster_labels = result.projected_participants["cluster_id"].values
 
     coord_data = result.projected_participants.loc[:, ["x", "y"]].values
@@ -19,10 +23,12 @@ def generate_figure_polis(result: PolisClusteringResult, show_guesses=False, fli
     # will be give a fake "-1" colored label that won't be used to draw clusters.
     # This is for illustration purpose to see the centroid guesses.
     if show_guesses:
-        coord_data = np.vstack([
-            coord_data,
-            np.asarray(result.kmeans.init_centers_used_ if result.kmeans else []),
-        ])
+        coord_data = np.vstack(
+            [
+                coord_data,
+                np.asarray(result.kmeans.init_centers_used_ if result.kmeans else []),
+            ]
+        )
 
     generate_figure(
         coord_data=coord_data,
@@ -34,12 +40,13 @@ def generate_figure_polis(result: PolisClusteringResult, show_guesses=False, fli
         flip_y=flip_y,
     )
 
+
 def generate_figure(
-        coord_data,
-        coord_labels = None,
-        cluster_labels: Optional[List[int]] = None,
-        flip_x: bool = False,
-        flip_y: bool = False,
+    coord_data,
+    coord_labels=None,
+    cluster_labels: Optional[List[int]] = None,
+    flip_x: bool = False,
+    flip_y: bool = False,
 ) -> None:
     """
     Generates a matplotlib scatterplot with optional bounded clusters.
@@ -61,8 +68,8 @@ def generate_figure(
         None.
     """
     plt.figure(figsize=(7, 5), dpi=80)
-    plt.axhline(y=0, color='k', linestyle='-', linewidth=0.5)
-    plt.axvline(x=0, color='k', linestyle='-', linewidth=0.5)
+    plt.axhline(y=0, color="k", linestyle="-", linewidth=0.5)
+    plt.axvline(x=0, color="k", linestyle="-", linewidth=0.5)
 
     if flip_x:
         plt.gca().invert_xaxis()
@@ -72,37 +79,41 @@ def generate_figure(
     # Label points when coordinate labels are provided.
     if coord_labels is not None:
         for label, xy in zip(coord_labels, coord_data):
-            plt.annotate(str(label),
+            plt.annotate(
+                str(label),
                 (float(xy[0]), float(xy[1])),
                 xytext=(2, 2),
                 color="gray",
-                textcoords='offset points')
+                textcoords="offset points",
+            )
 
     scatter_kwargs = defaultdict()
     scatter_kwargs["x"] = coord_data[:, 0]
     scatter_kwargs["y"] = coord_data[:, 1]
-    scatter_kwargs["s"] = 10       # point size
+    scatter_kwargs["s"] = 10  # point size
     scatter_kwargs["alpha"] = 0.8  # point transparency
 
     # Wrap clusters in hulls when cluster labels are provided.
     if cluster_labels is not None:
         # Ref: https://matplotlib.org/stable/users/explain/colors/colormaps.html#qualitative
-        scatter_kwargs["cmap"] = "Set1"      # color map
+        scatter_kwargs["cmap"] = "Set1"  # color map
 
         # Pad cluster_labels to match the number of points
         UNGROUPED_LABEL = -1
         if len(cluster_labels) < len(coord_data):
             pad_length = len(coord_data) - len(cluster_labels)
-            cluster_labels = np.concatenate([cluster_labels, [UNGROUPED_LABEL] * pad_length])
+            cluster_labels = np.concatenate(
+                [cluster_labels, [UNGROUPED_LABEL] * pad_length]
+            )
 
-        scatter_kwargs["c"] = cluster_labels # color indexes
+        scatter_kwargs["c"] = cluster_labels  # color indexes
 
         print("Calculating convex hulls around clusters...")
         # Subset to allow unlabelled points to just be plotted
         unique_labels = np.unique(cluster_labels)
         for label in unique_labels:
             if label == UNGROUPED_LABEL:
-                continue # skip hulls when ungrouped label was padded in
+                continue  # skip hulls when ungrouped label was padded in
 
             label_mask = cluster_labels == label
             cluster_points = coord_data[label_mask]
@@ -133,12 +144,77 @@ def generate_figure(
         cbar = plt.colorbar(scatter, label="Cluster", ticks=cluster_labels)
 
         UNGROUPED_LABEL_NAME = "[Center Guess]"
-        tick_labels = [UNGROUPED_LABEL_NAME if lbl == -1 else GROUP_LABEL_NAMES[lbl] for lbl in cluster_labels]
+        tick_labels = [
+            UNGROUPED_LABEL_NAME if lbl == -1 else GROUP_LABEL_NAMES[lbl]
+            for lbl in cluster_labels
+        ]
         cbar.ax.set_yticklabels(tick_labels)
 
     plt.show()
 
     return None
+
+
+def print_selected_statements(
+    result: PolisClusteringResult, statements_data: list[dict]
+) -> None:
+    """
+    Print formatted output of consensus and group-representative statements from Polis algorithm.
+
+    Arguments:
+        result (PolisClusteringResult): The result object of the red-dwarf polis implementation.
+
+    Returns:
+        None
+    """
+    print("# CONSENSUS STATEMENTS")
+    print()
+    print_consensus(consensus=result.consensus, statements_data=statements_data)
+
+    print()
+
+    print("# GROUP-REPRESENTATIVE STATEMENTS")
+    print()
+    print_repness(repness=result.repness, statements_data=statements_data)
+
+
+def print_consensus(consensus: ConsensusResult, statements_data: list[dict]) -> None:
+    """
+    Helper function to format printed output of Polis repness object.
+
+    Arguments:
+        consensus (ConsensusResult): Data that matches structure from polismath API
+        statements_data (list[dict]): Statement data with keys `statement_id` and `txt`
+
+    Returns:
+        None
+    """
+    for direction, statements in consensus.items():
+        print(f"## FOR {direction.upper()}MENT")
+        print()
+        if not statements:
+            print("None.")
+            print()
+        else:
+            for cons_st in list(statements):
+                st_data = [
+                    st for st in statements_data if st["statement_id"] == cons_st["tid"]
+                ][0]
+                tmpl = "\n".join(
+                    [
+                        "* {txt}\n"
+                        "    {percent}% of everyone who voted on statement {statement_id} {direction}d.\n"
+                    ]
+                )
+                print(
+                    tmpl.format(
+                        txt=st_data["txt"],
+                        percent=int((cons_st["n-success"] / cons_st["n-trials"]) * 100),
+                        statement_id=cons_st["tid"],
+                        direction=direction,
+                    )
+                )
+
 
 def print_repness(
     repness: PolisRepness,
@@ -148,7 +224,7 @@ def print_repness(
     Helper function to format printed output of Polis repness object.
 
     Arguments:
-        repness (dict): Repness dict that matches structure from polismath API
+        repness (PolisRepness): Data that matches structure from polismath API
         statements_data (list[dict]): Statement data with keys `statement_id` and `txt`
 
     Returns:
@@ -157,48 +233,66 @@ def print_repness(
     for gid, repful_statements in repness.items():
         gid = int(gid)
         group_label = GROUP_LABEL_NAMES[gid]
-        print("GROUP {group_label}".format(group_label=group_label))
+        print("## GROUP {group_label}".format(group_label=group_label))
+        print()
 
         for rep_st in repful_statements:
-            st_data = [st for st in statements_data if st["statement_id"] == rep_st["tid"]][0]
+            st_data = [
+                st for st in statements_data if st["statement_id"] == rep_st["tid"]
+            ][0]
             print(f"* {st_data['txt']}")
             if rep_st["repful-for"] == "agree":
                 tmpl = "   {percent}% of those in group {group_label} who voted on statement {statement_id} agreed."
-                print(tmpl.format(
-                    group_label=group_label,
-                    statement_id=rep_st["tid"],
-                    percent=int((rep_st["n-success"]/rep_st["n-trials"])*100),
-                ))
+                print(
+                    tmpl.format(
+                        group_label=group_label,
+                        statement_id=rep_st["tid"],
+                        percent=int((rep_st["n-success"] / rep_st["n-trials"]) * 100),
+                    )
+                )
             else:
                 tmpl = "   {percent}% of those in group {group_label} who voted on statement {statement_id} disagreed."
-                print(tmpl.format(
-                    percent=int((rep_st["n-success"]/rep_st["n-trials"])*100),
-                    group_label=group_label,
-                    statement_id=rep_st["tid"],
-                ))
+                print(
+                    tmpl.format(
+                        percent=int((rep_st["n-success"] / rep_st["n-trials"]) * 100),
+                        group_label=group_label,
+                        statement_id=rep_st["tid"],
+                    )
+                )
             print("")
 
         print("")
 
-class DataPresenter():
+
+class DataPresenter:
     def __init__(self, client):
         self.client = client
 
     def render_optimal_cluster_figure(self):
         print(f"Optimal clusters for K={self.client.optimal_k}")
-        print("Plotting PCA embeddings with K-means, K="+str(np.max(self.client.optimal_cluster_labels)+1))
-        self.generate_figure(coord_dataframe=self.client.projected_data, cluster_labels=self.client.optimal_cluster_labels)
+        print(
+            "Plotting PCA embeddings with K-means, K="
+            + str(np.max(self.client.optimal_cluster_labels) + 1)
+        )
+        self.generate_figure(
+            coord_dataframe=self.client.projected_data,
+            cluster_labels=self.client.optimal_cluster_labels,
+        )
 
     def generate_figure(self, coord_dataframe, cluster_labels=None):
         coord_data = coord_dataframe.loc[:, ["x", "y"]].values
         coord_labels = coord_dataframe.index
-        generate_figure(coord_data=coord_data, coord_labels=coord_labels, cluster_labels=cluster_labels)
+        generate_figure(
+            coord_data=coord_data,
+            coord_labels=coord_labels,
+            cluster_labels=cluster_labels,
+        )
 
     def generate_vote_heatmap(self, vote_df):
-        sns.set_context('poster')
-        sns.set_style('white')
-        sns.set_theme(font_scale=.7)
+        sns.set_context("poster")
+        sns.set_style("white")
+        sns.set_theme(font_scale=0.7)
         sns.set_color_codes()
-        fig, ax = plt.subplots(figsize=(10,8))
+        fig, ax = plt.subplots(figsize=(10, 8))
         sns.heatmap(vote_df, center=0, cmap="RdYlBu", ax=ax)
         plt.show()

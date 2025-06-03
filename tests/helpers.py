@@ -2,17 +2,24 @@ from sklearn.impute import SimpleImputer
 from reddwarf.types.polis import PolisRepness
 from typing import Any, Union, Literal
 import numpy as np
+import json
 
 
-def get_grouped_statement_ids(repness: PolisRepness) -> dict[str, list[dict[str, list[int]]]]:
+def get_grouped_statement_ids(
+    repness: PolisRepness,
+) -> dict[str, list[dict[str, list[int]]]]:
     """A helper to compare only tid in groups, rather than full repness object."""
     groups = []
 
     for key, statements in repness.items():
-        group = {"id": str(key), "members": sorted([stmt["tid"] for stmt in statements])} # type:ignore
+        group = {
+            "id": str(key),
+            "members": sorted([stmt["tid"] for stmt in statements]),
+        }  # type:ignore
         groups.append(group)
 
     return {"groups": groups}
+
 
 def transform_base_clusters_to_participant_coords(base_clusters):
     """
@@ -24,6 +31,7 @@ def transform_base_clusters_to_participant_coords(base_clusters):
     Returns:
         list: A list of dictionaries, each containing a participant_id and their xy coordinates.
     """
+
     # For now, ensure failure if a base-cluster has more than one member, as the test assumes that.
     def get_only_member_or_raise(members):
         if len(members) != 1:
@@ -32,16 +40,12 @@ def transform_base_clusters_to_participant_coords(base_clusters):
         return members[0]
 
     return [
-        {
-            "participant_id": get_only_member_or_raise(members),
-            "xy": [x, y]
-        }
+        {"participant_id": get_only_member_or_raise(members), "xy": [x, y]}
         for members, x, y in zip(
-            base_clusters['members'],
-            base_clusters['x'],
-            base_clusters['y']
+            base_clusters["members"], base_clusters["x"], base_clusters["y"]
         )
     ]
+
 
 # Not used right now. Maybe later.
 def groupsort_pids_by_cluster(df):
@@ -59,7 +63,7 @@ def groupsort_pids_by_cluster(df):
         cluster.
     """
     # Group by cluster_id and collect indices
-    grouped = df.groupby('cluster_id').apply(lambda x: list(x.index))
+    grouped = df.groupby("cluster_id").apply(lambda x: list(x.index))
 
     # Sort the groups by their length (number of members) in descending order
     sorted_groups = sorted(grouped, key=len, reverse=True)
@@ -70,6 +74,7 @@ def groupsort_pids_by_cluster(df):
 
 NestedValue = Union[int, float, list["NestedValue"], dict[str, "NestedValue"]]
 NestedDict = dict[str, NestedValue]
+
 
 def flip_signs_by_key(nested_dict: NestedDict, keys: list[str] = []) -> Any:
     """
@@ -95,6 +100,7 @@ def flip_signs_by_key(nested_dict: NestedDict, keys: list[str] = []) -> Any:
     """
     import copy
     import re
+
     result: NestedDict = copy.deepcopy(nested_dict)
 
     def flip_recursive(value: NestedValue) -> NestedValue:
@@ -106,7 +112,7 @@ def flip_signs_by_key(nested_dict: NestedDict, keys: list[str] = []) -> Any:
 
     def parse_path_segment(segment: str) -> list[Union[str, int, Literal["*"]]]:
         parts: list[Union[str, int, Literal["*"]]] = []
-        for match in re.finditer(r'([^\[\]]+)|\[(\d+|\*)\]', segment):
+        for match in re.finditer(r"([^\[\]]+)|\[(\d+|\*)\]", segment):
             key, idx = match.groups()
             if key:
                 parts.append(key)
@@ -116,13 +122,17 @@ def flip_signs_by_key(nested_dict: NestedDict, keys: list[str] = []) -> Any:
                 parts.append(int(idx))
         return parts
 
-    def resolve_targets(root: NestedValue, path: str) -> list[tuple[Union[dict, list], Union[str, int]]]:
+    def resolve_targets(
+        root: NestedValue, path: str
+    ) -> list[tuple[Union[dict, list], Union[str, int]]]:
         segments = path.split(".")
         parts: list[Union[str, int, Literal["*"]]] = []
         for seg in segments:
             parts.extend(parse_path_segment(seg))
 
-        def recurse(current: NestedValue, remaining: list[Union[str, int, Literal["*"]]]) -> list[tuple[Union[dict, list], Union[str, int]]]:
+        def recurse(
+            current: NestedValue, remaining: list[Union[str, int, Literal["*"]]]
+        ) -> list[tuple[Union[dict, list], Union[str, int]]]:
             if not remaining:
                 return []
 
@@ -140,7 +150,11 @@ def flip_signs_by_key(nested_dict: NestedDict, keys: list[str] = []) -> Any:
             if isinstance(part, str) and isinstance(current, dict) and part in current:
                 return recurse(current[part], rest)
 
-            elif isinstance(part, int) and isinstance(current, list) and 0 <= part < len(current):
+            elif (
+                isinstance(part, int)
+                and isinstance(current, list)
+                and 0 <= part < len(current)
+            ):
                 return recurse(current[part], rest)
 
             elif part == "*" and isinstance(current, list):
@@ -156,12 +170,21 @@ def flip_signs_by_key(nested_dict: NestedDict, keys: list[str] = []) -> Any:
     for dot_key in keys:
         targets = resolve_targets(result, dot_key)
         for parent, final_key in targets:
-            if isinstance(final_key, str) and isinstance(parent, dict) and final_key in parent:
+            if (
+                isinstance(final_key, str)
+                and isinstance(parent, dict)
+                and final_key in parent
+            ):
                 parent[final_key] = flip_recursive(parent[final_key])
-            elif isinstance(final_key, int) and isinstance(parent, list) and 0 <= final_key < len(parent):
+            elif (
+                isinstance(final_key, int)
+                and isinstance(parent, list)
+                and 0 <= final_key < len(parent)
+            ):
                 parent[final_key] = flip_recursive(parent[final_key])
 
     return result
+
 
 def calculate_explained_variance(sparse_vote_matrix, means, components):
     """
@@ -184,3 +207,13 @@ def calculate_explained_variance(sparse_vote_matrix, means, components):
     explained_variance = np.var(X_projected, axis=0, ddof=1)
 
     return explained_variance
+
+
+def simulate_api_response(data):
+    """
+    Simulates a python object sent through JSON via REST API.
+
+    Main change is that any int keys in python dictionary objects are converted
+    to string keys, because all keys are strings in JSON.
+    """
+    return json.loads(json.dumps(dict(data)))

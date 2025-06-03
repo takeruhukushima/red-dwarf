@@ -48,8 +48,14 @@ class Statement(BaseModel):
     )
     tweet_id: Optional[int] = None
     quote_src_url: Optional[str] = None
-    is_seed: Optional[bool] = None
-    is_meta: Optional[bool] = None
+    is_seed: Optional[bool] = Field(
+        default=None,
+        validation_alias=AliasChoices('is_seed', 'is-seed'),
+    )
+    is_meta: Optional[bool] = Field(
+        default=None,
+        validation_alias=AliasChoices('is_meta', 'is-meta'),
+    )
     lang: Optional[str] = None
     participant_id: IncrementingId = Field(
         validation_alias=AliasChoices('participant_id', 'pid', 'author-id'),
