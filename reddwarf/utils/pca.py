@@ -11,9 +11,9 @@ from sklearn.impute import SimpleImputer
 
 
 def run_pca(
-        vote_matrix: VoteMatrix,
-        n_components: int = 2,
-) -> Tuple[ pd.DataFrame, pd.DataFrame, PCA ]:
+    vote_matrix: VoteMatrix,
+    n_components: int = 2,
+) -> Tuple[pd.DataFrame, pd.DataFrame, PCA]:
     """
     Process a prepared vote matrix to be imputed and return projected participant data,
     as well as eigenvectors and eigenvalues.
@@ -31,12 +31,14 @@ def run_pca(
             - explained_variance_ (List[float]): Explained variance of each principal component.
             - mean_ (list[float]): Means/centers of each column/statements/features.
     """
-    pipeline = PatchedPipeline([
-        ("capture", SparsityAwareCapturer()),
-        ("impute", SimpleImputer(missing_values=np.nan, strategy="mean")),
-        ("pca", PCA(n_components=n_components)),
-        ("scale", SparsityAwareScaler(capture_step="capture")),
-    ])
+    pipeline = PatchedPipeline(
+        [
+            ("capture", SparsityAwareCapturer()),
+            ("impute", SimpleImputer(missing_values=np.nan, strategy="mean")),
+            ("pca", PCA(n_components=n_components)),
+            ("scale", SparsityAwareScaler(capture_step="capture")),
+        ]
+    )
 
     pipeline.fit(vote_matrix.values)
 
@@ -68,6 +70,7 @@ def run_pca(
     pca = pipeline.named_steps["pca"]
 
     return projected_participants, projected_statements, pca
+
 
 def calculate_extremity(projections: ArrayLike):
     # Compute extremity as vector magnitude on rows.
