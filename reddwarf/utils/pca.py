@@ -1,13 +1,53 @@
+from __future__ import annotations
 from numpy.typing import ArrayLike
 import pandas as pd
 import numpy as np
 from reddwarf.utils.matrix import VoteMatrix, generate_virtual_vote_matrix
 from reddwarf.sklearn.transformers import SparsityAwareCapturer, SparsityAwareScaler
 from reddwarf.sklearn.pipeline import PatchedPipeline
-from typing import Tuple
+from typing import Tuple, TYPE_CHECKING
 
-from sklearn.decomposition import PCA
 from sklearn.impute import SimpleImputer
+
+if TYPE_CHECKING:
+    from pacmap import PaCMAP, LocalMAP
+    from sklearn.decomposition import PCA
+
+
+def get_reducer(
+    reducer: str, n_components=2, random_state=None, **kwargs
+) -> PCA | PaCMAP | LocalMAP:
+    # Setting n_neighbors to None defaults to 10 below 10,000 samples, and
+    # slowly increases it according to a formula beyond that.
+    # See: https://github.com/YingfanWang/PaCMAP?tab=readme-ov-file#parameters
+    N_NEIGHBORS = None
+    match reducer:
+        case "pacmap":
+            from pacmap import PaCMAP
+
+            return PaCMAP(
+                n_components=n_components,
+                random_state=random_state,
+                n_neighbors=N_NEIGHBORS,
+                **kwargs,
+            )
+        case "localmap":
+            from pacmap import LocalMAP
+
+            return LocalMAP(
+                n_components=n_components,
+                random_state=random_state,
+                n_neighbors=N_NEIGHBORS,
+                **kwargs,
+            )
+        case "pca" | _:
+            from sklearn.decomposition import PCA
+
+            return PCA(
+                n_components=n_components,
+                random_state=random_state,
+                **kwargs,
+            )
 
 
 def run_pca(
@@ -26,7 +66,7 @@ def run_pca(
 
     Returns:
         projected_data (pd.DataFrame): A dataframe of projected xy coordinates for each `vote_matrix` row/participant.
-        pca (PCA): PCA object, notably with the following attributes:
+        reducer (PCA): PCA object, notably with the following attributes:
             - components_ (List[List[float]]): Eigenvectors of principal `n` components, one per column/statement/feature.
             - explained_variance_ (List[float]): Explained variance of each principal component.
             - mean_ (list[float]): Means/centers of each column/statements/features.
@@ -35,7 +75,7 @@ def run_pca(
         [
             ("capture", SparsityAwareCapturer()),
             ("impute", SimpleImputer(missing_values=np.nan, strategy="mean")),
-            ("pca", PCA(n_components=n_components)),
+            ("reduce", get_reducer("pca", n_components=n_components)),
             ("scale", SparsityAwareScaler(capture_step="capture")),
         ]
     )
@@ -67,9 +107,9 @@ def run_pca(
         columns=np.asarray(dimension_labels),
     )
 
-    pca = pipeline.named_steps["pca"]
+    reducer = pipeline.named_steps["reduce"]
 
-    return projected_participants, projected_statements, pca
+    return projected_participants, projected_statements, reducer
 
 
 def calculate_extremity(projections: ArrayLike):
