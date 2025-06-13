@@ -9,7 +9,7 @@ from reddwarf.utils.matrix import (
     simple_filter_matrix,
     get_clusterable_participant_ids,
 )
-from reddwarf.utils.pca import run_pca
+from reddwarf.utils.pca import run_reducer
 from reddwarf.utils.clustering import find_optimal_k
 from dataclasses import dataclass
 import pandas as pd
@@ -100,7 +100,7 @@ def run_clustering(
 
     # Run PCA and generate participant/statement projections.
     # DataFrames each have "x" and "y" columns.
-    participants_df, statements_df, pca = run_pca(vote_matrix=filtered_vote_matrix)
+    participants_df, statements_df, pca = run_reducer(vote_matrix=filtered_vote_matrix)
 
     participant_ids_to_cluster = get_clusterable_participant_ids(
         raw_vote_matrix, vote_threshold=min_user_vote_threshold
