@@ -5,7 +5,6 @@ DEFAULT_MIN_USER_VOTE_THRESHOLD = 7
 DEFAULT_MAX_CLUSTERS = 5
 DEFAULT_KMEANS_RANDOM_STATE = 123456789
 
-
 def run_clustering_v1(
     conversation: Conversation,
     options: ClusteringOptions = {},
@@ -40,12 +39,10 @@ def run_clustering_v1(
     all_statement_ids = vote_matrix.columns
     vote_matrix = utils.filter_matrix(
         vote_matrix=vote_matrix,
-        min_user_vote_threshold=options.get(
-            "min_user_vote_threshold", DEFAULT_MIN_USER_VOTE_THRESHOLD
-        ),
+        min_user_vote_threshold=options.get("min_user_vote_threshold", DEFAULT_MIN_USER_VOTE_THRESHOLD),
         active_statement_ids=all_statement_ids,
     )
-    projected_data, *_ = utils.run_reducer(vote_matrix=vote_matrix)
+    projected_data, *_ = utils.run_pca(vote_matrix=vote_matrix)
 
     k_bounds = [2, options.get("max_clusters", DEFAULT_MAX_CLUSTERS)]
     _, _, optimal_kmeans = utils.find_optimal_k(
@@ -57,9 +54,7 @@ def run_clustering_v1(
     )
 
     # Add cluster label column to dataframe.
-    projected_data = projected_data.assign(
-        cluster_id=optimal_kmeans.labels_ if optimal_kmeans else None
-    )
+    projected_data = projected_data.assign(cluster_id=optimal_kmeans.labels_ if optimal_kmeans else None)
     # Convert participant_id index into regular column, for ease of transformation.
     projected_data = projected_data.reset_index()
 
@@ -74,7 +69,7 @@ def run_clustering_v1(
                         "y": row.y,
                     }
                     for row in group.itertuples(index=False)
-                ],
+                ]
             }
             for cluster_id, group in projected_data.groupby("cluster_id")
         ]
