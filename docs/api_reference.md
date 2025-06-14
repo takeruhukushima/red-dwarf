@@ -55,6 +55,10 @@ use in Scikit-Learn workflows, pipelines, and APIs.
     options:
         show_root_heading: true
 
+### ::: reddwarf.utils.pca.run_reducer
+    options:
+        show_root_heading: true
+
 ## `reddwarf.utils.clustering`
 
 ### ::: reddwarf.utils.clustering.find_optimal_k
