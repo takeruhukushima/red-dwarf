@@ -7,6 +7,14 @@
     options:
         show_root_heading: true
 
+### ::: reddwarf.implementations.polis.run_pipeline
+    options:
+        show_root_heading: true
+
+### ::: reddwarf.implementations.polis.run_clusterer
+    options:
+        show_root_heading: true
+
 ## `reddwarf.implementations.agora`
 
 ### ::: reddwarf.implementations.agora.run_clustering_v1
@@ -56,6 +64,10 @@ use in Scikit-Learn workflows, pipelines, and APIs.
         show_root_heading: true
 
 ### ::: reddwarf.utils.pca.run_reducer
+    options:
+        show_root_heading: true
+
+### ::: reddwarf.utils.pca.get_reducer
     options:
         show_root_heading: true
 

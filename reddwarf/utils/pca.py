@@ -4,7 +4,7 @@ import numpy as np
 from reddwarf.utils.matrix import VoteMatrix, generate_virtual_vote_matrix
 from reddwarf.sklearn.transformers import SparsityAwareCapturer, SparsityAwareScaler
 from reddwarf.sklearn.pipeline import PatchedPipeline
-from typing import Literal, Tuple, Union, TYPE_CHECKING, TypeAlias
+from typing import Literal, Optional, Tuple, Union, TYPE_CHECKING, TypeAlias
 
 from sklearn.impute import SimpleImputer
 
@@ -17,7 +17,10 @@ ReducerModel: TypeAlias = Union["PCA", "PaCMAP", "LocalMAP"]
 
 
 def get_reducer(
-    reducer: ReducerType, n_components=2, random_state=None, **kwargs
+    reducer: ReducerType = "pca",
+    n_components: int = 2,
+    random_state: Optional[int] = None,
+    **reducer_kwargs,
 ) -> ReducerModel:
     # Setting n_neighbors to None defaults to 10 below 10,000 samples, and
     # slowly increases it according to a formula beyond that.
@@ -31,7 +34,7 @@ def get_reducer(
                 n_components=n_components,
                 random_state=random_state,
                 n_neighbors=N_NEIGHBORS,  # type:ignore
-                **kwargs,
+                **reducer_kwargs,
             )
         case "localmap":
             from pacmap import LocalMAP
@@ -40,7 +43,7 @@ def get_reducer(
                 n_components=n_components,
                 random_state=random_state,
                 n_neighbors=N_NEIGHBORS,  # type:ignore
-                **kwargs,
+                **reducer_kwargs,
             )
         case "pca" | _:
             from sklearn.decomposition import PCA
@@ -48,14 +51,14 @@ def get_reducer(
             return PCA(
                 n_components=n_components,
                 random_state=random_state,
-                **kwargs,
+                **reducer_kwargs,
             )
 
 
 def run_pca(
         vote_matrix: VoteMatrix,
         n_components: int = 2,
-) -> Tuple[ pd.DataFrame, pd.DataFrame | None, ReducerModel ]:
+) -> Tuple[ pd.DataFrame, pd.DataFrame, ReducerModel ]:
     """
     Process a prepared vote matrix to be imputed and return projected participant data,
     as well as eigenvectors and eigenvalues.
@@ -84,7 +87,8 @@ def run_reducer(
     vote_matrix: VoteMatrix,
     n_components: int = 2,
     reducer: ReducerType = "pca",
-) -> Tuple[pd.DataFrame, pd.DataFrame | None, ReducerModel]:
+    reducer_kwargs: dict = {},
+) -> Tuple[pd.DataFrame, pd.DataFrame, ReducerModel]:
     """
     Process a prepared vote matrix to be imputed and return projected participant data,
     as well as eigenvectors and eigenvalues.
@@ -109,7 +113,7 @@ def run_reducer(
                 [
                     ("capture", SparsityAwareCapturer()),
                     ("impute", SimpleImputer(missing_values=np.nan, strategy="mean")),
-                    ("reduce", get_reducer(reducer, n_components=n_components)),
+                    ("reduce", get_reducer(reducer, n_components=n_components, **reducer_kwargs)),
                     ("scale", SparsityAwareScaler(capture_step="capture")),
                 ]
             )
@@ -117,7 +121,7 @@ def run_reducer(
             pipeline = PatchedPipeline(
                 [
                     ("impute", SimpleImputer(missing_values=np.nan, strategy="mean")),
-                    ("reduce", get_reducer(reducer, n_components=n_components)),
+                    ("reduce", get_reducer(reducer, n_components=n_components, **reducer_kwargs)),
                 ]
             )
 
@@ -145,11 +149,13 @@ def run_reducer(
 
         projected_statements = pd.DataFrame(
             X_statements,
-            index=pd.Index(vote_matrix.columns, name="statement_id"),
             columns=np.asarray(dimension_labels),
+            index=pd.Index(vote_matrix.columns, name="statement_id"),
         )
     else:
-        projected_statements = None
+        projected_statements = pd.DataFrame(
+            index=pd.Index(vote_matrix.columns, name="statement_id"),
+        )
 
     reducer_model: ReducerModel = pipeline.named_steps["reduce"]
 

@@ -41,7 +41,7 @@ class PolisClusteringResult:
 
     raw_vote_matrix: DataFrame
     filtered_vote_matrix: DataFrame
-    pca: PCA
+    pca: PCA | None
     projected_participants: DataFrame
     projected_statements: DataFrame
     kmeans: PolisKMeans | None
@@ -52,8 +52,12 @@ class PolisClusteringResult:
     consensus: ConsensusResult
     repness: PolisRepness
 
+# This is to not break things.
+# TODO: Adde deprecation warning.
+def run_clustering(**kwargs) -> PolisClusteringResult:
+    return run_pipeline(**kwargs)
 
-def run_clustering(
+def run_pipeline(
     votes: list[dict],
     mod_out_statement_ids: list[int] = [],
     meta_statement_ids: list[int] = [],
@@ -112,21 +116,18 @@ def run_clustering(
             list(set(participant_ids_to_cluster + keep_participant_ids))
         )
 
-    if force_group_count:
-        k_bounds = [force_group_count, force_group_count]
-    else:
-        k_bounds = [2, max_group_count]
-
-    _, _, kmeans = find_optimal_k(
-        projected_data=participants_df.loc[participant_ids_to_cluster, :],
-        k_bounds=k_bounds,
-        # Force polis strategy of initiating cluster centers. See: PolisKMeans.
-        init="polis",
+    clusterer_model = run_clusterer(
+        clusterable_participants_df=participants_df.loc[participant_ids_to_cluster, :],
+        max_group_count=max_group_count,
+        force_group_count=force_group_count,
         init_centers=init_centers,
         random_state=random_state,
     )
+
+    cluster_labels = clusterer_model.labels_ if clusterer_model else None
+
     label_series = pd.Series(
-        kmeans.labels_ if kmeans else None,
+        cluster_labels,
         index=participant_ids_to_cluster,
         dtype="Int64",  # Allows nullable/NaN values.
     )
@@ -137,7 +138,7 @@ def run_clustering(
 
     grouped_stats_df, gac_df = calculate_comment_statistics_dataframes(
         vote_matrix=raw_vote_matrix.loc[participant_ids_to_cluster, :],
-        cluster_labels=kmeans.labels_,
+        cluster_labels=clusterer_model.labels_,
     )
 
     def get_with_default(lst, idx, default=None):
@@ -146,12 +147,13 @@ def run_clustering(
         except IndexError:
             return default
 
-    statements_df["to_zero"] = statements_df.index.isin(mod_out_statement_ids)
-    statements_df["is_meta"] = statements_df.index.isin(meta_statement_ids)
-    statements_df["mean"] = pca.mean_
-    statements_df["pc1"] = get_with_default(pca.components_, 0)
-    statements_df["pc2"] = get_with_default(pca.components_, 1)
-    statements_df["pc3"] = get_with_default(pca.components_, 2)
+    if statements_df is not None:
+        statements_df["to_zero"] = statements_df.index.isin(mod_out_statement_ids)
+        statements_df["is_meta"] = statements_df.index.isin(meta_statement_ids)
+        statements_df["mean"] = pca.mean_
+        statements_df["pc1"] = get_with_default(pca.components_, 0)
+        statements_df["pc2"] = get_with_default(pca.components_, 1)
+        statements_df["pc3"] = get_with_default(pca.components_, 2)
     statements_df = pd.concat([statements_df, gac_df], axis=1)
     statements_df = populate_priority_calculations_into_statements_df(
         statements_df=statements_df,
@@ -181,7 +183,7 @@ def run_clustering(
             participant_ids_to_cluster, ["x", "y", "cluster_id"]
         ],  # deprecate?
         projected_statements=statements_df.loc[:, ["x", "y"]],  # deprecate?
-        kmeans=kmeans,
+        kmeans=clusterer_model,
         group_aware_consensus=gac_df,  # deprecate?
         group_comment_stats=grouped_stats_df,
         statements_df=statements_df,
@@ -189,3 +191,32 @@ def run_clustering(
         consensus=consensus,
         repness=repness,
     )
+
+def run_clusterer(
+    clusterable_participants_df,
+    clusterer="kmeans",
+    force_group_count=None,
+    max_group_count=5,
+    **clusterer_kwargs
+) -> Optional[PolisKMeans]:
+    match clusterer:
+        case "kmeans":
+            if force_group_count:
+                k_bounds = [force_group_count, force_group_count]
+            else:
+                k_bounds = [2, max_group_count]
+
+            _, _, kmeans = find_optimal_k(
+                projected_data=clusterable_participants_df,
+                k_bounds=k_bounds,
+                # Force polis strategy of initiating cluster centers. See: PolisKMeans.
+                init="polis",
+                **clusterer_kwargs,
+            )
+
+            return kmeans
+
+        case "hdbscan":
+            raise NotImplementedError("clusterer type hdbscan not yet implemented")
+        case _:
+            raise NotImplementedError("clusterer type unknown")
