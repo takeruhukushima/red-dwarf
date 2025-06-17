@@ -3,14 +3,14 @@ from pandas import DataFrame
 from sklearn.decomposition import PCA
 from reddwarf.sklearn.cluster import PolisKMeans
 from reddwarf.types.polis import PolisRepness
+from reddwarf.utils.clusterer.base import run_clusterer
 from reddwarf.utils.consensus import select_consensus_statements, ConsensusResult
 from reddwarf.utils.matrix import (
     generate_raw_matrix,
     simple_filter_matrix,
     get_clusterable_participant_ids,
 )
-from reddwarf.utils.reducer.pca import run_pca
-from reddwarf.utils.clusterer.kmeans import find_optimal_k
+from reddwarf.utils.reducer.base import run_reducer
 from dataclasses import dataclass
 import pandas as pd
 
@@ -104,7 +104,7 @@ def run_pipeline(
 
     # Run PCA and generate participant/statement projections.
     # DataFrames each have "x" and "y" columns.
-    participants_df, statements_df, pca = run_pca(vote_matrix=filtered_vote_matrix)
+    participants_df, statements_df, pca = run_reducer(vote_matrix=filtered_vote_matrix, reducer="pca")
 
     participant_ids_to_cluster = get_clusterable_participant_ids(
         raw_vote_matrix, vote_threshold=min_user_vote_threshold
@@ -191,32 +191,3 @@ def run_pipeline(
         consensus=consensus,
         repness=repness,
     )
-
-def run_clusterer(
-    clusterable_participants_df,
-    clusterer="kmeans",
-    force_group_count=None,
-    max_group_count=5,
-    **clusterer_kwargs
-) -> Optional[PolisKMeans]:
-    match clusterer:
-        case "kmeans":
-            if force_group_count:
-                k_bounds = [force_group_count, force_group_count]
-            else:
-                k_bounds = [2, max_group_count]
-
-            _, _, kmeans = find_optimal_k(
-                projected_data=clusterable_participants_df,
-                k_bounds=k_bounds,
-                # Force polis strategy of initiating cluster centers. See: PolisKMeans.
-                init="polis",
-                **clusterer_kwargs,
-            )
-
-            return kmeans
-
-        case "hdbscan":
-            raise NotImplementedError("clusterer type hdbscan not yet implemented")
-        case _:
-            raise NotImplementedError("clusterer type unknown")
