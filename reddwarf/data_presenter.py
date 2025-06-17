@@ -7,7 +7,7 @@ from reddwarf.types.polis import PolisRepness
 import numpy as np
 import seaborn as sns
 
-from reddwarf.implementations.polis import PolisClusteringResult
+from reddwarf.implementations.base import PolisClusteringResult
 from reddwarf.utils.consensus import ConsensusResult
 
 GROUP_LABEL_NAMES = ["A", "B", "C", "D", "E", "F", "G", "H"]
