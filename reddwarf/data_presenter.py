@@ -14,11 +14,20 @@ GROUP_LABEL_NAMES = ["A", "B", "C", "D", "E", "F", "G", "H"]
 
 
 def generate_figure_polis(
-    result: PolisClusteringResult, show_guesses=False, flip_x=True, flip_y=False
+    result: PolisClusteringResult,
+    show_guesses=False,
+    flip_x=True,
+    flip_y=False,
+    show_pids=True,
 ):
+    """
+    Args:
+        show_pids (bool): Show the participant IDs on the plot
+    """
     cluster_labels = result.projected_participants["cluster_id"].values
 
     coord_data = result.projected_participants.loc[:, ["x", "y"]].values
+    coord_labels = None
     # Add the init center guesses to the bottom of the coord stack. Internally, they
     # will be give a fake "-1" colored label that won't be used to draw clusters.
     # This is for illustration purpose to see the centroid guesses.
@@ -30,9 +39,12 @@ def generate_figure_polis(
             ]
         )
 
+    if show_pids:
+        coord_labels = [f"p{pid}" for pid in result.projected_participants.index]
+
     generate_figure(
         coord_data=coord_data,
-        coord_labels=[f"p{pid}" for pid in result.projected_participants.index],
+        coord_labels=coord_labels,
         cluster_labels=cluster_labels,
         # Always needs flipping to look like Polis interface.
         flip_x=flip_x,
