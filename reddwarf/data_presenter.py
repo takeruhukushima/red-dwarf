@@ -153,12 +153,13 @@ def generate_figure(
 
     # Add a legend if labels are provided
     if cluster_labels is not None:
-        cbar = plt.colorbar(scatter, label="Cluster", ticks=cluster_labels)
+        unique_labels = np.unique(cluster_labels)
+        cbar = plt.colorbar(scatter, label="Cluster", ticks=unique_labels)
 
         UNGROUPED_LABEL_NAME = "[Center Guess]"
         tick_labels = [
             UNGROUPED_LABEL_NAME if lbl == -1 else GROUP_LABEL_NAMES[lbl]
-            for lbl in cluster_labels
+            for lbl in unique_labels
         ]
         cbar.ax.set_yticklabels(tick_labels)
 
