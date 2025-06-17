@@ -9,8 +9,8 @@ from reddwarf.utils.matrix import (
     simple_filter_matrix,
     get_clusterable_participant_ids,
 )
-from reddwarf.utils.pca import run_pca
-from reddwarf.utils.clustering import find_optimal_k
+from reddwarf.utils.reducer.pca import run_pca
+from reddwarf.utils.clusterer.kmeans import find_optimal_k
 from dataclasses import dataclass
 import pandas as pd
 
@@ -138,7 +138,7 @@ def run_pipeline(
 
     grouped_stats_df, gac_df = calculate_comment_statistics_dataframes(
         vote_matrix=raw_vote_matrix.loc[participant_ids_to_cluster, :],
-        cluster_labels=clusterer_model.labels_,
+        cluster_labels=cluster_labels,
     )
 
     def get_with_default(lst, idx, default=None):
@@ -147,9 +147,9 @@ def run_pipeline(
         except IndexError:
             return default
 
-    if statements_df is not None:
-        statements_df["to_zero"] = statements_df.index.isin(mod_out_statement_ids)
-        statements_df["is_meta"] = statements_df.index.isin(meta_statement_ids)
+    statements_df["to_zero"] = statements_df.index.isin(mod_out_statement_ids)
+    statements_df["is_meta"] = statements_df.index.isin(meta_statement_ids)
+    if isinstance(pca, PCA):
         statements_df["mean"] = pca.mean_
         statements_df["pc1"] = get_with_default(pca.components_, 0)
         statements_df["pc2"] = get_with_default(pca.components_, 1)
@@ -178,7 +178,7 @@ def run_pipeline(
     return PolisClusteringResult(
         raw_vote_matrix=raw_vote_matrix,
         filtered_vote_matrix=filtered_vote_matrix,
-        pca=pca,
+        pca=pca if isinstance(pca, PCA) else None,
         projected_participants=participants_df.loc[
             participant_ids_to_cluster, ["x", "y", "cluster_id"]
         ],  # deprecate?

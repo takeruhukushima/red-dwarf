@@ -9,7 +9,7 @@ from reddwarf.types.polis import (
     PolisRepness,
     PolisRepnessStatement,
 )
-from reddwarf.utils.pca import calculate_extremity
+from reddwarf.utils.reducer.pca import calculate_extremity
 
 
 def one_prop_test(

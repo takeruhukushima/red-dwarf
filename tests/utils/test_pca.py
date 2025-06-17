@@ -3,7 +3,7 @@ from numpy.testing import assert_allclose, assert_array_almost_equal
 import pytest
 from reddwarf.utils.statements import process_statements
 from tests.fixtures import polis_convo_data
-from reddwarf.utils import pca as PcaUtils
+from reddwarf.utils.reducer import pca as PcaUtils
 from reddwarf.utils import matrix as MatrixUtils
 from reddwarf.data_loader import Loader
 from tests import helpers

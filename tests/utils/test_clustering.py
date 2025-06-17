@@ -1,5 +1,5 @@
 import pytest
-from reddwarf.utils.clustering import run_kmeans, find_optimal_k
+from reddwarf.utils.clusterer.kmeans import run_kmeans, find_optimal_k
 from tests.fixtures import polis_convo_data
 from tests.helpers import transform_base_clusters_to_participant_coords
 import pandas as pd

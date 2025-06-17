@@ -1,5 +1,4 @@
 from reddwarf.implementations.polis_legacy import PolisClient
-from reddwarf import utils
 import math
 import pytest
 
