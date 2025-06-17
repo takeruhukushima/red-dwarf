@@ -96,13 +96,11 @@ def run_reducer(
                 ]
             )
 
-    pipeline.fit(vote_matrix.values)
-
     DEFAULT_DIMENSION_LABELS = ["x", "y", "z"]
     dimension_labels = DEFAULT_DIMENSION_LABELS[:n_components]
 
     # Generate projections of participants.
-    X_participants = pipeline.transform(vote_matrix.values)
+    X_participants = pipeline.fit_transform(vote_matrix.values)
 
     projected_participants = pd.DataFrame(
         X_participants,

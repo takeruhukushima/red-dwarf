@@ -20,6 +20,8 @@ from reddwarf.utils.stats import (
     select_representative_statements,
 )
 
+from reddwarf.utils.reducer.base import ReducerType
+
 
 @dataclass
 class PolisClusteringResult:
@@ -59,6 +61,8 @@ def run_clustering(**kwargs) -> PolisClusteringResult:
 
 def run_pipeline(
     votes: list[dict],
+    reducer: ReducerType = "pca",
+    clusterer: str = "kmeans",
     mod_out_statement_ids: list[int] = [],
     meta_statement_ids: list[int] = [],
     min_user_vote_threshold: int = 7,
@@ -104,7 +108,7 @@ def run_pipeline(
 
     # Run PCA and generate participant/statement projections.
     # DataFrames each have "x" and "y" columns.
-    participants_df, statements_df, pca = run_reducer(vote_matrix=filtered_vote_matrix, reducer="pca")
+    participants_df, statements_df, pca = run_reducer(vote_matrix=filtered_vote_matrix, reducer=reducer)
 
     participant_ids_to_cluster = get_clusterable_participant_ids(
         raw_vote_matrix, vote_threshold=min_user_vote_threshold
@@ -117,6 +121,7 @@ def run_pipeline(
         )
 
     clusterer_model = run_clusterer(
+        clusterer=clusterer,
         clusterable_participants_df=participants_df.loc[participant_ids_to_cluster, :],
         max_group_count=max_group_count,
         force_group_count=force_group_count,
@@ -154,11 +159,12 @@ def run_pipeline(
         statements_df["pc1"] = get_with_default(pca.components_, 0)
         statements_df["pc2"] = get_with_default(pca.components_, 1)
         statements_df["pc3"] = get_with_default(pca.components_, 2)
+        # Can't run with without statement extremities from statement projections.
+        statements_df = populate_priority_calculations_into_statements_df(
+            statements_df=statements_df,
+            vote_matrix=raw_vote_matrix.loc[participant_ids_to_cluster, :],
+        )
     statements_df = pd.concat([statements_df, gac_df], axis=1)
-    statements_df = populate_priority_calculations_into_statements_df(
-        statements_df=statements_df,
-        vote_matrix=raw_vote_matrix.loc[participant_ids_to_cluster, :],
-    )
 
     consensus = select_consensus_statements(
         vote_matrix=raw_vote_matrix,
@@ -182,7 +188,7 @@ def run_pipeline(
         projected_participants=participants_df.loc[
             participant_ids_to_cluster, ["x", "y", "cluster_id"]
         ],  # deprecate?
-        projected_statements=statements_df.loc[:, ["x", "y"]],  # deprecate?
+        projected_statements=statements_df.loc[:, ["x", "y"]] if reducer == "pca" else None,  # deprecate?
         kmeans=clusterer_model,
         group_aware_consensus=gac_df,  # deprecate?
         group_comment_stats=grouped_stats_df,
