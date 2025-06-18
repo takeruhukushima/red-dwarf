@@ -116,7 +116,7 @@ def test_calculate_comment_statistics_dataframes_gac_df_real_data(polis_convo_da
     fixture = polis_convo_data
     _, gac_df = setup_test(fixture)
 
-    calculated = helpers.simulate_api_response(gac_df["consensus"].items())
+    calculated = helpers.simulate_api_response(gac_df["group-aware-consensus"].items())
     expected = fixture.math_data["group-aware-consensus"]
     assert_dict_equal(calculated, expected)
 

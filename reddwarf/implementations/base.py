@@ -10,7 +10,7 @@ from reddwarf.utils.matrix import (
     simple_filter_matrix,
     get_clusterable_participant_ids,
 )
-from reddwarf.utils.reducer.base import run_reducer
+from reddwarf.utils.reducer.base import ReducerModel, run_reducer
 from dataclasses import dataclass
 import pandas as pd
 
@@ -29,11 +29,8 @@ class PolisClusteringResult:
     Attributes:
         raw_vote_matrix (DataFrame): Raw sparse vote matrix before any processing.
         filtered_vote_matrix (DataFrame): Raw sparse vote matrix with moderated statements zero'd out.
-        pca (PCA): PCA model fitted to vote matrix, including `mean_`, `expected_variance_` (eigenvalues) and `components_` (eigenvectors).
-        projected_participants (DataFrame): Dataframe of projected participants, with columns "x", "y", "cluster_id"
-        projected_statements (DataFrame): Dataframe of projected statements, with columns "x", "y".
+        reducer (ReducerModel): Reducer model fitted to vote matrix.
         kmeans (PolisKMeans): Scikit-Learn KMeans object for selected group count, including `labels_` and `cluster_centers_`. See `PolisKMeans`.
-        group_aware_consensus (DataFrame): Group-aware consensus scores for each statement.
         group_comment_stats (DataFrame): A multi-index dataframes for each statement, indexed by group ID and statement.
         statements_df (DataFrame): A dataframe with all intermediary and final statement data/calculations/metadata.
         participants_df (DataFrame): A dataframe with all intermediary and final participant data/calculations/metadata.
@@ -43,11 +40,8 @@ class PolisClusteringResult:
 
     raw_vote_matrix: DataFrame
     filtered_vote_matrix: DataFrame
-    pca: PCA | None
-    projected_participants: DataFrame
-    projected_statements: DataFrame
+    reducer: ReducerModel
     kmeans: PolisKMeans | None
-    group_aware_consensus: DataFrame
     group_comment_stats: DataFrame
     statements_df: DataFrame
     participants_df: DataFrame
@@ -103,7 +97,7 @@ def run_pipeline(
 
     # Run PCA and generate participant/statement projections.
     # DataFrames each have "x" and "y" columns.
-    participants_df, statements_df, pca = run_reducer(vote_matrix=filtered_vote_matrix, reducer=reducer)
+    participants_df, statements_df, reducer_model = run_reducer(vote_matrix=filtered_vote_matrix, reducer=reducer)
 
     participant_ids_to_cluster = get_clusterable_participant_ids(
         raw_vote_matrix, vote_threshold=min_user_vote_threshold
@@ -149,7 +143,8 @@ def run_pipeline(
 
     statements_df["to_zero"] = statements_df.index.isin(mod_out_statement_ids)
     statements_df["is_meta"] = statements_df.index.isin(meta_statement_ids)
-    if isinstance(pca, PCA):
+    if isinstance(reducer_model, PCA):
+        pca = reducer_model
         statements_df["mean"] = pca.mean_
         statements_df["pc1"] = get_with_default(pca.components_, 0)
         statements_df["pc2"] = get_with_default(pca.components_, 1)
@@ -179,13 +174,8 @@ def run_pipeline(
     return PolisClusteringResult(
         raw_vote_matrix=raw_vote_matrix,
         filtered_vote_matrix=filtered_vote_matrix,
-        pca=pca if isinstance(pca, PCA) else None,
-        projected_participants=participants_df.loc[
-            participant_ids_to_cluster, ["x", "y", "cluster_id"]
-        ],  # deprecate?
-        projected_statements=statements_df.loc[:, ["x", "y"]] if reducer == "pca" else None,  # deprecate?
+        reducer=reducer_model,
         kmeans=clusterer_model,
-        group_aware_consensus=gac_df,  # deprecate?
         group_comment_stats=grouped_stats_df,
         statements_df=statements_df,
         participants_df=participants_df,
