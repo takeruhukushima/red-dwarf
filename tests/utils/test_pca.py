@@ -3,7 +3,7 @@ from numpy.testing import assert_allclose, assert_array_almost_equal
 import pytest
 from reddwarf.utils.statements import process_statements
 from tests.fixtures import polis_convo_data
-from reddwarf.utils.reducer import pca as PcaUtils
+from reddwarf.utils.reducer.pca import run_pca
 from reddwarf.utils import matrix as MatrixUtils
 from reddwarf.data_loader import Loader
 from tests import helpers
@@ -34,10 +34,10 @@ def test_run_pca_toy():
         index=pd.Index([0, 1, 2, 3]), # participant_ids
         dtype=float,
     )
-    actual_projected_participants, _, pca = PcaUtils.run_pca(vote_matrix=initial_matrix)
+    actual_projected_participants, _, pca = run_pca(vote_matrix=initial_matrix)
     actual_eigenvectors = pca.components_
     actual_eigenvalues = pca.explained_variance_
-    assert_allclose(actual_projected_participants.values, expected_projections, rtol=10**-5)
+    assert_allclose(actual_projected_participants, expected_projections, rtol=10**-5)
     assert_allclose(actual_eigenvectors, expected_eigenvectors, rtol=10**-5)
     assert_allclose(actual_eigenvalues, expected_eigenvalues, rtol=10**-5)
 
@@ -66,7 +66,7 @@ def test_matching_explained_variance(polis_convo_data):
         vote_matrix=real_vote_matrix,
         mod_out_statement_ids=mod_out_statement_ids,
     )
-    _, _, actual_pca = PcaUtils.run_pca(vote_matrix=real_vote_matrix)
+    _, _, actual_pca = run_pca(vote_matrix=real_vote_matrix)
     actual_variance = actual_pca.explained_variance_
 
     # Rebuild explained variance from polismath data.
@@ -104,7 +104,7 @@ def test_explained_variance_modification_fails(polis_convo_data):
         vote_matrix=real_vote_matrix,
         mod_out_statement_ids=mod_out_statement_ids,
     )
-    _, _, actual_pca = PcaUtils.run_pca(vote_matrix=real_vote_matrix)
+    _, _, actual_pca = run_pca(vote_matrix=real_vote_matrix)
     actual_variance = actual_pca.explained_variance_
 
     # Rebuild explained variance from polismath data.
@@ -133,7 +133,7 @@ def test_run_pca_real_data_below_100(polis_convo_data):
         mod_out_statement_ids=mod_out_statement_ids,
     )
 
-    actual_projected_participants, actual_projected_statements, actual_pca = PcaUtils.run_pca(vote_matrix=real_vote_matrix)
+    X_participants, X_statements, actual_pca = run_pca(vote_matrix=real_vote_matrix)
 
     assert actual_pca.components_[0] == pytest.approx(expected_pca["comps"][0])
     assert actual_pca.components_[1] == pytest.approx(expected_pca["comps"][1])
@@ -145,11 +145,12 @@ def test_run_pca_real_data_below_100(polis_convo_data):
     expected_df = expected_df.drop(columns=['xy']).set_index('participant_id').sort_index()
 
     # Only include participants that are clustered (aka "in conversation" calculation)
-    actual_df = actual_projected_participants.loc[math_data["in-conv"]].sort_index()
+    actual_df = pd.DataFrame(X_participants, index=real_vote_matrix.index, columns=pd.Index(["x", "y"]))
+    actual_df = actual_df.loc[math_data["in-conv"]].sort_index()
 
     pd.testing.assert_frame_equal(expected_df, actual_df, rtol=1e-5)
 
-    assert_array_almost_equal(actual_projected_statements.values.transpose(), expected_pca["comment-projection"])
+    assert_array_almost_equal(X_statements.transpose(), expected_pca["comment-projection"])
 
 # TODO: Accomodate sign flips in "medium-no-meta".
 @pytest.mark.parametrize("polis_convo_data", ["medium-with-meta"], indirect=True)
@@ -171,7 +172,7 @@ def test_run_pca_real_data_above_100(polis_convo_data):
         mod_out_statement_ids=mod_out_statement_ids,
     )
 
-    _, _, actual_pca = PcaUtils.run_pca(vote_matrix=real_vote_matrix)
+    _, _, actual_pca = run_pca(vote_matrix=real_vote_matrix)
 
     assert actual_pca.components_[0] == pytest.approx(expected_pca["comps"][0])
     assert actual_pca.components_[1] == pytest.approx(expected_pca["comps"][1])
@@ -205,7 +206,7 @@ def test_run_pca_real_data_testing():
         mod_out_statement_ids=math_data["mod-out"],
     )
 
-    _, _, actual_pca = PcaUtils.run_pca(vote_matrix=real_vote_matrix)
+    _, _, actual_pca = run_pca(vote_matrix=real_vote_matrix)
     # powerit_pca = PcaUtils.powerit_pca(real_vote_matrix.values)
 
     # We test absolute because PCA methods don't always give the same sign, and can flip.

@@ -1,5 +1,6 @@
 from reddwarf.types.agora import Conversation, ClusteringResult, ClusteringOptions
 from reddwarf import utils
+import pandas as pd
 
 DEFAULT_MIN_USER_VOTE_THRESHOLD = 7
 DEFAULT_MAX_CLUSTERS = 5
@@ -53,6 +54,7 @@ def run_clustering_v1(
         random_state=DEFAULT_KMEANS_RANDOM_STATE,
     )
 
+    projected_data = pd.DataFrame(projected_data, columns=pd.Index(["x", "y"]), index=vote_matrix.index)
     # Add cluster label column to dataframe.
     projected_data = projected_data.assign(cluster_id=optimal_kmeans.labels_ if optimal_kmeans else None)
     # Convert participant_id index into regular column, for ease of transformation.

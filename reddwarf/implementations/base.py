@@ -97,7 +97,8 @@ def run_pipeline(
 
     # Run PCA and generate participant/statement projections.
     # DataFrames each have "x" and "y" columns.
-    participants_df, statements_df, reducer_model = run_reducer(vote_matrix=filtered_vote_matrix, reducer=reducer)
+    X_participants, X_statements, reducer_model = run_reducer(vote_matrix=filtered_vote_matrix.values, reducer=reducer)
+    participants_df = pd.DataFrame(X_participants, columns=pd.Index(["x", "y"]), index=filtered_vote_matrix.index)
 
     participant_ids_to_cluster = get_clusterable_participant_ids(
         raw_vote_matrix, vote_threshold=min_user_vote_threshold
@@ -111,7 +112,7 @@ def run_pipeline(
 
     clusterer_model = run_clusterer(
         clusterer=clusterer,
-        clusterable_participants_df=participants_df.loc[participant_ids_to_cluster, :],
+        X_participants_clusterable=participants_df.loc[participant_ids_to_cluster, :].values,
         max_group_count=max_group_count,
         force_group_count=force_group_count,
         init_centers=init_centers,
@@ -141,6 +142,7 @@ def run_pipeline(
         except IndexError:
             return default
 
+    statements_df = pd.DataFrame(X_statements, columns=pd.Index(["x", "y"]), index=filtered_vote_matrix.columns)
     statements_df["to_zero"] = statements_df.index.isin(mod_out_statement_ids)
     statements_df["is_meta"] = statements_df.index.isin(meta_statement_ids)
     if isinstance(reducer_model, PCA):

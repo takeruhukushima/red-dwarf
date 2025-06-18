@@ -1,11 +1,13 @@
 from typing import Optional
 
+from numpy.typing import NDArray
+
 from reddwarf.sklearn.cluster import PolisKMeans
 from reddwarf.utils.clusterer.kmeans import find_optimal_k
 
 
 def run_clusterer(
-    clusterable_participants_df,
+    X_participants_clusterable: NDArray,
     clusterer="kmeans",
     force_group_count=None,
     max_group_count=5,
@@ -19,7 +21,7 @@ def run_clusterer(
                 k_bounds = [2, max_group_count]
 
             _, _, kmeans = find_optimal_k(
-                projected_data=clusterable_participants_df,
+                projected_data=X_participants_clusterable,
                 k_bounds=k_bounds,
                 # Force polis strategy of initiating cluster centers. See: PolisKMeans.
                 init="polis",

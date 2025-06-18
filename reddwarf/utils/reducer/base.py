@@ -1,3 +1,4 @@
+from numpy.typing import NDArray
 import pandas as pd
 import numpy as np
 from reddwarf.utils.matrix import VoteMatrix, generate_virtual_vote_matrix
@@ -55,28 +56,26 @@ def get_reducer(
 
 
 def run_reducer(
-    vote_matrix: VoteMatrix,
+    vote_matrix: NDArray,
     n_components: int = 2,
     reducer: ReducerType = "pca",
     reducer_kwargs: dict = {},
-) -> Tuple[pd.DataFrame, pd.DataFrame, ReducerModel]:
+) -> Tuple[NDArray, Optional[NDArray], ReducerModel]:
     """
-    Process a prepared vote matrix to be imputed and return projected participant data,
-    as well as eigenvectors and eigenvalues.
+    Process a prepared vote matrix to be imputed and return participant and (optionally) statement data,
+    projected into reduced n-dimensional space.
 
     The vote matrix should not yet be imputed, as this will happen within the method.
 
     Args:
-        vote_matrix (pd.DataFrame): A vote matrix of data. Non-imputed values are expected.
+        vote_matrix (NDArray): A vote matrix of data. Non-imputed values are expected.
         n_components (int): Number n of principal components to decompose the `vote_matrix` into.
         reducer (Literal["pca", "pacmap", "localmap"]): Dimensionality reduction method to use.
 
     Returns:
-        projected_data (pd.DataFrame): A dataframe of projected xy coordinates for each `vote_matrix` row/participant.
-        reducer_model (ReducerModel): Reducer estimator, notably with the following attributes:
-            - components_ (List[List[float]]): Eigenvectors of principal `n` components, one per column/statement/feature.
-            - explained_variance_ (List[float]): Explained variance of each principal component.
-            - mean_ (list[float]): Means/centers of each column/statements/features.
+        X_participants (NDArray): A numpy array with n-d coordinates for each projected row/participant.
+        X_statements (Optional[NDArray]): A numpy array with n-d coordinates for each projected col/statement.
+        reducer_model (ReducerModel): The fitted dimensional reduction sci-kit learn estimator.
     """
     match reducer:
         case "pca":
@@ -96,36 +95,20 @@ def run_reducer(
                 ]
             )
 
-    DEFAULT_DIMENSION_LABELS = ["x", "y", "z"]
-    dimension_labels = DEFAULT_DIMENSION_LABELS[:n_components]
-
     # Generate projections of participants.
-    X_participants = pipeline.fit_transform(vote_matrix.values)
-
-    projected_participants = pd.DataFrame(
-        X_participants,
-        index=pd.Index(vote_matrix.index, name="participant_id"),
-        columns=np.asarray(dimension_labels),
-    )
+    X_participants = pipeline.fit_transform(vote_matrix)
 
     if reducer == "pca":
         # Generate projections of statements via virtual vote matrix.
         # This projects unit vectors for each feature/statement into PCA space to
         # understand their placement.
-        n_statements = len(vote_matrix.columns)
+        num_cols = vote_matrix.shape[1]
+        n_statements = num_cols
         virtual_vote_matrix = generate_virtual_vote_matrix(n_statements)
         X_statements = pipeline.transform(virtual_vote_matrix)
-
-        projected_statements = pd.DataFrame(
-            X_statements,
-            columns=np.asarray(dimension_labels),
-            index=pd.Index(vote_matrix.columns, name="statement_id"),
-        )
     else:
-        projected_statements = pd.DataFrame(
-            index=pd.Index(vote_matrix.columns, name="statement_id"),
-        )
+        X_statements = None
 
     reducer_model: ReducerModel = pipeline.named_steps["reduce"]
 
-    return projected_participants, projected_statements, reducer_model
+    return X_participants, X_statements, reducer_model

@@ -1,3 +1,4 @@
+from numpy.typing import NDArray
 import pandas as pd
 import numpy as np
 from reddwarf.sklearn.model_selection import GridSearchNonCV
@@ -63,7 +64,7 @@ def run_kmeans(
     return kmeans
 
 def find_optimal_k(
-        projected_data: pd.DataFrame,
+        projected_data: NDArray,
         k_bounds: RangeLike = [2, 5],
         init="k-means++",
         init_centers: Optional[List] = None,
@@ -73,7 +74,7 @@ def find_optimal_k(
     Use silhouette scores to find the best number of clusters k to assume to fit the data.
 
     Args:
-        projected_data (pd.DataFrame): A dataframe with two columns (assumed `x` and `y`).
+        projected_data (NDArray): A n-D numpy array.
         k_bounds (RangeLike): An upper and low bound on n_clusters to test for. (Default: [2, 5])
         init_centers (List): A list of xy coordinates to use as initial center guesses.
         random_state (int): Determines random number generation for centroid initialization. Use an int to make the randomness deterministic.
