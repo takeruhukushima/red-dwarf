@@ -58,6 +58,12 @@ See [`docs/notebooks/polis-implementation-demo.ipynb`][notebook] or [`docs/noteb
    - [`docs/notebooks/experiment-pca-pacmap-localmap-comparison.ipynb`](https://github.com/polis-community/red-dwarf/blob/main/docs/notebooks/experiment-pca-pacmap-localmap-comparison.ipynb)
    - [`docs/notebooks/strip-pass-votes.ipynb`](https://github.com/polis-community/red-dwarf/blob/main/docs/notebooks/strip-pass-votes.ipynb)
 
+## Architecture
+
+This is the generalized pipeline of Polis-like processes that we're aiming to accomodate. (See [issue #53](https://github.com/polis-community/red-dwarf/issues/53#issuecomment-2942923628) for details.)
+
+![](https://github.com/user-attachments/assets/8b7b5bfc-7127-4a27-8316-7528209d7c8e)
+
 ## Get Involved
 
 - [Join][pug-discord] the _Polis User Group (PUG)_ **Discord** server.
