@@ -140,9 +140,14 @@ def test_run_pca_real_data_below_100(polis_convo_data):
     assert actual_pca.mean_ == pytest.approx(expected_pca["center"])
 
     expected_participant_projections = helpers.transform_base_clusters_to_participant_coords(base_clusters=math_data["base-clusters"])
-    for expected in expected_participant_projections:
-        pid = expected["participant_id"]
-        assert_array_almost_equal(actual_projected_participants.loc[pid, ["x","y"]].values, expected["xy"])
+    expected_df = pd.DataFrame.from_records(expected_participant_projections)
+    expected_df[['x', 'y']] = pd.DataFrame(expected_df['xy'].tolist(), index=expected_df.index)
+    expected_df = expected_df.drop(columns=['xy']).set_index('participant_id').sort_index()
+
+    # Only include participants that are clustered (aka "in conversation" calculation)
+    actual_df = actual_projected_participants.loc[math_data["in-conv"]].sort_index()
+
+    pd.testing.assert_frame_equal(expected_df, actual_df, rtol=1e-5)
 
     assert_array_almost_equal(actual_projected_statements.values.transpose(), expected_pca["comment-projection"])
 
