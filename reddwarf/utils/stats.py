@@ -443,7 +443,11 @@ def calculate_comment_statistics_dataframes(
     )
 
     group_aware_consensus_df = pd.DataFrame(
-        {"group-aware-consensus": C_v_c[votes.A, :]},
+        {
+            "group-aware-consensus": C_v_c[votes.A, :],
+            "group-aware-consensus-agree": C_v_c[votes.A, :],
+            "group-aware-consensus-disagree": C_v_c[votes.D, :]
+        },
         index=vote_matrix.columns,
     )
 

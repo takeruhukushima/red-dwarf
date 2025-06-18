@@ -34,6 +34,9 @@ class PolisClusteringResult:
         group_comment_stats (DataFrame): A multi-index dataframes for each statement, indexed by group ID and statement.
         statements_df (DataFrame): A dataframe with all intermediary and final statement data/calculations/metadata.
         participants_df (DataFrame): A dataframe with all intermediary and final participant data/calculations/metadata.
+        participant_projections (dict): A dict of participant projected coordinates, keyed to participant ID.
+        statement_projections (Optional[dict]): A dict of statement projected coordinates, keyed to statement ID.
+        group_aware_consensus (dict): A nested dict of statement group-aware-consensus values, keyed first by agree/disagree, then participant ID.
         consensus (ConsensusResult): A dict of the most statistically significant statements for each of agree/disagree.
         repness (PolisRepness): A dict of the most statistically significant statements most representative of each group.
     """
@@ -45,6 +48,9 @@ class PolisClusteringResult:
     group_comment_stats: DataFrame
     statements_df: DataFrame
     participants_df: DataFrame
+    participant_projections: dict
+    statement_projections: Optional[dict]
+    group_aware_consensus: dict
     consensus: ConsensusResult
     repness: PolisRepness
 
@@ -158,6 +164,18 @@ def run_pipeline(
         )
     statements_df = pd.concat([statements_df, gac_df], axis=1)
 
+    participant_projections = dict(zip(filtered_vote_matrix.index, X_participants))
+
+    if X_statements:
+        statement_projections = dict(zip(filtered_vote_matrix.columns, X_statements))
+    else:
+        statement_projections = None
+
+    group_aware_consensus = {
+        "agree": statements_df["group-aware-consensus-agree"].to_dict(),
+        "disagree": statements_df["group-aware-consensus-disagree"].to_dict(),
+    }
+
     consensus = select_consensus_statements(
         vote_matrix=raw_vote_matrix,
         mod_out_statement_ids=mod_out_statement_ids,
@@ -174,6 +192,13 @@ def run_pipeline(
     )
 
     return PolisClusteringResult(
+        participant_projections=participant_projections,
+        statement_projections=statement_projections,
+        group_aware_consensus=group_aware_consensus,
+        consensus=consensus,
+        repness=repness,
+
+        # Raw & Intermediary values
         raw_vote_matrix=raw_vote_matrix,
         filtered_vote_matrix=filtered_vote_matrix,
         reducer=reducer_model,
@@ -181,6 +206,4 @@ def run_pipeline(
         group_comment_stats=grouped_stats_df,
         statements_df=statements_df,
         participants_df=participants_df,
-        consensus=consensus,
-        repness=repness,
     )
