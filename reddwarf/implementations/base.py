@@ -166,7 +166,7 @@ def run_pipeline(
 
     participant_projections = dict(zip(filtered_vote_matrix.index, X_participants))
 
-    if X_statements:
+    if X_statements is not None:
         statement_projections = dict(zip(filtered_vote_matrix.columns, X_statements))
     else:
         statement_projections = None
