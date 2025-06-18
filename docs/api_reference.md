@@ -65,7 +65,7 @@ use in Scikit-Learn workflows, pipelines, and APIs.
     options:
         show_root_heading: true
 
-### ::: reddwarf.utils.clusterer.kmeans.find_optimal_k
+### ::: reddwarf.utils.clusterer.kmeans.find_best_kmeans
     options:
         show_root_heading: true
 

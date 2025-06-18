@@ -46,8 +46,8 @@ def run_clustering_v1(
     projected_data, *_ = utils.run_pca(vote_matrix=vote_matrix)
 
     k_bounds = [2, options.get("max_clusters", DEFAULT_MAX_CLUSTERS)]
-    _, _, optimal_kmeans = utils.find_optimal_k(
-        projected_data=projected_data,
+    _, _, optimal_kmeans = utils.find_best_kmeans(
+        X_to_cluster=projected_data,
         k_bounds=k_bounds,
         init="k-means++",
         # Ensure reproducible kmeans calculation between runs.

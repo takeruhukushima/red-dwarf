@@ -197,8 +197,8 @@ class PolisClient():
 
     def find_optimal_k(self):
         k_bounds=[2, self.max_group_count]
-        best_k, silhouette_score, best_kmeans = utils.find_optimal_k(
-            projected_data=self.projected_data,
+        best_k, silhouette_score, best_kmeans = utils.find_best_kmeans(
+            X_to_cluster=self.projected_data,
             k_bounds=k_bounds,
         )
         self.optimal_k = best_k

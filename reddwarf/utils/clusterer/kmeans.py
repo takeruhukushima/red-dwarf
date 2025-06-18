@@ -63,8 +63,8 @@ def run_kmeans(
 
     return kmeans
 
-def find_optimal_k(
-        projected_data: NDArray,
+def find_best_kmeans(
+        X_to_cluster: NDArray,
         k_bounds: RangeLike = [2, 5],
         init="k-means++",
         init_centers: Optional[List] = None,
@@ -74,15 +74,15 @@ def find_optimal_k(
     Use silhouette scores to find the best number of clusters k to assume to fit the data.
 
     Args:
-        projected_data (NDArray): A n-D numpy array.
+        X_to_cluster (NDArray): A n-D numpy array.
         k_bounds (RangeLike): An upper and low bound on n_clusters to test for. (Default: [2, 5])
         init_centers (List): A list of xy coordinates to use as initial center guesses.
         random_state (int): Determines random number generation for centroid initialization. Use an int to make the randomness deterministic.
 
     Returns:
-        optimal_k (int): Ideal number of clusters.
-        optimal_silhouette_score (float): Silhouette score for this K value.
-        optimal_kmeans (PolisKMeans | None): The optimal fitted estimator returned from PolisKMeans.
+        best_k (int): Ideal number of clusters.
+        best_silhouette_score (float): Silhouette score for this K value.
+        best_kmeans (PolisKMeans | None): The optimal fitted estimator returned from PolisKMeans.
     """
     param_grid = {
         "n_clusters": to_range(k_bounds),
@@ -102,7 +102,7 @@ def find_optimal_k(
         ),
     )
 
-    search.fit(projected_data)
+    search.fit(X_to_cluster)
 
     best_k = search.best_params_['n_clusters']
     best_silhouette_score = search.best_score_
