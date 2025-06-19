@@ -19,6 +19,7 @@ def run_clusterer(
     force_group_count=None,
     max_group_count=5,
     init_centers=None,
+    random_state=None,
     **clusterer_kwargs,
 ) -> Optional[ReducerModel]:
     match clusterer:
@@ -34,6 +35,7 @@ def run_clusterer(
                 # Force polis strategy of initiating cluster centers. See: PolisKMeans.
                 init="polis",
                 init_centers=init_centers,
+                random_state=random_state,
                 # TODO: Support passing in arbitrary clusterer_kwargs.
             )
 
