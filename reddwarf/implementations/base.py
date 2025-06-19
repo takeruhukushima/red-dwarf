@@ -20,7 +20,8 @@ from reddwarf.utils.stats import (
     select_representative_statements,
 )
 
-from reddwarf.utils.reducer.base import ReducerType
+from reddwarf.utils.clusterer.base import ClustererType, ClustererModel
+from reddwarf.utils.reducer.base import ReducerType, ReducerModel
 
 
 @dataclass
@@ -29,8 +30,8 @@ class PolisClusteringResult:
     Attributes:
         raw_vote_matrix (DataFrame): Raw sparse vote matrix before any processing.
         filtered_vote_matrix (DataFrame): Raw sparse vote matrix with moderated statements zero'd out.
-        reducer (ReducerModel): Reducer model fitted to vote matrix.
-        kmeans (PolisKMeans): Scikit-Learn KMeans object for selected group count, including `labels_` and `cluster_centers_`. See `PolisKMeans`.
+        reducer (ReducerModel): scikit-learn reducer model fitted to vote matrix.
+        clusterer (ClustererModel): scikit-learn clusterer model, fitted to participant projections. (includes `labels_`)
         group_comment_stats (DataFrame): A multi-index dataframes for each statement, indexed by group ID and statement.
         statements_df (DataFrame): A dataframe with all intermediary and final statement data/calculations/metadata.
         participants_df (DataFrame): A dataframe with all intermediary and final participant data/calculations/metadata.
@@ -44,7 +45,8 @@ class PolisClusteringResult:
     raw_vote_matrix: DataFrame
     filtered_vote_matrix: DataFrame
     reducer: ReducerModel
-    kmeans: PolisKMeans | None
+    # TODO: Figure out how to guarantee PolisKMeans model returned.
+    clusterer: ClustererModel | None
     group_comment_stats: DataFrame
     statements_df: DataFrame
     participants_df: DataFrame
@@ -57,7 +59,9 @@ class PolisClusteringResult:
 def run_pipeline(
     votes: list[dict],
     reducer: ReducerType = "pca",
-    clusterer: str = "kmeans",
+    reducer_kwargs: dict = {},
+    clusterer: ClustererType = "kmeans",
+    clusterer_kwargs: dict = {},
     mod_out_statement_ids: list[int] = [],
     meta_statement_ids: list[int] = [],
     min_user_vote_threshold: int = 7,
@@ -79,6 +83,10 @@ def run_pipeline(
 
     Args:
         votes (list[dict]): Raw list of vote dicts, with keys for "participant_id", "statement_id", "vote" and "modified"
+        reducer (ReducerType): Selects the type of reducer model to use.
+        reducer_kwargs (dict): Extra params to pass to reducer model during initialization.
+        clusterer (ClustererType): Selects the type of clusterer model to use.
+        clusterer_kwargs (dict): Extra params to pass to clusterer model during initialization.
         mod_out_statement_ids (list[int]): List of statement IDs to moderate/zero out
         meta_statement_ids (list[int]): List of meta statement IDs
         min_user_vote_threshold (int): Minimum number of votes a participant must make to be included in clustering
@@ -202,7 +210,7 @@ def run_pipeline(
         raw_vote_matrix=raw_vote_matrix,
         filtered_vote_matrix=filtered_vote_matrix,
         reducer=reducer_model,
-        kmeans=clusterer_model,
+        clusterer=clusterer_model,
         group_comment_stats=grouped_stats_df,
         statements_df=statements_df,
         participants_df=participants_df,

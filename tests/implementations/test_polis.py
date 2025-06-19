@@ -154,7 +154,7 @@ def test_run_clustering_is_reproducible(polis_convo_data):
         mod_out_statement_ids=mod_out_statement_ids,
     )
 
-    centers_1 = cluster_run_1.kmeans.cluster_centers_ if cluster_run_1.kmeans else None
+    centers_1 = cluster_run_1.clusterer.cluster_centers_ if cluster_run_1.clusterer else None
 
     cluster_run_2 = run_clustering(
         votes=loader.votes_data,
@@ -163,8 +163,8 @@ def test_run_clustering_is_reproducible(polis_convo_data):
     )
 
     # same number of clusters
-    centers_1 = cluster_run_1.kmeans.cluster_centers_ if cluster_run_1.kmeans else []
-    centers_2 = cluster_run_2.kmeans.cluster_centers_ if cluster_run_2.kmeans else []
+    centers_1 = cluster_run_1.clusterer.cluster_centers_ if cluster_run_1.clusterer else []
+    centers_2 = cluster_run_2.clusterer.cluster_centers_ if cluster_run_2.clusterer else []
     assert len(centers_1) == len(centers_2)
     assert_array_equal(centers_1, centers_2)
 

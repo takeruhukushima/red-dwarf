@@ -1,4 +1,4 @@
-from typing import Optional, Union, TypeAlias, TYPE_CHECKING
+from typing import Literal, Optional, Union, TypeAlias, TYPE_CHECKING
 
 from numpy.typing import NDArray
 
@@ -10,18 +10,19 @@ if TYPE_CHECKING:
     from sklearn.cluster import HDBSCAN
     from reddwarf.sklearn.cluster import PolisKMeans
 
-ReducerModel: TypeAlias = Union["HDBSCAN", "PolisKMeans"]
+ClustererModel: TypeAlias = Union["HDBSCAN", "PolisKMeans"]
+ClustererType: TypeAlias = Literal["hdbscan", "kmeans"]
 
 
 def run_clusterer(
     X_participants_clusterable: NDArray,
-    clusterer="kmeans",
+    clusterer: ClustererType = "kmeans",
     force_group_count=None,
     max_group_count=5,
     init_centers=None,
     random_state=None,
     **clusterer_kwargs,
-) -> Optional[ReducerModel]:
+) -> Optional[ClustererModel]:
     match clusterer:
         case "kmeans":
             if force_group_count:
