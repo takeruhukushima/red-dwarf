@@ -18,6 +18,7 @@ def run_clusterer(
     clusterer="kmeans",
     force_group_count=None,
     max_group_count=5,
+    init_centers=None,
     **clusterer_kwargs,
 ) -> Optional[ReducerModel]:
     match clusterer:
@@ -32,7 +33,8 @@ def run_clusterer(
                 k_bounds=k_bounds,
                 # Force polis strategy of initiating cluster centers. See: PolisKMeans.
                 init="polis",
-                **clusterer_kwargs,
+                init_centers=init_centers,
+                # TODO: Support passing in arbitrary clusterer_kwargs.
             )
 
             return kmeans
