@@ -111,11 +111,11 @@ def generate_figure(
         scatter_kwargs["cmap"] = "Set1"  # color map
 
         # Pad cluster_labels to match the number of points
-        UNGROUPED_LABEL = -1
+        CLUSTER_CENTER_LABEL = -2
         if len(cluster_labels) < len(coord_data):
             pad_length = len(coord_data) - len(cluster_labels)
             cluster_labels = np.concatenate(
-                [cluster_labels, [UNGROUPED_LABEL] * pad_length]
+                [cluster_labels, [CLUSTER_CENTER_LABEL] * pad_length]
             )
 
         scatter_kwargs["c"] = cluster_labels  # color indexes
@@ -124,8 +124,8 @@ def generate_figure(
         # Subset to allow unlabelled points to just be plotted
         unique_labels = np.unique(cluster_labels)
         for label in unique_labels:
-            if label == UNGROUPED_LABEL:
-                continue  # skip hulls when ungrouped label was padded in
+            if label in (-1, -2):
+                continue  # skip hulls when special-case labels used
 
             label_mask = cluster_labels == label
             cluster_points = coord_data[label_mask]
@@ -156,11 +156,14 @@ def generate_figure(
         unique_labels = np.unique(cluster_labels)
         cbar = plt.colorbar(scatter, label="Cluster", ticks=unique_labels)
 
-        UNGROUPED_LABEL_NAME = "[Center Guess]"
-        tick_labels = [
-            UNGROUPED_LABEL_NAME if lbl == -1 else GROUP_LABEL_NAMES[lbl]
-            for lbl in unique_labels
-        ]
+        tick_labels = []
+        for lbl in unique_labels:
+            if lbl == -1:
+                tick_labels.append("[Unclustered]")
+            elif lbl == -2:
+                tick_labels.append("[Center Guess]")
+            else:
+                tick_labels.append(GROUP_LABEL_NAMES[lbl])
         cbar.ax.set_yticklabels(tick_labels)
 
     plt.show()
