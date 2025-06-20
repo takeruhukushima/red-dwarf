@@ -1,7 +1,11 @@
 # Red Dwarf: A Pol.is-like library
 
+&nbsp;&nbsp;
+⚫⋆✦⋆⭑⋆⋆⋆⋆⋆
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 [![PyPI - Version](https://img.shields.io/pypi/v/red-dwarf)][pypi]
 [![Run Tests](https://github.com/polis-community/red-dwarf-democracy/actions/workflows/test.yml/badge.svg)](https://github.com/polis-community/red-dwarf-democracy/actions/workflows/test.yml)
+--------
 
 A <em>DIM</em>ensional <em>RED</em>uction library for [stellarpunk][] democracy into the long haul.
 
