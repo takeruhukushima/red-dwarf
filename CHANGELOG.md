@@ -14,11 +14,26 @@
 - Add `print_consensus_statements()` presenter for inspecting `PolisClusteringResult`.
 - Allow `pick_max` and `confidence` interval args to be set in `polis.run_clustering()`.
 - Allow `get_corrected_centroid_guesses()` to unflip each axis if correction not needed.
+- Abstracted reducer and clusterer algorithm support.
+  - Added support for pacmap/localmap beyond PCA.
+  - Added support for HDBSCAN clustering beyond KMeans.
+  - Allow passing of arbitary params into reducer/clusterer.
+- Remove support for `polis_legacy` implementation (PolisClient).
+- Added disagree variant of group-informed-consensus. (`group-informed-consensus-disagree`)
+- Brought `group-informed-consensus` metrics to top-level result object.
+- Renamed `run_clustering` function to `run_pipeline` and created base pipeline implementation.
+- Add option to generate_figure_polis to configure showing pid labels (`show_pids`).
+- Remove deprecated methods from doc website.
+- Remove deprecated modules from prior import paths.
+- Avoid using dataframes in a few low level util function, in favour of numpy arrays.
+- Rename `projected_{participants,statements}` to `{participant,statement}_projections` in run_pipeline results. Also coords keyed to ID, instead of dataframes.
 
 ### Fixes
+
 - Handle when `is-meta` and `is-seed` columns arrive in CSV import.
   [`#55`](https://github.com/polis-community/red-dwarf/issues/55)
 - Handle loading comments data from API when `is_meta` missing in CSV import.
+- Only pass unique labels into `generate_figure()` colorbar.
 
 ### Chores
 

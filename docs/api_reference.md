@@ -3,7 +3,7 @@
 
 ## `reddwarf.implementations.polis`
 
-### ::: reddwarf.implementations.polis.run_clustering
+### ::: reddwarf.implementations.polis.run_pipeline
     options:
         show_root_heading: true
 
@@ -49,19 +49,23 @@ use in Scikit-Learn workflows, pipelines, and APIs.
     options:
         show_root_heading: true
 
-## `reddwarf.utils.pca`
+## `reddwarf.utils.reducer`
 
-### ::: reddwarf.utils.pca.run_pca
+### ::: reddwarf.utils.reducer.base.run_reducer
     options:
         show_root_heading: true
 
-## `reddwarf.utils.clustering`
-
-### ::: reddwarf.utils.clustering.find_optimal_k
+### ::: reddwarf.utils.reducer.base.get_reducer
     options:
         show_root_heading: true
 
-### ::: reddwarf.utils.clustering.run_kmeans
+## `reddwarf.utils.clusterer`
+
+### ::: reddwarf.utils.clusterer.base.run_clusterer
+    options:
+        show_root_heading: true
+
+### ::: reddwarf.utils.clusterer.kmeans.find_best_kmeans
     options:
         show_root_heading: true
 
@@ -104,6 +108,10 @@ use in Scikit-Learn workflows, pipelines, and APIs.
 ## `reddwarf.data_presenter`
 
 ### ::: reddwarf.data_presenter.generate_figure
+    options:
+        show_root_heading: true
+
+### ::: reddwarf.data_presenter.generate_figure_polis
     options:
         show_root_heading: true
 

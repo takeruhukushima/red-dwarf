@@ -65,29 +65,30 @@ def test_run_clustering_real_data_small(polis_convo_data):
 
     # Check group-aware-consensus calculations.
     calculated = helpers.simulate_api_response(
-        result.statements_df["consensus"].items()
+        result.statements_df["group-aware-consensus"].items()
     )
     expected = math_data["group-aware-consensus"]
     assert_dict_equal(calculated, expected)
 
     # Check PCA components and means
-    assert pytest.approx(result.pca.components_[0]) == math_data["pca"]["comps"][0]
-    assert pytest.approx(result.pca.components_[1]) == math_data["pca"]["comps"][1]
-    assert pytest.approx(result.pca.mean_) == math_data["pca"]["center"]
+    assert pytest.approx(result.reducer.components_[0]) == math_data["pca"]["comps"][0]
+    assert pytest.approx(result.reducer.components_[1]) == math_data["pca"]["comps"][1]
+    assert pytest.approx(result.reducer.mean_) == math_data["pca"]["center"]
 
     # Check projected statements
     # Convert [[x_1, y_1], [x_2, y_2], ...] into [[x_1, x_2, ...], list[y_1, y_2, ...]]
-    actual = result.projected_statements.values.transpose()
+    actual = result.statements_df[["x", "y"]].values.transpose()
     expected = math_data["pca"]["comment-projection"]
     assert_array_almost_equal(actual, expected)
 
     # Check projected participants
     # Ensure we have as many expected coords as calculated coords.
-    assert len(result.projected_participants.index) == len(expected_projected_ptpts)
+    clustered_participants_df = result.participants_df.loc[result.participants_df["to_cluster"], :]
+    assert len(clustered_participants_df.index) == len(expected_projected_ptpts)
 
     for projection in expected_projected_ptpts:
         expected_xy = projection["xy"]
-        calculated_xy = result.projected_participants.loc[
+        calculated_xy = result.participants_df.loc[
             projection["participant_id"], ["x", "y"]
         ].values
 
@@ -95,7 +96,8 @@ def test_run_clustering_real_data_small(polis_convo_data):
 
     # Check that the cluster labels all match when K is forced to match.
     _, expected_cluster_labels = extract_data_from_polismath(math_data)
-    calculated_cluster_labels = result.projected_participants["cluster_id"].values
+    clustered_participants_df = result.participants_df.loc[result.participants_df["to_cluster"], :]
+    calculated_cluster_labels = clustered_participants_df["cluster_id"].values
     assert_array_equal(calculated_cluster_labels, expected_cluster_labels)  # type:ignore
 
     # Check extremity calculation
@@ -152,7 +154,7 @@ def test_run_clustering_is_reproducible(polis_convo_data):
         mod_out_statement_ids=mod_out_statement_ids,
     )
 
-    centers_1 = cluster_run_1.kmeans.cluster_centers_ if cluster_run_1.kmeans else None
+    centers_1 = cluster_run_1.clusterer.cluster_centers_ if cluster_run_1.clusterer else None
 
     cluster_run_2 = run_clustering(
         votes=loader.votes_data,
@@ -161,18 +163,25 @@ def test_run_clustering_is_reproducible(polis_convo_data):
     )
 
     # same number of clusters
-    centers_1 = cluster_run_1.kmeans.cluster_centers_ if cluster_run_1.kmeans else []
-    centers_2 = cluster_run_2.kmeans.cluster_centers_ if cluster_run_2.kmeans else []
+    centers_1 = cluster_run_1.clusterer.cluster_centers_ if cluster_run_1.clusterer else []
+    centers_2 = cluster_run_2.clusterer.cluster_centers_ if cluster_run_2.clusterer else []
     assert len(centers_1) == len(centers_2)
     assert_array_equal(centers_1, centers_2)
 
     # projected statements and cluster IDs
     assert_frame_equal(
-        cluster_run_1.projected_participants, cluster_run_2.projected_participants
+        cluster_run_1.participants_df.loc[
+            cluster_run_1.participants_df["to_cluster"],
+            ["x", "y", "cluster_id"],
+        ],
+        cluster_run_2.participants_df.loc[
+            cluster_run_2.participants_df["to_cluster"],
+            ["x", "y", "cluster_id"],
+        ]
     )
     # components/eigenvectors
     assert (
-        cluster_run_1.pca.components_.tolist() == cluster_run_2.pca.components_.tolist()
+        cluster_run_1.reducer.components_.tolist() == cluster_run_2.reducer.components_.tolist()
     )
     # statement means
-    assert cluster_run_1.pca.mean_.tolist() == cluster_run_2.pca.mean_.tolist()
+    assert cluster_run_1.reducer.mean_.tolist() == cluster_run_2.reducer.mean_.tolist()

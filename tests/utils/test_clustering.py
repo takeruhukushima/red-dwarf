@@ -1,5 +1,5 @@
 import pytest
-from reddwarf.utils.clustering import run_kmeans, find_optimal_k
+from reddwarf.utils.clusterer.kmeans import run_kmeans, find_best_kmeans
 from tests.fixtures import polis_convo_data
 from tests.helpers import transform_base_clusters_to_participant_coords
 import pandas as pd
@@ -37,7 +37,7 @@ def test_run_kmeans_real_data_reproducible(polis_convo_data):
 # NOTE: "small-no-meta" fixture doesn't work because wants to find 4 clusters, whereas real data from polismath says 3.
 # This is likely due to k-smoothing holding back the k value at 3 in polismath, and we're finding the real current one.
 @pytest.mark.parametrize("polis_convo_data", ["small-with-meta"], indirect=True)
-def test_find_optimal_k_real_data(polis_convo_data):
+def test_find_best_kmeans_real_data(polis_convo_data):
     fixture = polis_convo_data
     MAX_GROUP_COUNT = 5
 
@@ -54,8 +54,8 @@ def test_find_optimal_k_real_data(polis_convo_data):
         for item in projected_participants
     ]).set_index("participant_id")
 
-    results = find_optimal_k(
-        projected_data=projected_participants_df,
+    results = find_best_kmeans(
+        X_to_cluster=projected_participants_df,
         k_bounds=[2, MAX_GROUP_COUNT],
         # Pad center guesses to have enough values for testing up to max k groups.
         init_centers=expected_centers
