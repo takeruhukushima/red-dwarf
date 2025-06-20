@@ -36,7 +36,7 @@ def generate_figure_polis(
         coord_data = np.vstack(
             [
                 coord_data,
-                np.asarray(result.kmeans.init_centers_used_ if result.kmeans else []),
+                np.asarray(result.clusterer.init_centers_used_ if result.clusterer else []),
             ]
         )
 
