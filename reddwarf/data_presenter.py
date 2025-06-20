@@ -24,9 +24,10 @@ def generate_figure_polis(
     Args:
         show_pids (bool): Show the participant IDs on the plot
     """
-    cluster_labels = result.projected_participants["cluster_id"].values
+    participants_clustered_df = result.participants_df[result.participants_df["cluster_id"].notnull()]
+    cluster_labels = participants_clustered_df["cluster_id"].values
 
-    coord_data = result.projected_participants.loc[:, ["x", "y"]].values
+    coord_data = participants_clustered_df.loc[:, ["x", "y"]].values
     coord_labels = None
     # Add the init center guesses to the bottom of the coord stack. Internally, they
     # will be give a fake "-1" colored label that won't be used to draw clusters.
@@ -40,7 +41,7 @@ def generate_figure_polis(
         )
 
     if show_pids:
-        coord_labels = [f"p{pid}" for pid in result.projected_participants.index]
+        coord_labels = [f"p{pid}" for pid in participants_clustered_df.index]
 
     generate_figure(
         coord_data=coord_data,
