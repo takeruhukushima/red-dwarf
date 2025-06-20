@@ -1,4 +1,4 @@
-# Red Dwarf: A Pol.is-inspired library
+# Red Dwarf: A Pol.is-like library
 
 [![PyPI - Version](https://img.shields.io/pypi/v/red-dwarf)][pypi]
 [![Run Tests](https://github.com/polis-community/red-dwarf-democracy/actions/workflows/test.yml/badge.svg)](https://github.com/polis-community/red-dwarf-democracy/actions/workflows/test.yml)
