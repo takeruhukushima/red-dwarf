@@ -12,9 +12,6 @@ docs-build: ## Build the static docs ./site directory
 docs-serve: ## Serve the documentation dev site
 	uv run mkdocs serve
 
-debug: ## Run the debug.py script
-	uv run python debug.py
-
 test: ## Run tests via pytest, optionally filtering (Ex.: `make test TEST_FILTER=map-xids`)
 	uv run pytest -p no:nbmake -k '$(TEST_FILTER)'
 
