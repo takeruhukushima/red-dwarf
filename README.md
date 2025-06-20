@@ -9,7 +9,7 @@ A <em>DIM</em>ensional <em>RED</em>uction library for [stellarpunk][] democracy 
 > type -- the quiet 70% majority. They burn slow, using fuel efficiently,
 > making them the longest-living stars in the universe. They'll be around until
 > the last light, even supporting habitable planets for billions of years.
-> If there's persistant life in the universe, it's likely around a red dwarf.
+> If there's persistant life out there, it's likely in a long slow dance with a red dwarf.
 
 ## Roadmap
 
