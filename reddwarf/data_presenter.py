@@ -280,6 +280,15 @@ def print_repness(
 
         print("")
 
+def generate_vote_heatmap(vote_df):
+    sns.set_context("poster")
+    sns.set_style("white")
+    sns.set_theme(font_scale=0.7)
+    sns.set_color_codes()
+    fig, ax = plt.subplots(figsize=(10, 8))
+    sns.heatmap(vote_df, center=0, cmap="RdYlBu", ax=ax)
+    plt.show()
+
 
 class DataPresenter:
     def __init__(self, client):
@@ -306,10 +315,4 @@ class DataPresenter:
         )
 
     def generate_vote_heatmap(self, vote_df):
-        sns.set_context("poster")
-        sns.set_style("white")
-        sns.set_theme(font_scale=0.7)
-        sns.set_color_codes()
-        fig, ax = plt.subplots(figsize=(10, 8))
-        sns.heatmap(vote_df, center=0, cmap="RdYlBu", ax=ax)
-        plt.show()
+        generate_vote_heatmap(vote_df)
