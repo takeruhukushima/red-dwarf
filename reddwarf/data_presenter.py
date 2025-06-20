@@ -24,7 +24,9 @@ def generate_figure_polis(
     Args:
         show_pids (bool): Show the participant IDs on the plot
     """
-    participants_clustered_df = result.participants_df[result.participants_df["cluster_id"].notnull()]
+    participants_clustered_df = result.participants_df[
+        result.participants_df["cluster_id"].notnull()
+    ]
     cluster_labels = participants_clustered_df["cluster_id"].values
 
     coord_data = participants_clustered_df.loc[:, ["x", "y"]].values
@@ -36,7 +38,9 @@ def generate_figure_polis(
         coord_data = np.vstack(
             [
                 coord_data,
-                np.asarray(result.clusterer.init_centers_used_ if result.clusterer else []),
+                np.asarray(
+                    result.clusterer.init_centers_used_ if result.clusterer else []
+                ),
             ]
         )
 
@@ -280,6 +284,7 @@ def print_repness(
 
         print("")
 
+
 def generate_vote_heatmap(vote_df):
     sns.set_context("poster")
     sns.set_style("white")
@@ -288,31 +293,3 @@ def generate_vote_heatmap(vote_df):
     fig, ax = plt.subplots(figsize=(10, 8))
     sns.heatmap(vote_df, center=0, cmap="RdYlBu", ax=ax)
     plt.show()
-
-
-class DataPresenter:
-    def __init__(self, client):
-        self.client = client
-
-    def render_optimal_cluster_figure(self):
-        print(f"Optimal clusters for K={self.client.optimal_k}")
-        print(
-            "Plotting PCA embeddings with K-means, K="
-            + str(np.max(self.client.optimal_cluster_labels) + 1)
-        )
-        self.generate_figure(
-            coord_dataframe=self.client.projected_data,
-            cluster_labels=self.client.optimal_cluster_labels,
-        )
-
-    def generate_figure(self, coord_dataframe, cluster_labels=None):
-        coord_data = coord_dataframe.loc[:, ["x", "y"]].values
-        coord_labels = coord_dataframe.index
-        generate_figure(
-            coord_data=coord_data,
-            coord_labels=coord_labels,
-            cluster_labels=cluster_labels,
-        )
-
-    def generate_vote_heatmap(self, vote_df):
-        generate_vote_heatmap(vote_df)
