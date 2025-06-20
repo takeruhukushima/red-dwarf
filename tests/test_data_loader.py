@@ -79,6 +79,14 @@ def test_load_data_from_api_and_dump_files(tmp_path):
     assert comments_path.exists() == True
     assert math_path.exists() == True
 
+def test_load_data_from_report_id():
+    loader = Loader(report_id="r5hr48j8y8mpcffk7crmk")
+    assert len(loader.votes_data) > 0
+
+def test_load_data_from_conversation_id():
+    loader = Loader(conversation_id="9knpdktubt")
+    assert len(loader.votes_data) > 0
+
 def test_load_data_via_polis_id_report_id():
     report_id = SMALL_CONVO_REPORT_ID
     loader = Loader(polis_id=report_id)
