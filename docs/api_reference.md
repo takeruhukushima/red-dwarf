@@ -1,5 +1,10 @@
 # API Reference
 
+## `reddwarf.implementations.base`
+
+### ::: reddwarf.implementations.polis.run_pipeline
+    options:
+        show_root_heading: true
 
 ## `reddwarf.implementations.polis`
 
