@@ -1,7 +1,8 @@
 from typing import Optional
+from dataclasses import dataclass
+import pandas as pd
 from pandas import DataFrame
 from sklearn.decomposition import PCA
-from reddwarf.sklearn.cluster import PolisKMeans
 from reddwarf.types.polis import PolisRepness
 from reddwarf.utils.clusterer.base import run_clusterer
 from reddwarf.utils.consensus import select_consensus_statements, ConsensusResult
@@ -10,18 +11,13 @@ from reddwarf.utils.matrix import (
     simple_filter_matrix,
     get_clusterable_participant_ids,
 )
-from reddwarf.utils.reducer.base import ReducerModel, run_reducer
-from dataclasses import dataclass
-import pandas as pd
-
+from reddwarf.utils.reducer.base import ReducerType, ReducerModel, run_reducer
+from reddwarf.utils.clusterer.base import ClustererType, ClustererModel
 from reddwarf.utils.stats import (
     calculate_comment_statistics_dataframes,
     populate_priority_calculations_into_statements_df,
     select_representative_statements,
 )
-
-from reddwarf.utils.clusterer.base import ClustererType, ClustererModel
-from reddwarf.utils.reducer.base import ReducerType, ReducerModel
 
 
 @dataclass
