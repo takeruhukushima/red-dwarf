@@ -1,5 +1,4 @@
 from numpy.typing import ArrayLike
-import pandas as pd
 import numpy as np
 from reddwarf.utils.matrix import VoteMatrix
 from typing import Tuple
@@ -11,7 +10,7 @@ from reddwarf.utils.reducer.base import ReducerModel
 def run_pca(
         vote_matrix: VoteMatrix,
         n_components: int = 2,
-) -> Tuple[ pd.DataFrame, pd.DataFrame, ReducerModel ]:
+) -> Tuple[ np.ndarray, np.ndarray | None, ReducerModel ]:
     """
     Process a prepared vote matrix to be imputed and return projected participant data,
     as well as eigenvectors and eigenvalues.
@@ -30,7 +29,7 @@ def run_pca(
             - mean_ (list[float]): Means/centers of each column/statements/features.
     """
     projected_participants, projected_statements, pca = run_reducer(
-        vote_matrix=vote_matrix, n_components=n_components, reducer="pca"
+        vote_matrix=vote_matrix.values, n_components=n_components, reducer="pca"
     )
 
     return projected_participants, projected_statements, pca
