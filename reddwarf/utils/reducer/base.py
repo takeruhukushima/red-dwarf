@@ -20,7 +20,7 @@ def get_reducer(
     reducer: ReducerType = "pca",
     n_components: int = 2,
     random_state: Optional[int] = None,
-    **reducer_kwargs,
+    reducer_kwargs: dict = {},
 ) -> ReducerModel:
     # Setting n_neighbors to None defaults to 10 below 10,000 samples, and
     # slowly increases it according to a formula beyond that.
