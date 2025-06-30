@@ -25,24 +25,19 @@ def get_reducer(
     # Setting n_neighbors to None defaults to 10 below 10,000 samples, and
     # slowly increases it according to a formula beyond that.
     # See: https://github.com/YingfanWang/PaCMAP?tab=readme-ov-file#parameters
-    N_NEIGHBORS = None
+    DEFAULT_N_NEIGHBORS = None
     match reducer:
-        case "pacmap":
-            from pacmap import PaCMAP
+        case "pacmap" | "localmap":
+            from pacmap import PaCMAP, LocalMAP
 
-            return PaCMAP(
+            # Override with default if not set
+            n_neighbors = reducer_kwargs.pop("n_neighbors", DEFAULT_N_NEIGHBORS)
+
+            ReducerCls = PaCMAP if reducer == "pacmap" else LocalMAP
+            return ReducerCls(
                 n_components=n_components,
                 random_state=random_state,
-                n_neighbors=N_NEIGHBORS,  # type:ignore
-                **reducer_kwargs,
-            )
-        case "localmap":
-            from pacmap import LocalMAP
-
-            return LocalMAP(
-                n_components=n_components,
-                random_state=random_state,
-                n_neighbors=N_NEIGHBORS,  # type:ignore
+                n_neighbors=n_neighbors,  # type:ignore
                 **reducer_kwargs,
             )
         case "pca" | _:
