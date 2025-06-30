@@ -35,6 +35,7 @@
   [`#55`](https://github.com/polis-community/red-dwarf/issues/55)
 - Handle loading comments data from API when `is_meta` missing in CSV import.
 - Only pass unique labels into `generate_figure()` colorbar.
+- bugfix: `clusterer_kwargs` and `reducer_kwargs` were not being pass through `run_pipeline()`.
 
 ### Chores
 
