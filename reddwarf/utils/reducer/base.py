@@ -20,7 +20,7 @@ def get_reducer(
     reducer: ReducerType = "pca",
     n_components: int = 2,
     random_state: Optional[int] = None,
-    reducer_kwargs: dict = {},
+    **reducer_kwargs,
 ) -> ReducerModel:
     # Setting n_neighbors to None defaults to 10 below 10,000 samples, and
     # slowly increases it according to a formula beyond that.
@@ -57,9 +57,9 @@ def get_reducer(
 
 def run_reducer(
     vote_matrix: NDArray,
-    n_components: int = 2,
     reducer: ReducerType = "pca",
-    reducer_kwargs: dict = {},
+    n_components: int = 2,
+    **reducer_kwargs,
 ) -> Tuple[NDArray, Optional[NDArray], ReducerModel]:
     """
     Process a prepared vote matrix to be imputed and return participant and (optionally) statement data,
