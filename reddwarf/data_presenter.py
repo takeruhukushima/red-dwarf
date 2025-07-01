@@ -21,7 +21,13 @@ def generate_figure_polis(
     show_pids=True,
 ):
     """
+    Generate a Polis-style visualization from clustering results.
+
     Args:
+        result (PolisClusteringResult): The result object from run_pipeline
+        show_guesses (bool): Show the initial cluster center guesses on the plot
+        flip_x (bool): Flip the X-axis (default True to match Polis interface)
+        flip_y (bool): Flip the Y-axis (default False)
         show_pids (bool): Show the participant IDs on the plot
     """
     participants_clustered_df = result.participants_df[
