@@ -8,7 +8,7 @@
 [![Deploy Docs](https://github.com/polis-community/red-dwarf/actions/workflows/deploy-docs.yml/badge.svg)](https://github.com/polis-community/red-dwarf/actions/workflows/deploy-docs.yml)
 --------
 
-A <em>DIM</em>ensional <em>RED</em>uction library for [stellarpunk][] democracy into the long haul.
+A <em>DIM</em>ensional <em>RED</em>uction library for reproducing and experimenting with Polis-like data pipelines.
 
 > Red dwarf stars are dim red stars. They are hard to see, but are the most common
 > type -- the quiet 70% majority. They burn slow, using fuel efficiently,
