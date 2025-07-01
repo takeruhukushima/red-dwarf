@@ -8,4 +8,9 @@ def run_clustering(**kwargs) -> base.PolisClusteringResult:
 
 
 def run_pipeline(**kwargs) -> base.PolisClusteringResult:
-    return base.run_pipeline(reducer="pca", clusterer="kmeans", **kwargs)
+    kwargs = {
+        "reducer": "pca",
+        "clusterer": "kmeans",
+        **kwargs,
+    }
+    return base.run_pipeline(**kwargs)
