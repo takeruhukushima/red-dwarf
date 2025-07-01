@@ -20,14 +20,14 @@ A <em>DIM</em>ensional <em>RED</em>uction library for reproducing and experiment
 
 - Loads data from any Polis conversation on any Polis server, using only the conversation URL.
 - Reproduces Polis calculation pipeline from only raw vote data.
-   - "Classic" Polis pipeline = PCA dimensional reduction, KMeans clustering, and comment statistics.
+  - "Classic" Polis pipeline = PCA dimensional reduction, KMeans clustering, and comment statistics.
 - Alternative algorithms, aspiring for sensible defaults:
-   - dimensional reduction: [PaCMAP & LocalMAP][pacmap]
-      - Planned: [UMAP][umap], [TriMap][trimap], [PHATE][], [ivis][ivis], [LargeVis][largevis]
-   - clustering: [HDBSCAN][hdbscan]
-      - Planned: [EVOC][evoc]
+  - dimensional reduction: [PaCMAP & LocalMAP][pacmap]
+    - Planned: [UMAP][umap], [TriMap][trimap], [PHATE][], [ivis][ivis], [LargeVis][largevis]
+  - clustering: [HDBSCAN][hdbscan]
+    - Planned: [EVOC][evoc]
 - Helpful visualizations via `matplotlib`
-   - Planned: [Plotly][plotly]
+  - Planned: [Plotly][plotly]
 
 ## Goals
 
