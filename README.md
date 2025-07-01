@@ -65,7 +65,7 @@ See [`docs/notebooks/polis-implementation-demo.ipynb`][notebook] or [`docs/noteb
 - [`docs/notebooks/dump-downloaded-polis-data.ipynb`](https://github.com/polis-community/red-dwarf/blob/main/docs/notebooks/dump-downloaded-polis-data.ipynb)
 - Advanced
    - [`docs/notebooks/map-xids.ipynb`](https://github.com/polis-community/red-dwarf/blob/main/docs/notebooks/map-xids.ipynb)
-   - [`docs/notebooks/experiment-pca-pacmap-localmap-comparison.ipynb`](https://github.com/polis-community/red-dwarf/blob/main/docs/notebooks/experiment-pca-pacmap-localmap-comparison.ipynb)
+   - [`docs/notebooks/alternative-algorithms.ipynb`](https://github.com/polis-community/red-dwarf/blob/main/docs/notebooks/alternative-algorithms.ipynb)
    - [`docs/notebooks/strip-pass-votes.ipynb`](https://github.com/polis-community/red-dwarf/blob/main/docs/notebooks/strip-pass-votes.ipynb)
 
 ## Architecture
