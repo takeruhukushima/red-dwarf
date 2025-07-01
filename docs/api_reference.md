@@ -117,7 +117,7 @@ use in Scikit-Learn workflows, pipelines, and APIs.
 
 ## Types
 
-### ::: reddwarf.implementations.polis.PolisClusteringResult
+### ::: reddwarf.implementations.base.PolisClusteringResult
     options:
         show_root_heading: true
 
