@@ -15,9 +15,18 @@ A <em>DIM</em>ensional <em>RED</em>uction library for [stellarpunk][] democracy 
 > the last light, even supporting habitable planets for billions of years.
 > If there's persistant life out there, it's likely in a long slow dance with a red dwarf.
 
-## Roadmap
+## Features
 
-For now, see [this related issue](https://github.com/patcon/red-dwarf/issues/4)
+- Loads data from any Polis conversation on any Polis server, using only the conversation URL.
+- Reproduces Polis calculation pipeline from only raw vote data.
+   - "Classic" Polis pipeline = PCA dimensional reduction, KMeans clustering, and comment statistics.
+- Alternative algorithms, aspiring for sensible defaults:
+   - dimensional reduction: [PaCMAP & LocalMAP][pacmap]
+      - Planned: [UMAP][umap], [TriMap][trimap], [PHATE][], [ivis][ivis], [LargeVis][largevis]
+   - clustering: [HDBSCAN][hdbscan]
+      - Planned: [EVOC][evoc]
+- Helpful visualizations via `matplotlib`
+   - Planned: [Plotly][plotly]
 
 ## Goals
 
@@ -26,6 +35,10 @@ Code that aspires to embody and support democratic values should be...
 - **Legible.** It should be explorable and auditable not just to researchers, but to as many curious citizens as possible.
 - **Re-usable.** It should be easily used in contexts in which its original creators did not anticipate, nor perhaps even desire.
 - **Collectively stewarded.** It should grow and govern itself democratically and in a plural fashion.
+
+## Roadmap
+
+For now, see [this related issue](https://github.com/patcon/red-dwarf/issues/4)
 
 ## Sponsors
 
@@ -81,6 +94,19 @@ See [`CHANGELOG.md`][changelog].
 <!-- Links -->
    [pypi]: https://pypi.org/project/red-dwarf/
    [stellarpunk]: https://www.youtube.com/watch?v=opnkQVZrhAw
+
+   [pacmap]: https://github.com/YingfanWang/PaCMAP
+   [umap]: https://github.com/lmcinnes/umap
+   [trimap]: https://github.com/eamid/trimap
+   [phate]: https://github.com/KrishnaswamyLab/PHATE
+   [ivis]: https://github.com/beringresearch/ivis
+   [largevis]: https://github.com/lferry007/LargeVis
+
+   [hdbscan]: https://scikit-learn.org/stable/modules/generated/sklearn.cluster.HDBSCAN.html
+   [evoc]: https://github.com/TutteInstitute/evoc
+
+   [plotly]: https://plotly.com/python/
+
    [notebook]: https://github.com/polis-community/red-dwarf/blob/main/docs/notebooks/polis-implementation-demo.ipynb
    [notebooks]: https://github.com/polis-community/red-dwarf/tree/main/docs/notebooks/
    [ZKorum]: https://github.com/zkorum
