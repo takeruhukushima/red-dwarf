@@ -68,6 +68,7 @@ See [`docs/notebooks/polis-implementation-demo.ipynb`][notebook] or [`docs/noteb
    - [`docs/notebooks/map-xids.ipynb`](https://github.com/polis-community/red-dwarf/blob/main/docs/notebooks/map-xids.ipynb)
    - [`docs/notebooks/alternative-algorithms.ipynb`](https://github.com/polis-community/red-dwarf/blob/main/docs/notebooks/alternative-algorithms.ipynb)
    - [`docs/notebooks/strip-pass-votes.ipynb`](https://github.com/polis-community/red-dwarf/blob/main/docs/notebooks/strip-pass-votes.ipynb)
+   - [`docs/notebooks/untested/tabpfn-experiment.ipynb`](https://github.com/polis-community/red-dwarf/blob/main/docs/notebooks/untested/tabpfn-experiment.ipynb)
 
 ## Architecture
 
