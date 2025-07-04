@@ -224,7 +224,7 @@ def test_export_polis_format(tmp_path):
         
     for type in loader.ReportType:
         # first, dowload the original for comparison:
-        downloaded = loader.fetch_csv(output_dir, type)
+        downloaded = loader.fetch_csv(type, output_dir)
         
         with (
             open(downloaded.name) as f_expected,
