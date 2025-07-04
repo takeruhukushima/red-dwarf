@@ -213,24 +213,24 @@ def test_track_skipped():
     # Should be dups via CSV export
     csv_loader = Loader(report_id=SMALL_CONVO_REPORT_ID, data_source="csv_export")
     assert len(csv_loader.skipped_dup_votes) > 0
-    
-def test_export_polis_format(tmp_path):
+
+def test_export_data_csv(tmp_path):
     report_id = SMALL_CONVO_REPORT_ID
     loader = Loader(report_id=report_id)
-    
+
     output_dir = str(tmp_path)
-    loader.export_polis_format(output_dir)
+    loader.export_data(output_dir, format="csv")
     # ... and compare them to the original CSVs:
-        
+
     for type in loader.ReportType:
         # first, dowload the original for comparison:
         downloaded = loader.fetch_csv(type, output_dir)
-        
+
         with (
             open(downloaded.name) as f_expected,
             open(f"{output_dir}/{type.value}.csv") as f_actual,
         ):
-            
+
             expected_lines = f_expected.readlines()
             actual_lines = f_actual.readlines()
 
@@ -238,12 +238,12 @@ def test_export_polis_format(tmp_path):
             expected_header = expected_lines[0].strip().split(",")
             actual_header = actual_lines[0].strip().split(",")
             assert expected_header == actual_header, "Headers don't match for {type}"
-            
+
             # Unfortunately we can't easily compare actual lines:
             #  * The originals have some duplicate entries, so #lines don't match
             #  * the originals aren't always ordered, so lines won't match
             #  * the originals' data seems less accurate than ours, so lines won't match
-            
+
             # Compare with our own data instead:
             if type == loader.ReportType.COMMENTS or type == loader.ReportType.COMMENT_GROUPS:
                 assert len(loader.comments_data) == len(actual_lines)-1 # -1 for header
