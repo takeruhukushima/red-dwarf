@@ -1,7 +1,7 @@
 [project]
 name = "red-dwarf"
 version = "0.3.0"
-description = "A dimensional reduction library for stellarpunk democracy into the long haul"
+description = "A DIMensional REDuction library for reproducing and experimenting with Polis-like data pipelines."
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
