@@ -3,7 +3,7 @@ import json
 import os
 from typing import Literal
 from fake_useragent import UserAgent
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone, timedelta
 from requests_ratelimiter import SQLiteBucket, LimiterSession
 import csv
 from io import StringIO
