@@ -14,13 +14,16 @@ jobs:
   test:
     name: Test
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.8", "3.10", "3.12"]
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Python 3.10
+      - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
         with:
-          python-version: "3.10"
+          python-version: ${{ matrix.python-version }}
 
       - uses: astral-sh/setup-uv@v5
         with:
@@ -33,6 +36,7 @@ jobs:
             **/*(requirements|constraints)*.(txt|in)
             **/pyproject.toml
             **/uv.lock
+          cache-suffix: python-${{ matrix.python-version }}
 
       - name: Install dependencies
         run: make install-dev
