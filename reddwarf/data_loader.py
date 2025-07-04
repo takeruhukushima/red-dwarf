@@ -67,7 +67,13 @@ class Loader():
         PARTICIPANT_VOTES = "participant-votes"
         COMMENT_GROUPS = "comment-groups"
 
-    def fetch_csv(self, output_dir, type: ReportType):
+    def fetch_csv(self, type: ReportType, output_dir=None):
+        if not output_dir:
+            if self.output_dir:
+                output_dir = self.output_dir
+            else:
+                raise ValueError("output_dir must be set in either the loader or as parameter to this function")
+        
         print(f"Downloading CSVs from remote server to {output_dir}")
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)
