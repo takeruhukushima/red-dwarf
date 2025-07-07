@@ -1,7 +1,11 @@
+from enum import Enum
 import filecmp
+import os
 import pytest
+from requests import session
 from reddwarf.data_loader import Loader
 
+from tests import helpers
 from tests.fixtures import polis_convo_data
 
 # 3 groups, 28 ptpts (24 grouped), 63 statements.
@@ -222,9 +226,9 @@ def test_export_data_csv(tmp_path):
     loader.export_data(output_dir, format="csv")
     # ... and compare them to the original CSVs:
 
-    for type in loader.ReportType:
+    for type in helpers.ReportType:
         # first, dowload the original for comparison:
-        downloaded = loader.fetch_csv(type, output_dir)
+        downloaded = helpers.fetch_csv(type, output_dir, report_id)
 
         with (
             open(downloaded.name) as f_expected,
@@ -245,9 +249,9 @@ def test_export_data_csv(tmp_path):
             #  * the originals' data seems less accurate than ours, so lines won't match
 
             # Compare with our own data instead:
-            if type == loader.ReportType.COMMENTS or type == loader.ReportType.COMMENT_GROUPS:
+            if type == helpers.ReportType.COMMENTS or type == helpers.ReportType.COMMENT_GROUPS:
                 assert len(loader.comments_data) == len(actual_lines)-1 # -1 for header
-            elif type == loader.ReportType.VOTES:
+            elif type == helpers.ReportType.VOTES:
                 assert len(loader.votes_data) == len(actual_lines)-1 # -1 for header
-            elif type == loader.ReportType.PARTICIPANT_VOTES:
+            elif type == helpers.ReportType.PARTICIPANT_VOTES:
                 assert len(loader.math_data["user-vote-counts"]) == len(actual_lines)-1 # -1 for header

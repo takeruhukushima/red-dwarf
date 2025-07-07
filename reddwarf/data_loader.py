@@ -60,29 +60,6 @@ class Loader():
             # If not set, write it from what's provided.
             self.polis_id = self.report_id or self.conversation_id
 
-    class ReportType(Enum):
-        SUMMARY = "summary"
-        VOTES = "votes"
-        COMMENTS = "comments"
-        PARTICIPANT_VOTES = "participant-votes"
-        COMMENT_GROUPS = "comment-groups"
-
-    def fetch_csv(self, type: ReportType, output_dir=None):
-        if not output_dir:
-            if self.output_dir:
-                output_dir = self.output_dir
-            else:
-                raise ValueError("output_dir must be set in either the loader or as parameter to this function")
-
-        print(f"Downloading CSVs from remote server to {output_dir}")
-        if not os.path.exists(output_dir):
-            os.makedirs(output_dir)
-
-        with open(f"{output_dir}/{self.report_id}_{type.value}.csv", 'w') as f:
-            r = self.session.get(f"{self.polis_instance_url}/api/v3/reportExport/{self.report_id}/{type.value}.csv")
-            f.write(r.text)
-        return f
-
     # Deprecated.
     def dump_data(self, output_dir):
         self.export_data(output_dir, format="json")
