@@ -111,10 +111,7 @@ class Loader():
             headers = ["timestamp", "datetime", "comment-id", "voter-id", "vote"]
             writer.writerow(headers)
             for entry in sorted_votes_data:
-                # Convert timestamp (ms) to datetime string in required format
-                ts = int(entry["modified"] // 1000)
-                dt = datetime.fromtimestamp(ts, tz=timezone.utc)
-                dt_str = dt.strftime('%a %b %d %Y %H:%M:%S GMT+0000 (Coordinated Universal Time)')
+                ts, dt_str = self._format_polis_times(entry["modified"])
                 row = [
                         ts,
                         dt_str,
@@ -141,11 +138,7 @@ class Loader():
                 key=lambda x: (x["statement_id"], x["participant_id"]),
             )
             for entry in sorted_comments:
-                created = entry["created"]
-                dt_obj = datetime.strptime(created, "%Y-%m-%dT%H:%M:%S.%fZ")
-                ts = int(dt_obj.replace(tzinfo=timezone.utc).timestamp())
-                dt = datetime.fromtimestamp(ts, tz=timezone.utc)
-                dt_str = dt.strftime('%a %b %d %Y %H:%M:%S GMT+0000 (Coordinated Universal Time)')
+                ts, dt_str = self._format_polis_times(entry["created"])
                 single_quote = '"'
                 double_quote = '""'
                 row = [
@@ -159,6 +152,27 @@ class Loader():
                         f'"{str(entry["txt"]).replace(single_quote, double_quote)}"',
                     ]
                 f.write(",".join([str(item) for item in row]) + "\n")
+
+    def _format_polis_times(self, time):
+        """Convert timestamp or ISO string to Polis datetime format."""
+        from dateutil import parser
+        try:
+            if isinstance(time, (int, float)):
+                # Handle timestamps
+                timestamp = int(str(time)[:10]) if time > 10**10 else time
+                date_obj = datetime.fromtimestamp(timestamp, tz=timezone.utc)
+            else:
+                # Handle string inputs in ISO format
+                date_obj = parser.parse(time)
+                if date_obj.tzinfo is None:
+                    date_obj = date_obj.replace(tzinfo=timezone.utc)
+            
+            date_obj = date_obj.astimezone(timezone.utc)
+            dt_str = date_obj.strftime('%a %b %d %Y %H:%M:%S GMT+0000 (Coordinated Universal Time)')
+            
+            return int(date_obj.timestamp()), dt_str
+        except (ValueError, OSError) as error:        
+            raise ValueError(f"Timestamp is not in a recognizable format: {error}")
 
     def _write_polis_comment_groups(self, output_dir):
         """

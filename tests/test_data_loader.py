@@ -255,3 +255,4 @@ def test_export_data_csv(tmp_path):
                 assert len(loader.votes_data) == len(actual_lines)-1 # -1 for header
             elif type == helpers.ReportType.PARTICIPANT_VOTES:
                 assert len(loader.math_data["user-vote-counts"]) == len(actual_lines)-1 # -1 for header
+    assert False
