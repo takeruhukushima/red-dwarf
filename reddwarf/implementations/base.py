@@ -105,9 +105,13 @@ def run_pipeline(
         mod_out_statement_ids=mod_out_statement_ids,
     )
 
-    # Run PCA and generate participant/statement projections.
-    # DataFrames each have "x" and "y" columns.
-    X_participants, X_statements, reducer_model = run_reducer(vote_matrix=filtered_vote_matrix.values, reducer=reducer, **reducer_kwargs)
+    # Run reducer and generate participant projections (and statement projections if possible).
+    X_participants, X_statements, reducer_model = run_reducer(
+        vote_matrix=filtered_vote_matrix.values,
+        reducer=reducer,
+        random_state=random_state,
+        **reducer_kwargs,
+    )
     participants_df = pd.DataFrame(X_participants, columns=pd.Index(["x", "y"]), index=filtered_vote_matrix.index)
 
     participant_ids_to_cluster = get_clusterable_participant_ids(
