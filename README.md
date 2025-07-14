@@ -83,7 +83,7 @@ This is the generalized pipeline of Polis-like processes that we're aiming to ac
 - Install python (preferrably virtual environment)
 - Install uv (python package manager) (e.g. `pip install uv`)
 - Install dependencies with `make install` (or `make install-dev`)
-- Check other 'make' commands from the root Makefile (e.g. `make test` to run tests)
+- Run `make` command alone to see other helpful make subcommands
 - Alternatively, run one of the ipynb notebooks; possibly replacing the install command at the top with `%pip install -e ../../` to use the local source instead.
 
 ### Contributing
