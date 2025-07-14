@@ -1,7 +1,6 @@
 from enum import Enum
 import json
 import os
-from typing import Literal
 from fake_useragent import UserAgent
 from datetime import datetime, timezone, timedelta
 from requests_ratelimiter import SQLiteBucket, LimiterSession
