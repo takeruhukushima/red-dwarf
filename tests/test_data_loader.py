@@ -1,8 +1,4 @@
-from enum import Enum
-import filecmp
-import os
 import pytest
-from requests import session
 from reddwarf.data_loader import Loader
 
 from tests import helpers
