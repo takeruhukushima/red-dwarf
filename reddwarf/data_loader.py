@@ -502,27 +502,27 @@ class Loader():
             else:
                 raise ValueError("Unknown file type")
 
-    def load_file_data_votes(self, file):
+    def load_file_data_votes(self, file=None):
         with open(file) as f:
             votes_data = json.load(f)
 
         votes_data = [Vote(**vote).model_dump(mode='json') for vote in votes_data]
         self.votes_data = votes_data
 
-    def load_file_data_comments(self, file):
+    def load_file_data_comments(self, file=None):
         with open(file) as f:
             comments_data = json.load(f)
 
         comments_data = [Statement(**c).model_dump(mode='json') for c in comments_data]
         self.comments_data = comments_data
 
-    def load_file_data_conversation(self, file):
+    def load_file_data_conversation(self, file=None):
         with open(file) as f:
             convo_data = json.load(f)
 
         self.conversation_data = convo_data
 
-    def load_file_data_math(self, file):
+    def load_file_data_math(self, file=None):
         with open(file) as f:
             math_data = json.load(f)
 
@@ -587,7 +587,7 @@ class Loader():
         for item in self.votes_data:
             item["vote"] = -item["vote"]
 
-    def load_api_data_votes(self, last_participant_id=0):
+    def load_api_data_votes(self, last_participant_id=None):
         for pid in range(0, last_participant_id+1):
             params = {
                 "pid": pid,
