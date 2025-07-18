@@ -5,6 +5,7 @@ description = "A DIMensional REDuction library for reproducing and experimenting
 readme = "README.md"
 requires-python = ">=3.8"
 dependencies = [
+    # Core dependencies
     "pandas>=1.5.0",
     "scikit-learn>=1.1.0",
 
@@ -17,15 +18,6 @@ dependencies = [
     "requests-cache",
     "requests-ratelimiter>=0.4.0",
     "fake-useragent>=1.4.0,<2.0.0",
-
-    # Extended algorithms
-    "pacmap>=0.7.0",
-    "hdbscan>=0.8.40",
-
-    # Presentation
-    "concave-hull>=0.0.9",
-    "seaborn>=0.11.0",
-    "matplotlib>=3.5.0,<3.8.0",
 ]
 
 [tool.setuptools.packages.find]
@@ -40,6 +32,18 @@ license-files = []
 requests-cache = { git = "https://github.com/requests-cache/requests-cache", rev = "12af54ded36" }
 
 [project.optional-dependencies]
+alt-algos = [
+    "pacmap>=0.7.0",
+    "hdbscan>=0.8.40",
+]
+plots = [
+    "concave-hull>=0.0.9",
+    "seaborn>=0.11.0",
+    "matplotlib>=3.5.0,<3.8.0",
+]
+all = [
+    "red-dwarf[alt-algos,plots]",
+]
 dev = [
     "coverage>=6.0",
     "ipywidgets>=8.0.0",
@@ -51,6 +55,19 @@ dev = [
 ]
 
 [dependency-groups]
+alt-algos = [
+    "pacmap>=0.7.0",
+    "hdbscan>=0.8.40",
+]
+plots = [
+    "concave-hull>=0.0.9",
+    "seaborn>=0.11.0",
+    "matplotlib>=3.5.0,<3.8.0",
+]
+all = [
+    {include-group = "alt-algos"},
+    {include-group = "plots"},
+]
 dev = [
     "coverage>=6.0",
     "ipywidgets>=8.0.0",
