@@ -7,7 +7,7 @@ from reddwarf.sklearn.cluster import PolisKMeans
 from reddwarf.utils.clusterer.kmeans import find_best_kmeans
 
 if TYPE_CHECKING:
-    from sklearn.cluster import HDBSCAN
+    from hdbscan import HDBSCAN
     from reddwarf.sklearn.cluster import PolisKMeans
 
 ClustererModel: TypeAlias = Union["HDBSCAN", "PolisKMeans"]
@@ -43,7 +43,7 @@ def run_clusterer(
             return kmeans
 
         case "hdbscan":
-            from sklearn.cluster import HDBSCAN
+            from hdbscan import HDBSCAN
 
             hdb = HDBSCAN(**clusterer_kwargs)
             hdb.fit(X_participants_clusterable)

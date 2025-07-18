@@ -24,7 +24,7 @@ A <em>DIM</em>ensional <em>RED</em>uction library for reproducing and experiment
 - Alternative algorithms, aspiring for sensible defaults:
   - dimensional reduction: [PaCMAP & LocalMAP][pacmap]
     - Planned: [UMAP][umap], [TriMap][trimap], [PHATE][], [ivis][ivis], [LargeVis][largevis]
-  - clustering: [HDBSCAN][hdbscan]
+  - clustering: [HDBSCAN*][hdbscan]
     - Planned: [EVOC][evoc]
 - Helpful visualizations via `matplotlib`
   - Planned: [Plotly][plotly]
@@ -114,7 +114,7 @@ See [`CHANGELOG.md`][changelog].
    [ivis]: https://github.com/beringresearch/ivis
    [largevis]: https://github.com/lferry007/LargeVis
 
-   [hdbscan]: https://scikit-learn.org/stable/modules/generated/sklearn.cluster.HDBSCAN.html
+   [hdbscan]: https://github.com/scikit-learn-contrib/hdbscan
    [evoc]: https://github.com/TutteInstitute/evoc
 
    [plotly]: https://plotly.com/python/

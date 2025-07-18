@@ -28,6 +28,7 @@
 - Avoid using dataframes in a few low level util function, in favour of numpy arrays.
 - Rename `projected_{participants,statements}` to `{participant,statement}_projections` in run_pipeline results. Also coords keyed to ID, instead of dataframes.
 - Remove agora implementation and tests. ([#73](https://github.com/polis-community/red-dwarf/issues/74))
+- Migrate from reference HDBSCAN module (in `scikit-learn`) to full-featured HDBSCAN* package.
 
 ### Fixes
 
