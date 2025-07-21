@@ -19,7 +19,8 @@ jobs:
     strategy:
       matrix:
         # See: https://devguide.python.org/versions/
-        python-version: ["3.8", "3.10", "3.13", "3.14", "3.15"]
+        # See: https://raw.githubusercontent.com/actions/python-versions/main/versions-manifest.json
+        python-version: ["3.8", "3.10", "3.13", "3.14"]
     steps:
       - uses: actions/checkout@v4
 
@@ -27,7 +28,7 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-          # For v3.14, v3.15
+          # For v3.14
           allow-prereleases: true
 
       - uses: astral-sh/setup-uv@v5
