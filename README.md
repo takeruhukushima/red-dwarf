@@ -56,16 +56,17 @@ Are you or your organization eager to see more platforms and community built aro
 ```
 # OFFICIAL RELEASES
 
-# For core, the classic polis pipeline (PCA + K-means)
+# For core, the classic polis pipeline: PCA + K-means
+# (~60MB beyond scikit-learn disk space)
 pip install red-dwarf
 
-# For additional algorithms beyond classic polis (PaCMAP, LocalMAP, HDBSCAN, etc.)
+# For additional algorithms beyond classic polis: PaCMAP, LocalMAP, HDBSCAN, etc.
 pip install red-dwarf[alt-algos]
 
 # For additional packages for visualizing plots
 pip install red-dwarf[plots]
 
-# For everything
+# For everything (~60MB beyond core packages)
 pip install red-dwarf[all]
 # pip install red-dwarf[alt-algos,plots]
 ```
