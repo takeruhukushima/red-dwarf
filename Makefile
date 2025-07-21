@@ -1,7 +1,7 @@
 TEST_FILTER ?= .
 
 install: ## Install production dependencies
-	uv pip install --editable .
+	uv pip install --editable .[all]
 
 install-dev: ## Install development dependencies
 	uv sync --extra all --dev

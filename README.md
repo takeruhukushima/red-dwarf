@@ -53,6 +53,23 @@ Are you or your organization eager to see more platforms and community built aro
 
 ## Usage
 
+```
+# OFFICIAL RELEASES
+
+# For core, the classic polis pipeline (PCA + K-means)
+pip install red-dwarf
+
+# For additional algorithms beyond classic polis (PaCMAP, LocalMAP, HDBSCAN, etc.)
+pip install red-dwarf[alt-algos]
+
+# For additional packages for visualizing plots
+pip install red-dwarf[plots]
+
+# For everything
+pip install red-dwarf[all]
+# pip install red-dwarf[alt-algos,plots]
+```
+
 See [`docs/notebooks/polis-implementation-demo.ipynb`][notebook] or [`docs/notebooks/`][notebooks] for other examples.
 
 
