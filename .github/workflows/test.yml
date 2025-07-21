@@ -27,7 +27,7 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      - uses: astral-sh/setup-uv@v5
+      - uses: uv venv --yes
         with:
           # Enable cache, except when manually triggered and explicitly disabled.
           enable-cache: ${{ github.event_name != 'workflow_dispatch' || inputs.enableCache }}
@@ -39,6 +39,9 @@ jobs:
             **/pyproject.toml
             **/uv.lock
           cache-suffix: python-${{ matrix.python-version }}
+
+      - name: Create virtual environment
+        run: make venv
 
       - name: Install dependencies
         run: make install-dev

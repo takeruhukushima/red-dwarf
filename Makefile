@@ -1,5 +1,8 @@
 TEST_FILTER ?= .
 
+venv: ## Make a virtualenv
+	uv venv
+
 install: ## Install only production dependencies
 	uv pip install --editable .[all]
 
