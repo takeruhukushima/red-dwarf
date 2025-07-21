@@ -41,9 +41,7 @@ jobs:
           cache-suffix: python-${{ matrix.python-version }}
 
       - name: Create virtual environment
-        run: |
-          make venv
-          source .venv/bin/activate
+        run: make venv
 
       - name: Install dependencies
         run: make install-dev
