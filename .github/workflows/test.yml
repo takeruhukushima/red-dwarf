@@ -24,7 +24,9 @@ jobs:
           # - "3.8"
           - "3.10"
           - "3.13"
-          - "3.14"
+          # Numba is being ported to v3.14
+          # See: https://github.com/numba/numba/issues/9957
+          # - "3.14"
     steps:
       - uses: actions/checkout@v4
 
