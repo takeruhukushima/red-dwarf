@@ -18,7 +18,8 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.8", "3.10", "3.12"]
+        # See: https://devguide.python.org/versions/
+        python-version: ["3.8", "3.10", "3.13", "3.14", "3.15"]
     steps:
       - uses: actions/checkout@v4
 
