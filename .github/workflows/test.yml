@@ -27,7 +27,7 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      - uses: uv venv --yes
+      - uses: astral-sh/setup-uv@v5
         with:
           # Enable cache, except when manually triggered and explicitly disabled.
           enable-cache: ${{ github.event_name != 'workflow_dispatch' || inputs.enableCache }}
