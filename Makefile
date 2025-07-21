@@ -1,10 +1,13 @@
 TEST_FILTER ?= .
 
-install: ## Install production dependencies
-	uv pip install --editable .
+venv: ## Make a virtualenv
+	uv venv
 
-install-dev: ## Install development dependencies
-	uv sync --extra dev
+install: ## Install only production dependencies
+	uv pip install --editable .[all]
+
+install-dev: ## Install production with development dependencies
+	uv pip install --editable .[all,dev]
 
 docs-build: ## Build the static docs ./site directory
 	uv run mkdocs build
