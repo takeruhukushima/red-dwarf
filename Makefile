@@ -1,7 +1,8 @@
 TEST_FILTER ?= .
+PYTHON_VERSION ?= python
 
 venv: ## Make a virtualenv
-	uv venv
+	uv venv --python $(PYTHON_VERSION)
 
 install: ## Install only production dependencies
 	uv pip install --editable .[all]
