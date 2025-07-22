@@ -38,6 +38,10 @@ test-debug: ## Run tests via pytest, optionally filtering (with verbose debuggin
 
 test-all: test test-nb docs-build ## Run unit and notebook tests
 
+# Small hint to remove gitignore'd python version file, which can confuse usage of uv.
+clean:
+	rm .python-version
+
 clear-test-cache: ## Cleak the SQLite database of cached HTTP requests
 	rm -f test_cache.sqlite
 
