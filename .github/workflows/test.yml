@@ -20,7 +20,12 @@ jobs:
       matrix:
         # See: https://devguide.python.org/versions/
         # See: https://raw.githubusercontent.com/actions/python-versions/main/versions-manifest.json
-        python-version: ["3.8", "3.10", "3.13", "3.14"]
+        python-version:
+          - "3.10"
+          - "3.13"
+          # Numba (required by pacmap) is being ported to v3.14
+          # See: https://github.com/numba/numba/issues/9957
+          # - "3.14"
     steps:
       - uses: actions/checkout@v4
 
