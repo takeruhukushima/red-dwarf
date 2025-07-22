@@ -1,7 +1,7 @@
 TEST_FILTER ?= .
 PYTHON_VERSION ?= python
-# virtualenv's are used automatically for `uv pip`, but not for `uv run`
-UV_RUN ?= uv run --python .venv/bin/python
+# Make it simpler to change args during `uv run` calls.
+UV_RUN ?= uv run
 
 venv: ## Make a virtualenv
 	uv venv --python $(PYTHON_VERSION)
