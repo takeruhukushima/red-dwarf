@@ -4,7 +4,7 @@ PYTHON_VERSION ?= python
 UV_RUN ?= uv run
 
 venv: ## Make a virtualenv
-	uv venv --python $(PYTHON_VERSION)
+	uv venv
 
 install: ## Install only production dependencies
 	uv pip install --editable .[all]
