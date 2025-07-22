@@ -1,5 +1,4 @@
 TEST_FILTER ?= .
-PYTHON_VERSION ?= python
 # Make it simpler to change args during `uv run` calls.
 UV_RUN ?= uv run
 
