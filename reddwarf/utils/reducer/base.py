@@ -26,28 +26,27 @@ def get_reducer(
     # slowly increases it according to a formula beyond that.
     # See: https://github.com/YingfanWang/PaCMAP?tab=readme-ov-file#parameters
     DEFAULT_N_NEIGHBORS = None
-    match reducer:
-        case "pacmap" | "localmap":
-            pacmap = try_import("pacmap", extra="alt-algos")
+    if reducer in ("pacmap", "localmap"):
+        pacmap = try_import("pacmap", extra="alt-algos")
 
-            # Override with default if not set
-            n_neighbors = reducer_kwargs.pop("n_neighbors", DEFAULT_N_NEIGHBORS)
+        # Override with default if not set
+        n_neighbors = reducer_kwargs.pop("n_neighbors", DEFAULT_N_NEIGHBORS)
 
-            ReducerCls = pacmap.PaCMAP if reducer == "pacmap" else pacmap.LocalMAP
-            return ReducerCls(
-                n_components=n_components,
-                random_state=random_state,
-                n_neighbors=n_neighbors,  # type:ignore
-                **reducer_kwargs,
-            )
-        case "pca" | _:
-            from sklearn.decomposition import PCA
+        ReducerCls = pacmap.PaCMAP if reducer == "pacmap" else pacmap.LocalMAP
+        return ReducerCls(
+            n_components=n_components,
+            random_state=random_state,
+            n_neighbors=n_neighbors,  # type:ignore
+            **reducer_kwargs,
+        )
+    else:  # "pca" or any other value
+        from sklearn.decomposition import PCA
 
-            return PCA(
-                n_components=n_components,
-                random_state=random_state,
-                **reducer_kwargs,
-            )
+        return PCA(
+            n_components=n_components,
+            random_state=random_state,
+            **reducer_kwargs,
+        )
 
 
 def run_reducer(
@@ -72,23 +71,22 @@ def run_reducer(
         X_statements (Optional[NDArray]): A numpy array with n-d coordinates for each projected col/statement.
         reducer_model (ReducerModel): The fitted dimensional reduction sci-kit learn estimator.
     """
-    match reducer:
-        case "pca":
-            pipeline = PatchedPipeline(
-                [
-                    ("capture", SparsityAwareCapturer()),
-                    ("impute", SimpleImputer(missing_values=np.nan, strategy="mean")),
-                    ("reduce", get_reducer(reducer, n_components=n_components, **reducer_kwargs)),
-                    ("scale", SparsityAwareScaler(capture_step="capture")),
-                ]
-            )
-        case "pacmap" | "localmap":
-            pipeline = PatchedPipeline(
-                [
-                    ("impute", SimpleImputer(missing_values=np.nan, strategy="mean")),
-                    ("reduce", get_reducer(reducer, n_components=n_components, **reducer_kwargs)),
-                ]
-            )
+    if reducer == "pca":
+        pipeline = PatchedPipeline(
+            [
+                ("capture", SparsityAwareCapturer()),
+                ("impute", SimpleImputer(missing_values=np.nan, strategy="mean")),
+                ("reduce", get_reducer(reducer, n_components=n_components, **reducer_kwargs)),
+                ("scale", SparsityAwareScaler(capture_step="capture")),
+            ]
+        )
+    elif reducer in ("pacmap", "localmap"):
+        pipeline = PatchedPipeline(
+            [
+                ("impute", SimpleImputer(missing_values=np.nan, strategy="mean")),
+                ("reduce", get_reducer(reducer, n_components=n_components, **reducer_kwargs)),
+            ]
+        )
 
     # Generate projections of participants.
     X_participants = pipeline.fit_transform(vote_matrix)
