@@ -21,7 +21,6 @@ jobs:
         # See: https://devguide.python.org/versions/
         # See: https://raw.githubusercontent.com/actions/python-versions/main/versions-manifest.json
         python-version:
-          # - "3.8"
           - "3.10"
           - "3.13"
           # Numba (required by pacmap) is being ported to v3.14
