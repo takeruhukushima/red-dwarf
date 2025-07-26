@@ -44,6 +44,9 @@ jobs:
             **/pyproject.toml
             **/uv.lock
 
+      - name: Create virtual environment
+        run: make venv
+
       - name: Install dependencies
         run: make install-dev
 
