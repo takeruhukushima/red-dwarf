@@ -109,3 +109,47 @@ def test_run_pipeline_pca_still_deterministic_without_random_state(
         projections_2,
         err_msg=f"{reducer} should produce identical participant projections even without random_state",
     )
+
+
+## Test for keep_participant_ids with non-existent IDs
+
+
+@pytest.mark.parametrize("polis_convo_data", ["small-no-meta"], indirect=True)
+def test_run_pipeline_handles_nonexistent_keep_participant_ids(polis_convo_data):
+    """Test that run_pipeline doesn't crash when keep_participant_ids contains IDs that don't exist in vote matrix."""
+    fixture = polis_convo_data
+
+    # Load test data
+    loader = Loader(filepaths=[f"{fixture.data_dir}/votes.json"])
+    votes = loader.votes_data
+
+    # Get actual participant IDs from the votes data
+    actual_participant_ids = set(vote["participant_id"] for vote in votes)
+    max_existing_id = max(actual_participant_ids)
+
+    # Create a list that includes both existing and non-existent participant IDs
+    keep_participant_ids = [
+        max_existing_id,  # This ID exists
+        max_existing_id + 1000,  # This ID doesn't exist
+        max_existing_id + 2000,  # This ID doesn't exist
+    ]
+
+    # This should not crash - the bugfix ensures non-existent IDs are filtered out
+    result = run_pipeline(
+        votes=votes, keep_participant_ids=keep_participant_ids, random_state=42
+    )
+
+    # Verify the result is valid
+    assert result is not None
+    assert len(result.participant_projections) > 0
+
+    # Verify that only the existing participant ID from keep_participant_ids is actually kept
+    # (assuming it meets other clustering criteria)
+    clustered_participant_ids = set(
+        result.participants_df[result.participants_df["to_cluster"]].index
+    )
+
+    # The existing ID should be in the clustered participants if it meets vote threshold
+    # The non-existent IDs should be silently ignored (not cause a crash)
+    assert max_existing_id + 1000 not in clustered_participant_ids
+    assert max_existing_id + 2000 not in clustered_participant_ids
